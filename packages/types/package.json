@@ -1,0 +1,13 @@
+{
+  "name": "@bqm/types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared domain types for Bensi Queen Mart apps. Single source of truth for Product / Invoice schemas.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  }
+}

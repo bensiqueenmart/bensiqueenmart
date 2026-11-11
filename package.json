@@ -1,0 +1,19 @@
+{
+  "name": "bensi-queen-mart",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo for Bensi Queen Mart retail ecosystem: public website, billing desk (POS), inventory admin. Shared MongoDB Atlas data layer.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:packages": "tsc --build packages/types packages/db",
+    "build:billing": "npm run build --workspace apps/billing-desk",
+    "build:admin": "npm run build --workspace apps/inventory-admin",
+    "build:all": "npm run build:packages && npm run build:billing && npm run build:admin"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,18 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.vercel/
+.output/
+
+# Vite
+apps/*/dist/
+
+# Env
+.env
+.env*.local
+apps/*/.env
+apps/*/.env*.local
+
+# OS / editor
+.DS_Store
+*.log
