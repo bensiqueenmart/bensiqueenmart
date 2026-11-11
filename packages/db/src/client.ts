@@ -1,11 +1,12 @@
 import { MongoClient, type Collection, type Db, type Document } from 'mongodb';
-import type { Order, Product, StockMovement } from '@bqm/types';
+import type { Combo, Order, Product, StockMovement } from '@bqm/types';
 
-/** Domain-typed collection handle (3 collections only — see er_diagram.md). */
+/** Domain-typed collection handle (collections listed in er_diagram.md). */
 export type CollectionOf<T> = Collection<T & Document>;
 
 export interface BqmCollections {
   products: CollectionOf<Product>;
+  combos: CollectionOf<Combo>;
   orders: CollectionOf<Order>;
   stockMovements: CollectionOf<StockMovement>;
 }
@@ -43,6 +44,7 @@ export async function getCollections(db?: Db): Promise<BqmCollections> {
   const database = db ?? (await getDb());
   return {
     products: database.collection('products'),
+    combos: database.collection('combos'),
     orders: database.collection('orders'),
     stockMovements: database.collection('stockMovements'),
   };

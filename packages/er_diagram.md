@@ -20,11 +20,23 @@ erDiagram
     ORDER {
         string id
         string orderNo
-        string source
+        string source "online, in-store"
         string status
         number totalPrice
         object customerData "{ customerName, mobile, fullAddress }"
         object orderItems "[{ productSlug, quantity, price }]"
+        date createdAt
+        date updatedAt
+    }
+
+    COMBO {
+        string id
+        string slug
+        string name
+        string description
+        boolean isActive
+        array products "array of product slugs"
+        number totalPrice
         date createdAt
         date updatedAt
     }

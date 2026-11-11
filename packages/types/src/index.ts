@@ -20,6 +20,20 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface Combo {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  /** Slugs of the products included in this combo. */
+  products: string[];
+  /** Combo price in paise — usually less than the summed product price. */
+  totalPrice: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CustomerData {
   customerName: string;
   mobile: string;
