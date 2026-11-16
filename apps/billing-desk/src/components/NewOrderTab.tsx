@@ -61,7 +61,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
       }
       try {
         const fresh = await getOrder(parked.order.id);
-        if (fresh.status !== 'pending') {
+        if (fresh.status !== 'unconfirmed') {
           clearParked(); // finished elsewhere (e.g. Orders tab) — start fresh
         } else {
           setOrder(fresh);
@@ -237,8 +237,8 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
     setBusy(true);
     try {
       const result = await patchOrder(order.id, { status });
-      if (result.order.status !== 'pending') {
-        // Terminal (paid/cancelled/...): deduction done, bill cleared to empty.
+      if (result.order.status !== 'unconfirmed') {
+        // Confirmed: deduction done, bill cleared to empty.
         clearParked();
         setLines([]);
         setOrder(null);
@@ -283,7 +283,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
           </button>
           <button
             style={btn}
-            title="Discard the current bill and start empty (a saved pending order stays in the Orders tab)"
+            title="Discard the current bill and start empty (a saved unconfirmed order stays in the Orders tab)"
             disabled={busy}
             onClick={newBill}
           >

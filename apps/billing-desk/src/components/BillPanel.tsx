@@ -77,7 +77,7 @@ interface Props {
 export default function BillPanel(p: Props) {
   const total = p.lines.reduce((s, l) => s + (Number.isFinite(l.price) ? l.price : 0), 0);
   const status = p.order?.status;
-  const lockedForEdit = !!status && status !== 'pending';
+  const lockedForEdit = !!status && status !== 'unconfirmed';
 
   // Raw text for fields being typed. Lets users clear/retype freely (e.g. "45.")
   // without the input snapping back; the parsed value still flows to the line.
@@ -214,12 +214,12 @@ export default function BillPanel(p: Props) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
               {l.packSize || l.kind === 'combo' ? (
                 <>
-                  <button style={btn} disabled={!!status && status !== 'pending'} onClick={() => bump(l.key, -1)}>−</button>
+                  <button style={btn} disabled={!!status && status !== 'unconfirmed'} onClick={() => bump(l.key, -1)}>−</button>
                   <span style={{ fontSize: 13 }}>
                     {l.packSize ? l.quantity / l.packSize : l.quantity}
                     {l.packSize && <span style={{ color: '#888' }}> × {l.packSize}{l.unit}</span>}
                   </span>
-                  <button style={btn} disabled={!!status && status !== 'pending'} onClick={() => bump(l.key, 1)}>+</button>
+                  <button style={btn} disabled={!!status && status !== 'unconfirmed'} onClick={() => bump(l.key, 1)}>+</button>
                 </>
               ) : (
                 <>
@@ -243,7 +243,7 @@ export default function BillPanel(p: Props) {
               {!l.packSize && l.kind !== 'combo' && (
                 <button
                   title={l.locked ? 'locked: price follows quantity' : 'unlocked: custom price'}
-                  disabled={!!status && status !== 'pending'}
+                  disabled={!!status && status !== 'unconfirmed'}
                   onClick={() => toggleLock(l.key)}
                   style={{
                     border: 'none',
@@ -313,13 +313,13 @@ export default function BillPanel(p: Props) {
         </button>
       )}
 
-      {status === 'pending' && p.order && (
+      {status === 'unconfirmed' && p.order && (
         <>
           <div style={{ fontSize: 13, marginBottom: 8 }}>
-            Bill <code>{p.order.orderNo}</code> saved as <strong>PENDING</strong> — stock not deducted yet.
+            Bill <code>{p.order.orderNo}</code> saved as <strong>UNCONFIRMED</strong> — stock not deducted yet.
           </div>
-          <button style={{ ...primary, width: '100%', marginBottom: 6 }} disabled={p.busy} onClick={() => p.onStatus('paid')}>
-            Collect {paise(p.order.totalPrice)} — mark PAID
+          <button style={{ ...primary, width: '100%', marginBottom: 6 }} disabled={p.busy} onClick={() => p.onStatus('confirmed')}>
+            Confirm — deduct stock
           </button>
           <button
             style={{ ...btn, width: '100%', marginBottom: 6, ...(hasBadLine ? { opacity: 0.5 } : null) }}
@@ -328,38 +328,13 @@ export default function BillPanel(p: Props) {
           >
             Save item changes
           </button>
-          <button style={{ ...btn, width: '100%' }} disabled={p.busy} onClick={() => p.onStatus('cancelled')}>
-            Cancel order
-          </button>
         </>
       )}
 
-      {status === 'paid' && p.order && (
+      {status === 'confirmed' && p.order && (
         <>
           <div style={{ background: '#e6f7e6', border: '1px solid #6c6', borderRadius: 6, padding: 8, marginBottom: 8, fontSize: 14 }}>
-            Paid {paise(p.order.totalPrice)} · stock deducted · <code>{p.order.orderNo}</code>
-          </div>
-          <button style={{ ...primary, width: '100%', marginBottom: 6 }} disabled={p.busy} onClick={() => p.onStatus('shipped')}>
-            Mark Shipped
-          </button>
-          <button style={{ ...btn, width: '100%' }} onClick={p.onNewBill}>Start new bill</button>
-        </>
-      )}
-
-      {status === 'shipped' && p.order && (
-        <>
-          <div style={{ fontSize: 14, marginBottom: 8 }}>Shipped · <code>{p.order.orderNo}</code></div>
-          <button style={{ ...primary, width: '100%', marginBottom: 6 }} disabled={p.busy} onClick={() => p.onStatus('delivered')}>
-            Mark Delivered
-          </button>
-          <button style={{ ...btn, width: '100%' }} onClick={p.onNewBill}>Start new bill</button>
-        </>
-      )}
-
-      {(status === 'delivered' || status === 'cancelled') && p.order && (
-        <>
-          <div style={{ fontSize: 14, marginBottom: 8 }}>
-            {status === 'delivered' ? 'Delivered' : 'Cancelled'} · <code>{p.order.orderNo}</code> · {paise(p.order.totalPrice)}
+            Confirmed {paise(p.order.totalPrice)} · stock deducted · <code>{p.order.orderNo}</code>
           </div>
           <button style={{ ...btn, width: '100%' }} onClick={p.onNewBill}>Start new bill</button>
         </>
