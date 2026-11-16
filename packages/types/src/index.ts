@@ -100,10 +100,13 @@ export interface OrderItem {
   price: number;
 }
 
-/** Order lifecycle: pending -> paid -> shipped -> delivered (+ cancelled).
- * Stock deducts once on the transition into `paid`. Kept as plain strings
- * in the DB; this union is the enforced set for billing-desk writes. */
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+/** Order lifecycle: unconfirmed <-> confirmed. The only distinction that
+ * matters is stock: `unconfirmed` = stock untouched, `confirmed` = stock
+ * deducted. Toggling back restores the exact deducted lines; deleting a
+ * confirmed order may restore or skip restocking (explicit choice), always
+ * recorded in stockMovements. Kept as plain strings in the DB; this union
+ * is the enforced set for billing-desk writes. */
+export type OrderStatus = 'unconfirmed' | 'confirmed';
 
 export interface Order {
   id: string;
