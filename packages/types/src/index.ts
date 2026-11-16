@@ -108,10 +108,18 @@ export interface OrderItem {
  * is the enforced set for billing-desk writes. */
 export type OrderStatus = 'unconfirmed' | 'confirmed';
 
+/**
+ * Where an order originated. Exactly two values for now:
+ * - `in-store` — billing-desk POS terminal.
+ * - `online`   — website order.
+ * Stored as plain strings in the DB; this union is the enforced set for writes.
+ */
+export type OrderSource = 'in-store' | 'online';
+
 export interface Order {
   id: string;
   orderNo: string;
-  source: string;
+  source: OrderSource;
   status: string;
   totalPrice: number;
   customerData: CustomerData;

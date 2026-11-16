@@ -22,7 +22,7 @@ erDiagram
     ORDER {
         string id
         string orderNo
-        string source "online, in-store"
+        string source "OrderSource: in-store | online"
         string status
         number totalPrice
         object customerData "{ customerName, mobile, fullAddress }"

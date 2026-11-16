@@ -1,10 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import type { ClientSession } from 'mongodb';
-import type { Combo, CustomerData, Order, OrderItem, OrderStatus, QuantizedCount } from '@bqm/types';
+import type { Combo, CustomerData, Order, OrderItem, OrderSource, OrderStatus, QuantizedCount } from '@bqm/types';
 import { getCollections, type BqmCollections, getMongoClient } from './client.js';
 import { buildMovementDocs, deltaBaseTotal } from './stock.js';
 
 export const ORDER_STATUSES: readonly OrderStatus[] = ['unconfirmed', 'confirmed'] as const;
+
+/** Allowed order origins (`OrderSource`). Runtime owner lives here next to ORDER_STATUSES. */
+export const ORDER_SOURCES: readonly OrderSource[] = ['in-store', 'online'] as const;
 
 /**
  * The deducted state. Entering it deducts stock (`sale`); leaving it
@@ -16,7 +19,7 @@ export const STOCK_DEDUCT_STATUS: OrderStatus = 'confirmed';
 export interface CreateOrderInput {
   orderItems: OrderItem[];
   customerData?: CustomerData;
-  source?: string;
+  source?: OrderSource;
 }
 
 export interface PatchOrderInput {
@@ -154,6 +157,12 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
   if (!input.orderItems || input.orderItems.length === 0) {
     throw new Error('orderItems must be a non-empty array');
   }
+  // Legacy callers passed 'billing-desk'; that terminal is `in-store` now.
+  const rawSource = (input.source as string | undefined) ?? 'in-store';
+  const source: OrderSource = rawSource === 'billing-desk' ? 'in-store' : (rawSource as OrderSource);
+  if (!(ORDER_SOURCES as readonly string[]).includes(source)) {
+    throw new Error(`invalid source: ${rawSource}`);
+  }
   input.orderItems.forEach(assertValidItem);
   assertCatalogMatch(input.orderItems, await fetchCatalogMaps(input.orderItems));
 
@@ -165,7 +174,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     const order: Order = {
       id: randomUUID(),
       orderNo: generateOrderNo(),
-      source: input.source ?? 'billing-desk',
+      source,
       status: 'unconfirmed',
       totalPrice,
       customerData: input.customerData ?? DEFAULT_CUSTOMER,
