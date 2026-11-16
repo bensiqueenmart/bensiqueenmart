@@ -293,24 +293,24 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
 
         {loading && <p>Loading catalog…</p>}
 
+        <h3>Products</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginBottom: 16 }}>
+          {visibleProducts.map((p) => (
+            <ProductCard key={p.slug} product={p} lang={lang} onAddTier={addTier} onAddLoose={addLoose} onAddLooseByPrice={addLooseByPrice} />
+          ))}
+        </div>
+        {!loading && visibleProducts.length === 0 && <p>No products match. Seed some in the DB first.</p>}
+
         {!loading && visibleCombos.length > 0 && (
           <>
             <h3>Combos</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
               {visibleCombos.map((c) => (
                 <ComboCard key={c.slug} combo={c} lang={lang} contents={resolveContents(c)} onAdd={addCombo} />
               ))}
             </div>
           </>
         )}
-
-        <h3>Products</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
-          {visibleProducts.map((p) => (
-            <ProductCard key={p.slug} product={p} lang={lang} onAddTier={addTier} onAddLoose={addLoose} onAddLooseByPrice={addLooseByPrice} />
-          ))}
-        </div>
-        {!loading && visibleProducts.length === 0 && <p>No products match. Seed some in the DB first.</p>}
       </section>
 
       <BillPanel
