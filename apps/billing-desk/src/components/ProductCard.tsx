@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Product } from '@bqm/types';
 import { paise } from '../api';
+import type { DisplayLang } from './BillPanel';
 
 const card: React.CSSProperties = { border: '1px solid #ddd', borderRadius: 8, padding: 10, background: '#fff' };
 const btn: React.CSSProperties = { padding: '6px 12px', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff' };
@@ -8,12 +9,13 @@ const input: React.CSSProperties = { padding: '6px 8px', border: '1px solid #ccc
 
 interface Props {
   product: Product;
+  lang: DisplayLang;
   onAddTier: (product: Product, quantity: number, price: number) => void;
   onAddLoose: (product: Product, quantity: number) => void;
   onAddLooseByPrice: (product: Product, pricePaise: number) => void;
 }
 
-export default function ProductCard({ product: p, onAddTier, onAddLoose, onAddLooseByPrice }: Props) {
+export default function ProductCard({ product: p, lang, onAddTier, onAddLoose, onAddLooseByPrice }: Props) {
   const tiers = p.quantityPrice ?? [];
   const [tierIdx, setTierIdx] = useState(0);
   const [looseQty, setLooseQty] = useState('');
@@ -62,14 +64,16 @@ export default function ProductCard({ product: p, onAddTier, onAddLoose, onAddLo
           no photo
         </div>
       )}
-      <strong>{p.name}</strong>
-      {p.tamilName && <div style={{ fontSize: 12, color: '#666' }}>{p.tamilName}</div>}
+      <strong>{lang === 'ta' ? (p.tamilName ?? p.name) : p.name}</strong>
+      {p.tamilName && (
+        <div style={{ fontSize: 16, color: '#666' }}>{lang === 'ta' ? p.name : p.tamilName}</div>
+      )}
       <div style={{ fontSize: 12, color: '#666' }}>
-        {p.category} · stock: {p.stockPacks && p.stockPacks.length > 0
-          ? p.stockPacks.map((b) => `${b.count}×${b.size}${p.stockUnit}`).join(' + ')
-          : p.stockPacks && p.stockPacks.length === 0
-            ? 'out of stock'
-            : `${p.stockBaseQty}${p.stockUnit}`}
+        {p.category} · stock: {Array.isArray(p.stock)
+          ? (p.stock.length > 0
+            ? p.stock.map((b) => `${b.count}×${b.size}${p.stockUnit}`).join(' + ')
+            : 'out of stock')
+          : `${p.stock}${p.stockUnit}`}
       </div>
 
       {hasTiers ? (

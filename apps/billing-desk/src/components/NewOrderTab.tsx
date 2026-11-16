@@ -4,7 +4,7 @@ import { createOrder, getCatalog, getOrder, patchOrder } from '../api';
 import { clearBill as clearParked, loadBill, saveBill } from '../billCache';
 import ProductCard from './ProductCard';
 import ComboCard from './ComboCard';
-import BillPanel, { type DraftLine } from './BillPanel';
+import BillPanel, { type ComboContent, type DisplayLang, type DraftLine } from './BillPanel';
 
 const btn: React.CSSProperties = { padding: '6px 12px', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff' };
 const input: React.CSSProperties = { padding: '6px 8px', border: '1px solid #ccc', borderRadius: 6 };
@@ -19,6 +19,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
   const [category, setCategory] = useState('all');
 
   const [lines, setLines] = useState<DraftLine[]>([]);
+  const [lang, setLang] = useState<DisplayLang>('en');
   const [order, setOrder] = useState<import('@bqm/types').Order | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [mobile, setMobile] = useState('');
@@ -92,6 +93,20 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
 
   const categories = useMemo(() => [...new Set(products.map((p) => p.category))], [products]);
 
+  const productBySlug = useMemo(() => new Map(products.map((p) => [p.slug, p])), [products]);
+
+  const resolveContents = (c: Combo): ComboContent[] =>
+    c.products.map((comp) => {
+      const p = productBySlug.get(comp.productSlug);
+      return {
+        slug: comp.productSlug,
+        name: comp.name ?? p?.name ?? comp.productSlug,
+        ...(comp.tamilName ?? p?.tamilName ? { tamilName: (comp.tamilName ?? p?.tamilName) as string } : {}),
+        unit: p?.stockUnit ?? '',
+        quantity: comp.quantity,
+      };
+    });
+
   const visibleProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
     return products.filter(
@@ -111,7 +126,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
     setLines((ls) => {
       const found = ls.find((l) => l.key === key);
       if (found) return ls.map((l) => (l.key === key ? { ...l, quantity: l.quantity + quantity, price: l.price + price } : l));
-      return [...ls, { key, kind: 'product', slug: p.slug, name: `${p.name} (${quantity}${p.stockUnit})`, step: quantity, quantity, price, packSize: quantity, unit: p.stockUnit }];
+      return [...ls, { key, kind: 'product', slug: p.slug, name: `${p.name} (${quantity}${p.stockUnit})`, ...(p.tamilName ? { tamilName: `${p.tamilName} (${quantity}${p.stockUnit})` } : {}), step: quantity, quantity, price, packSize: quantity, unit: p.stockUnit }];
     });
   };
 
@@ -124,6 +139,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
         kind: 'product',
         slug: p.slug,
         name: `${p.name} (loose)`,
+        ...(p.tamilName ? { tamilName: `${p.tamilName} (loose)` } : {}),
         step: looseStep(p),
         quantity,
         price: Math.round(unitRate * quantity),
@@ -144,6 +160,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
         kind: 'product',
         slug: p.slug,
         name: `${p.name} (loose)`,
+        ...(p.tamilName ? { tamilName: `${p.tamilName} (loose)` } : {}),
         step: looseStep(p),
         // Customer pays the entered price; quantity derives from the canonical rate.
         quantity: Math.max(1, Math.round(pricePaise / unitRate)),
@@ -156,25 +173,38 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
   };
 
   const addCombo = (c: Combo) => {
+    const contents: ComboContent[] = c.products.map((comp) => {
+      const p = productBySlug.get(comp.productSlug);
+      return {
+        slug: comp.productSlug,
+        name: comp.name ?? p?.name ?? comp.productSlug,
+        ...(comp.tamilName ?? p?.tamilName ? { tamilName: (comp.tamilName ?? p?.tamilName) as string } : {}),
+        unit: p?.stockUnit ?? '',
+        quantity: comp.quantity,
+      };
+    });
     setLines((ls) => {
       const found = ls.find((l) => l.kind === 'combo' && l.slug === c.slug);
       if (found) return ls.map((l) => (l.kind === 'combo' && l.slug === c.slug ? { ...l, quantity: l.quantity + 1, price: l.price + c.totalPrice } : l));
-      return [...ls, { key: `combo:${c.slug}`, kind: 'combo', slug: c.slug, name: c.name, step: 1, quantity: 1, price: c.totalPrice, unit: '' }];
+      return [...ls, { key: `combo:${c.slug}`, kind: 'combo', slug: c.slug, name: c.name, ...(c.tamilName ? { tamilName: c.tamilName } : {}), step: 1, quantity: 1, price: c.totalPrice, unit: '', comboContents: contents }];
     });
   };
 
   const toOrderItems = () =>
     lines.map((l) => {
-      const base = {
+      // Quantized tier lines send the pack buckets themselves (the only
+      // quantized shape); loose and combo lines send plain numbers.
+      // DraftLine.quantity stays an editable base-unit number in the UI —
+      // the shape branch happens here, at the server boundary.
+      const quantity =
+        l.kind === 'product' && l.packSize
+          ? [{ size: l.packSize, count: l.quantity / l.packSize }]
+          : l.quantity;
+      return {
         ...(l.kind === 'product' ? { productSlug: l.slug } : { comboSlug: l.slug }),
-        quantity: l.quantity,
+        quantity,
         price: l.price,
       };
-      // Quantized tier lines carry their pack breakdown; Σ(size×count) = quantity.
-      if (l.kind === 'product' && l.packSize && l.quantity % l.packSize === 0) {
-        return { ...base, packs: [{ size: l.packSize, count: l.quantity / l.packSize }] };
-      }
-      return base;
     });
 
   const handleCreate = async () => {
@@ -246,6 +276,13 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
           <button style={btn} onClick={load}>Refresh</button>
           <button
             style={btn}
+            title="Switch display language for product and combo names"
+            onClick={() => setLang((l) => (l === 'en' ? 'ta' : 'en'))}
+          >
+            🌐 {lang === 'en' ? 'தமிழ்' : 'English'}
+          </button>
+          <button
+            style={btn}
             title="Discard the current bill and start empty (a saved pending order stays in the Orders tab)"
             disabled={busy}
             onClick={newBill}
@@ -261,7 +298,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
             <h3>Combos</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginBottom: 16 }}>
               {visibleCombos.map((c) => (
-                <ComboCard key={c.slug} combo={c} onAdd={addCombo} />
+                <ComboCard key={c.slug} combo={c} lang={lang} contents={resolveContents(c)} onAdd={addCombo} />
               ))}
             </div>
           </>
@@ -270,7 +307,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
         <h3>Products</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
           {visibleProducts.map((p) => (
-            <ProductCard key={p.slug} product={p} onAddTier={addTier} onAddLoose={addLoose} onAddLooseByPrice={addLooseByPrice} />
+            <ProductCard key={p.slug} product={p} lang={lang} onAddTier={addTier} onAddLoose={addLoose} onAddLooseByPrice={addLooseByPrice} />
           ))}
         </div>
         {!loading && visibleProducts.length === 0 && <p>No products match. Seed some in the DB first.</p>}
@@ -278,6 +315,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
 
       <BillPanel
         lines={lines}
+        lang={lang}
         onLinesChange={setLines}
         order={order}
         customerName={customerName}

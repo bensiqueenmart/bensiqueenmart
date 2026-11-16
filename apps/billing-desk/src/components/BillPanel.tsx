@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import type { Order, OrderStatus } from '@bqm/types';
+import type { Order, OrderStatus, QuantizedCount } from '@bqm/types';
 import { paise } from '../api';
+
+/** Display language for product/combo names. 'en' (default): English dominant, Tamil subtle; 'ta': vice-versa. */
+export type DisplayLang = 'en' | 'ta';
 
 /** One editable row on the running bill. quantity is in base units. */
 export interface DraftLine {
@@ -8,6 +11,8 @@ export interface DraftLine {
   kind: 'product' | 'combo';
   slug: string;
   name: string;
+  /** Tamil display name snapshot — shown alone when lang is 'ta'. */
+  tamilName?: string;
   step: number;
   quantity: number;
   price: number; // line total, paise — editable (custom price)
@@ -19,7 +24,28 @@ export interface DraftLine {
   unitPrice?: number;
   /** Loose-line qty⇄price sync. True by default; pack/combo lines never set it. */
   locked?: boolean;
+  /** Resolved combo contents snapshot — display only, never sent to backend. */
+  comboContents?: ComboContent[];
 }
+
+/**
+ * Resolved combo component for display: name/unit snapshotted from the
+ * catalog at add time, quantity copied from the combo doc (loose: base-unit
+ * number, quantized: QuantizedCount array).
+ */
+export interface ComboContent {
+  slug: string;
+  name: string;
+  tamilName?: string;
+  unit: string;
+  quantity: number | QuantizedCount[];
+}
+
+/** Display label for one combo component: `230g` loose, `200g × 5` quantized. */
+export const comboContentLabel = (c: ComboContent): string =>
+  Array.isArray(c.quantity)
+    ? c.quantity.map((q) => `${q.size}${c.unit} × ${q.count}`).join(' + ')
+    : `${c.quantity}${c.unit}`;
 
 const btn: React.CSSProperties = { padding: '6px 12px', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff' };
 const primary: React.CSSProperties = { ...btn, background: '#1a1a1a', color: '#fff', borderColor: '#1a1a1a' };
@@ -35,6 +61,7 @@ const LockGlyph = ({ open }: { open: boolean }) => (
 
 interface Props {
   lines: DraftLine[];
+  lang: DisplayLang;
   onLinesChange: (lines: DraftLine[]) => void;
   order: Order | null;
   customerName: string;
@@ -172,7 +199,7 @@ export default function BillPanel(p: Props) {
       {p.lines.map((l) => (
         <div key={l.key} style={{ borderBottom: '1px solid #eee', padding: '6px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <strong style={{ fontSize: 14 }}>{l.name}</strong>
+            <strong style={{ fontSize: 14 }}>{p.lang === 'ta' ? (l.tamilName ?? l.name) : l.name}</strong>
             {!lockedForEdit && (
               <button
                 title="Remove item"
@@ -248,6 +275,13 @@ export default function BillPanel(p: Props) {
               {isBadPrice(l) && <span style={{ color: '#d00', fontSize: 13 }} title="Enter a price">*</span>}
             </div>
           </div>
+          {l.kind === 'combo' && l.comboContents && l.comboContents.length > 0 && (
+            <div style={{ fontSize: 16, color: '#555', marginTop: 4 }}>
+              {l.comboContents.map((cc) => (
+                <div key={cc.slug}>{p.lang === 'ta' ? (cc.tamilName ?? cc.name) : cc.name} · {comboContentLabel(cc)}</div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
 

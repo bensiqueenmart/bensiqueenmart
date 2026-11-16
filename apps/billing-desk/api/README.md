@@ -19,9 +19,10 @@ Endpoints (all in `apps/billing-desk/api/`):
 - `GET /api/orders?page=1&limit=50` — paginated order list, newest first.
 - `GET /api/orders/:id` — fetch one order (bill reprint).
 
-Item semantics: `quantity` is in base units (g / pcs), `price` is the line
-total in paise. Combo lines (`{ comboSlug, quantity, price }`) deduct each
-component product by the line quantity.
+Item semantics: product-line `quantity` matches the product's stock shape
+(loose: base-unit number; quantized: `QuantizedCount[]`); `price` is the
+line total in paise. Combo lines (`{ comboSlug, quantity, price }`) carry the
+combo-unit count; each component deducts its shape-matched share.
 
 All handlers import composed methods from `@bqm/db` and types from
 `@bqm/types`. No shared HTTP layer. Stock math never lives here — only in

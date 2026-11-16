@@ -30,7 +30,7 @@ inventory admin panel — all sharing one MongoDB Atlas database.
 
 ## Data invariants
 
-- Stock (`stockBaseQty`) changes ONLY via atomic ops — never read-modify-write.
+- Stock (`stock`) changes ONLY via atomic ops — never read-modify-write.
 - Exactly ONE `StockMovement` audit doc per stock change.
 - Money is stored in paise (`pricePaise`) to avoid float errors.
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Order, OrderStatus } from '@bqm/types';
+import type { Order, OrderItem, OrderStatus } from '@bqm/types';
 import { getCatalog, getOrder, listOrders, paise, patchOrder } from '../api';
 
 const btn: React.CSSProperties = { padding: '6px 12px', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff' };
@@ -26,6 +26,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Order | null>(null);
   const [names, setNames] = useState<Record<string, string>>({});
+  const [units, setUnits] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
   const load = async (p = 1) => {
@@ -37,9 +38,11 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
       setHasMore(result.hasMore);
       setTotal(result.total);
       const map: Record<string, string> = {};
-      for (const pr of catalog.products) map[pr.slug] = pr.name;
+      const umap: Record<string, string> = {};
+      for (const pr of catalog.products) { map[pr.slug] = pr.name; umap[pr.slug] = pr.stockUnit; }
       for (const c of catalog.combos) map[c.slug] = c.name;
       setNames(map);
+      setUnits(umap);
     } catch (e) {
       onError(`Couldn't load orders: ${String(e)}`);
     } finally {
@@ -76,6 +79,16 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
   };
 
   const label = (slug: string) => names[slug] ?? slug;
+
+  /** Line quantity in its own shape: `230g` loose, `200g × 5` quantized, plain count for combos. */
+  const qtyLabel = (it: OrderItem) => {
+    if (it.comboSlug) return `× ${it.quantity as number}`;
+    if (Array.isArray(it.quantity)) {
+      const unit = it.productSlug ? (units[it.productSlug] ?? '') : '';
+      return it.quantity.map((q) => `${q.size}${unit} × ${q.count}`).join(' + ');
+    }
+    return `× ${it.quantity}${it.productSlug ? (units[it.productSlug] ?? '') : ''}`;
+  };
 
   return (
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: 16 }}>
@@ -114,7 +127,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
           </h4>
           {viewing.orderItems.map((it, i) => (
             <div key={i} style={{ fontSize: 14 }}>
-              {label(it.productSlug ?? it.comboSlug ?? '?')} × {it.quantity} — {paise(it.price)}
+              {label(it.productSlug ?? it.comboSlug ?? '?')} {qtyLabel(it)} — {paise(it.price)}
             </div>
           ))}
           <div style={{ marginTop: 6 }}><strong>Total {paise(viewing.totalPrice)}</strong></div>

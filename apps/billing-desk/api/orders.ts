@@ -6,6 +6,9 @@ import { createOrder, listOrders } from '@bqm/db';
  * POST — create a new order (status starts at `pending`, no stock moves).
  *        Body: { orderItems: [{ productSlug?, comboSlug?, quantity, price }],
  *                customerData?: { customerName, mobile, fullAddress } }
+ *        Product-line quantity matches the product's stock shape (loose:
+ *        base-unit number; quantized: QuantizedCount[]); combo-line quantity
+ *        is the combo-unit count.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function handler(req: any, res: any): Promise<void> {
