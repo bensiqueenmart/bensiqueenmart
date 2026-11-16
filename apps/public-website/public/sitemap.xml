@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://bensiqueen.com/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://bensiqueen.com/images/bensi-queen-logo.jpg</image:loc>
+      <image:title>Bensi Queen Premium Groceries and Provisions</image:title>
+      <image:caption>Bensi Queen Logo - Quality pulses, spices, oils, and nuts in Chitlapakkam, Chennai</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bensiqueen.com/products</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://bensiqueen.com/images/Products_Cover.jpg</image:loc>
+      <image:title>Bensi Queen Grocery Collection</image:title>
+      <image:caption>Whole spices, stone-milled powders, unpolished pulses, and California almonds</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bensiqueen.com/offers</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://bensiqueen.com/images/combo-dry-fruits.jpg</image:loc>
+      <image:title>Exclusive Combo Deals - Bensi Queen</image:title>
+      <image:caption>Curated household pantry bundles and seasonal savings</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bensiqueen.com/about</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://bensiqueen.com/images/bensi-queen-shop.jpg</image:loc>
+      <image:title>About Bensi Queen Store</image:title>
+      <image:caption>Our grocery store in Chitlapakkam Chennai</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bensiqueen.com/faq</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://bensiqueen.com/contact</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>

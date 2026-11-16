@@ -1,0 +1,10 @@
+﻿# Bensi Queen robots.txt
+User-agent: *
+Allow: /
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-summary
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://bensiqueen.com/sitemap.xml

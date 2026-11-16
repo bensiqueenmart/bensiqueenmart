@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+  
+  body {
+    background-color: #F7F5E8;
+    color: #123B26;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Typography Helpers */
+.font-playfair {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-poppins {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.font-mukta {
+  font-family: 'Mukta Malar', 'Latha', 'Vijaya', 'Tamil Sangam MN', -apple-system, sans-serif;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom refined scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F7F5E8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #A8C66C;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #205C38;
+}
+
+/* Print Styles for Order Summary PDF */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  
+  header, footer, nav, .no-print, button:not(.print-include) {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .shadow-soft, .shadow-card, .shadow-lg {
+    box-shadow: none !important;
+  }
+}
