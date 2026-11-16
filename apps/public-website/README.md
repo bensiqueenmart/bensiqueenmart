@@ -21,7 +21,7 @@ Planned API needs (for later):
 - `GET /api/products` — public catalogue, only `isActive` products with
   live `stockBaseQty` for availability display.
 - `POST /api/orders` — create a `pending` website/WhatsApp order;
-  stock is decremented later at close-out by inventory-admin,
+  stock is decremented later at close-out by admin-console,
   NOT at order creation.
 
 Until the code arrives, this folder stays intentionally empty so there

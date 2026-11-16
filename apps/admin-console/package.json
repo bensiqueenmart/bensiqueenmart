@@ -1,9 +1,9 @@
 {
-  "name": "inventory-admin",
+  "name": "admin-console",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Owner's inventory admin panel for Bensi Queen Mart.",
+  "description": "Owner's admin console for Bensi Queen Mart: controls all digital data — website, billing, inventory, and sales.",
   "scripts": {
     "dev": "vite --port 5174",
     "build": "tsc -p tsconfig.json && vite build",

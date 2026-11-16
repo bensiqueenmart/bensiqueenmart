@@ -53,7 +53,7 @@ Nothing is synced between apps — they simply talk to the same DB.
      correctly (same status-driven stock deduction as the website).
 - Same record creation as the website, different UI and operation style.
 
-### 3. Admin Console (currently `apps/inventory-admin`) — owner's control room
+### 3. Admin Console (`apps/admin-console`) — owner's control room
 
 - **Needs renaming** — it won't be just inventory. It's the software the
   shop owner uses to control *everything*:
@@ -104,5 +104,6 @@ create Order (status: pending)
   pinning before we write the status-update endpoints.
 - **Stock deduction timing** per status — confirm exactly which status flip
   triggers the deduction (currently: payment + shipped, per above).
-- **Admin console folder rename** (`inventory-admin` → something like
-  `admin-console`) — directory/Vercel project rename to do when green-lit.
+- ~~Admin console folder rename (`inventory-admin` → something like
+  `admin-console`) — directory/Vercel project rename to do when green-lit.~~
+  Done — now `apps/admin-console` (Vercel project `bqm-admin`).

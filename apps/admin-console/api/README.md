@@ -1,4 +1,4 @@
-# inventory-admin `api/` — planned private suite
+# admin-console `api/` — planned private suite
 
 This app owns its API surface. Its UI calls ONLY these same-origin
 endpoints. No other app may call them.

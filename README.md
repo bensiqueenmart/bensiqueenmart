@@ -2,7 +2,7 @@
 
 Software ecosystem for a retail nuts, spices, and groceries store:
 public catalogue website, in-store billing/POS terminal, and owner
-inventory admin panel — all sharing one MongoDB Atlas database.
+admin console — all sharing one MongoDB Atlas database.
 
 ## Layout
 
@@ -10,7 +10,7 @@ inventory admin panel — all sharing one MongoDB Atlas database.
 ├── apps/
 │   ├── public-website/    # RESERVED — partner's React+Vite code lands here
 │   ├── billing-desk/      # POS terminal (Vite React-TS scaffold)
-│   └── inventory-admin/   # owner admin panel (Vite React-TS scaffold)
+│   └── admin-console/     # owner admin console (Vite React-TS scaffold)
 └── packages/
     ├── types/             # @bqm/types — Product, Invoice, StockMovement…
     └── db/                # @bqm/db — STUB; connection + $inc primitives next
@@ -40,7 +40,7 @@ inventory admin panel — all sharing one MongoDB Atlas database.
 npm install
 npm run build:packages
 npm run dev --workspace apps/billing-desk
-npm run dev --workspace apps/inventory-admin   # :5174
+npm run dev --workspace apps/admin-console   # :5174
 ```
 
 ## Vercel deployment (3 projects, 1 repo)
@@ -51,7 +51,7 @@ Create three Vercel projects from this repo, one per app:
 |---|---|---|
 | `bqm-website` | `apps/public-website` | `MONGODB_URI`, `MONGODB_DB` |
 | `bqm-billing` | `apps/billing-desk` | same |
-| `bqm-inventory` | `apps/inventory-admin` | same |
+| `bqm-admin` | `apps/admin-console` | same |
 
 Enable "Include files outside of the Root Directory" (or equivalent)
 so `packages/*` workspace deps build. Each project's `api/` dir deploys
