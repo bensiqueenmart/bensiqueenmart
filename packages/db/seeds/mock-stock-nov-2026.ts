@@ -5,6 +5,10 @@
  * grams, since every product uses stockUnit 'g') with a spread that covers
  * every UI case: high stock, medium, low, very low, and out-of-stock (0).
  *
+ * For isQuantized items it also sets `stockPacks` ([{size, count}] buckets
+ * with Σ(size×count) === stockBaseQty) with variety for UI testing:
+ * multi-size, single-size, few-packs, and empty (zero-stock).
+ *
  * Bands in this seed:
  * - high (>= 20kg): idli-rice, toor-dal, cooking-oil, rava-sooji
  * - medium (5–15kg): dals, chickpeas, oils, spice powders, soaps
@@ -72,6 +76,29 @@ const STOCK: Record<string, { grams: number; note: string }> = {
   'rasam-powder': { grams: 0, note: 'out of stock' },
 };
 
+/** Quantized buckets: slug -> [{size, count}] in grams. Sums match STOCK above. */
+const PACKS: Record<string, Array<{ size: number; count: number }>> = {
+  // dry fruits — multi-size variety
+  'cashew-nuts': [{ size: 1000, count: 2 }, { size: 500, count: 1 }, { size: 250, count: 2 }],
+  almonds: [{ size: 1000, count: 1 }, { size: 500, count: 2 }, { size: 250, count: 2 }],
+  'dry-black-grapes': [{ size: 1000, count: 2 }, { size: 500, count: 3 }, { size: 250, count: 2 }],
+  'dates-with-seeds': [{ size: 1000, count: 2 }, { size: 500, count: 2 }, { size: 250, count: 2 }],
+  'dates-without-seeds': [],
+  // oils — bulk + small packs
+  'cooking-oil': [{ size: 5000, count: 4 }, { size: 1000, count: 2 }, { size: 500, count: 6 }],
+  'sesame-oil': [{ size: 1000, count: 6 }, { size: 500, count: 4 }],
+  'coconut-oil': [{ size: 1000, count: 10 }, { size: 500, count: 4 }],
+  // soaps — single-size packs
+  'body-soap': [{ size: 100, count: 30 }],
+  'detergent-soap': [{ size: 250, count: 20 }],
+  // masalas — mixed small packs
+  'garam-masala': [{ size: 500, count: 2 }, { size: 200, count: 3 }, { size: 100, count: 4 }],
+  'chicken-masala': [{ size: 200, count: 5 }, { size: 100, count: 5 }],
+  'sambar-powder': [{ size: 500, count: 4 }, { size: 200, count: 3 }, { size: 100, count: 4 }],
+  'rasam-powder': [],
+  'biryani-masala': [{ size: 200, count: 7 }, { size: 100, count: 4 }],
+};
+
 async function main(): Promise<void> {
   const apply = process.argv.includes('--apply');
   const uri = process.env.MONGODB_URI;
@@ -96,18 +123,32 @@ async function main(): Promise<void> {
     const zeros = Object.entries(STOCK).filter(([, v]) => v.grams === 0).map(([s]) => s);
     console.log(`coverage OK: ${slugs.length} products (${zeros.length} zero-stock: ${zeros.join(', ')})`);
 
+    // Guard: packs sums must equal grams for every quantized slug.
+    for (const [slug, packs] of Object.entries(PACKS)) {
+      const sum = packs.reduce((s, p) => s + p.size * p.count, 0);
+      if (sum !== STOCK[slug].grams) throw new Error(`packs sum mismatch for ${slug}: ${sum} != ${STOCK[slug].grams}`);
+    }
+
     if (!apply) {
       console.log('dry run — no writes. Re-run with --apply to write.');
+      console.log(`packs cover ${Object.keys(PACKS).length} quantized products`);
       return;
     }
 
     const timestamp = now();
     let count = 0;
     for (const [slug, v] of Object.entries(STOCK)) {
-      const r = await db
-        .collection('products')
-        .updateOne({ slug }, { $set: { stockBaseQty: v.grams, updatedAt: timestamp } });
-      count += r.modifiedCount;
+      if (slug in PACKS) {
+        const r = await db
+          .collection('products')
+          .updateOne({ slug }, { $set: { stockBaseQty: v.grams, stockPacks: PACKS[slug], updatedAt: timestamp } });
+        count += r.modifiedCount;
+      } else {
+        const r = await db
+          .collection('products')
+          .updateOne({ slug }, { $set: { stockBaseQty: v.grams, updatedAt: timestamp }, $unset: { stockPacks: '' } });
+        count += r.modifiedCount;
+      }
     }
     console.log(`wrote: ${count} products`);
 
