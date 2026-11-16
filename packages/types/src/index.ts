@@ -5,8 +5,8 @@ export interface QuantityPrice {
   price: number;
 }
 
-/** One fixed-size pack bucket: `size` base units × `count` packs. */
-export interface PackCount {
+/** One quantized count: `size` base units × `count` packs. The only quantity shape for quantized items. */
+export interface QuantizedCount {
   size: number;
   count: number;
 }
@@ -21,15 +21,20 @@ export interface Product {
   image?: string;
   description: string;
   category: string;
+  /**
+   * Discriminator for every quantity field: loose products store plain base
+   * units, quantized products store QuantizedCount buckets. Repo methods and
+   * UI branch on this.
+   */
   isQuantized: boolean;
   stockUnit: string;
-  stockBaseQty: number;
   /**
-   * Bucketed on-hand packs for isQuantized items only (e.g. [{size:500,count:4}]).
-   * Informative breakdown of stockBaseQty: Σ(size × count) === stockBaseQty.
-   * Loose items omit this; zero-stock quantized items use [].
+   * On-hand stock, shape chosen by `isQuantized`: loose items store base
+   * units (e.g. 15000); quantized items store the pack buckets themselves
+   * (e.g. [{size:500,count:4}]) — the buckets ARE the stock. Total stock for
+   * a quantized item is Σ(size × count), computed only for display.
    */
-  stockPacks?: PackCount[];
+  stock: number | QuantizedCount[];
   pricePerUnit?: number;
   quantityPrice: QuantityPrice[];
   createdAt: string;
@@ -40,14 +45,37 @@ export interface Combo {
   id: string;
   slug: string;
   name: string;
+  /** Tamil display name. Optional — same convention as Product.tamilName. */
+  tamilName?: string;
   description: string;
   isActive: boolean;
-  /** Slugs of the products included in this combo. */
-  products: string[];
+  /**
+   * Components included in one unit of this combo.
+   * `quantity` is the authoritative base-unit amount of that component
+   * (e.g. 200 grams when stockUnit is 'g'); quantized components also carry
+   * `packs` with Σ(size × count) === quantity. Order quantity scales every
+   * component: 2 combos deduct 2 × quantity each.
+   */
+  products: ComboProduct[];
   /** Combo price in paise — usually less than the summed product price. */
   totalPrice: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * One combo component. `quantity` matches the component product's own stock
+ * shape: a base-unit number for loose components, a QuantizedCount array for
+ * quantized ones. Order quantity scales every component: 2 combos deduct
+ * 2 × quantity each (counts multiply for quantized).
+ * `productSlug` is the join key; `name` / `tamilName` are display snapshots
+ * copied from the product so combo rows render without a catalog lookup.
+ */
+export interface ComboProduct {
+  productSlug: string;
+  name: string;
+  tamilName?: string;
+  quantity: number | QuantizedCount[];
 }
 
 export interface CustomerData {
@@ -62,19 +90,14 @@ export interface OrderItem {
   /** Combo slug for a combo line. Exactly one of productSlug / comboSlug is set. */
   comboSlug?: string;
   /**
-   * Count in base units (e.g. grams when stockUnit is 'g', count when 'pcs').
-   * UI converts packs/tiers to base units before sending; server deducts stock
-   * by exactly this amount. `price` is the line total in paise.
+   * Product lines store the product's own stock shape: a base-unit number
+   * for loose products, a QuantizedCount array for quantized ones. Combo
+   * lines store the combo-unit count (a plain number).
+   * `price` is the line total in paise.
    */
-  quantity: number;
+  quantity: number | QuantizedCount[];
   /** Line total in paise (unit price x quantity, incl. any custom-price edit). */
   price: number;
-  /**
-   * Quantized breakdown for isQuantized product lines only
-   * (e.g. 2 × 100g = [{size:100,count:2}]).
-   * Σ(size × count) must equal `quantity`. Loose and combo lines omit this.
-   */
-  packs?: PackCount[];
 }
 
 /** Order lifecycle: pending -> paid -> shipped -> delivered (+ cancelled).
@@ -100,5 +123,6 @@ export interface StockMovement {
   reason: string;
   orderId?: string;
   createdAt: string;
+  /** Signed base-unit delta (negative = sale). Always a flat number, even for quantized products. */
   quantity: number;
 }

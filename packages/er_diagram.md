@@ -12,8 +12,7 @@ erDiagram
         string category
         boolean isQuantized
         string stockUnit
-        number stockBaseQty
-        object stockPacks "optional json array of {size, count} — quantized items only, Σ(size×count) = stockBaseQty"
+        object stock "loose: number base units | quantized: json array of {size, count} buckets (the buckets ARE the stock)"
         number pricePerUnit "optional"
         object quantityPrice "json array of quantity and price"
         date createdAt
@@ -27,7 +26,7 @@ erDiagram
         string status
         number totalPrice
         object customerData "{ customerName, mobile, fullAddress }"
-        object orderItems "[{ productSlug, quantity, price, packs? }] — packs is [{size, count}] on quantized product lines only, Σ(size×count) = quantity"
+        object orderItems "[{ productSlug?, comboSlug?, quantity, price }] — product-line quantity matches the product stock shape (loose: number base units | quantized: [{size, count}]); combo-line quantity is the combo-unit count (number)"
         date createdAt
         date updatedAt
     }
@@ -36,9 +35,10 @@ erDiagram
         string id
         string slug
         string name
+        string tamilName "optional"
         string description
         boolean isActive
-        array products "array of product slugs"
+        array products "array of { productSlug, name, tamilName?, quantity } — productSlug is the join key; names are display snapshots; quantity matches the component stock shape (loose: number base units per combo unit | quantized: [{size, count}])"
         number totalPrice
         date createdAt
         date updatedAt
@@ -71,7 +71,7 @@ Three layers:
    write-method plus bulk reads, then shapes the response. App-specific flows
    live here but never reimplement stock/audit math.
 3. Rules:
-   - Any write touching `stockBaseQty` goes through `applyStockChange`. Hard rule.
+   - Any write touching `stock` goes through `applyStockChange`. Hard rule.
    - Never N+1: no per-item loop of DB calls — `bulkWrite` or one transaction.
    - Fetch lists in one call and filter in memory (hundreds of products, not
      millions) instead of per-item lookups.
