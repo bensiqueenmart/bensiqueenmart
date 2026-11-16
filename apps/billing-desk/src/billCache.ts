@@ -10,7 +10,7 @@ import type { ComboContent, DraftLine } from './components/BillPanel';
  * restore as NaN (red-invalid empty fields) — the existing bill validation
  * covers it.
  */
-const KEY = 'bqm.current-bill.v2';
+const KEY = 'bqm.current-bill.v3';
 
 export interface ParkedBill {
   order: Order | null;
@@ -82,7 +82,7 @@ export function loadBill(): ParkedBill | null {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
     const data: unknown = JSON.parse(raw);
-    if (!isRecord(data) || data.v !== 2) return null;
+    if (!isRecord(data) || data.v !== 3) return null;
     const order = isRecord(data.order) && typeof data.order.id === 'string'
       ? (data.order as unknown as Order)
       : null;
@@ -99,7 +99,7 @@ export function loadBill(): ParkedBill | null {
 
 export function saveBill(bill: ParkedBill): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ v: 1, ...bill }));
+    localStorage.setItem(KEY, JSON.stringify({ v: 3, ...bill }));
   } catch {
     // private mode etc. — app keeps working in memory
   }
