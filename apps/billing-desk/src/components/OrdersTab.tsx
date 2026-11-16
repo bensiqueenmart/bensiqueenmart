@@ -99,10 +99,10 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
 
   const label = (slug: string) => names[slug] ?? slug;
 
-  /** Fixed columns shared by the header and every row: status, time, price, order id, items, toggle. */
+  /** Fixed columns shared by the header and every row: status, time, price, order id, source, items, toggle. */
   const rowGrid: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: '90px 150px 110px 1fr 70px 40px',
+    gridTemplateColumns: '90px 150px 110px 1fr 90px 70px 40px',
     gap: 12,
     alignItems: 'center',
   };
@@ -138,6 +138,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
             <span>Time</span>
             <span>Price</span>
             <span>Order</span>
+            <span>Source</span>
             <span style={{ textAlign: 'right' }}>Items</span>
             <span />
           </div>
@@ -157,6 +158,9 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
                       {o.customerData.customerName}
                     </div>
                   )}
+                </span>
+                <span style={{ fontSize: 13, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {(o.source as string) === 'billing-desk' ? 'in-store' : o.source}
                 </span>
                 <span style={{ fontSize: 13, color: '#555', textAlign: 'right' }}>{o.orderItems.length} lines</span>
                 <button

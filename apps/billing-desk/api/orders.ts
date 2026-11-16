@@ -26,7 +26,7 @@ export default async function handler(req: any, res: any): Promise<void> {
       const order = await createOrder({
         orderItems,
         customerData,
-        source: 'billing-desk',
+        source: 'in-store',
       });
       res.status(201).json(order);
       return;

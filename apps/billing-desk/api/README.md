@@ -8,8 +8,9 @@ Endpoints (all in `apps/billing-desk/api/`):
 - `GET /api/products` — whole catalog (all products + all combos, two
   parallel queries). UI searches/filters locally; refresh button re-fetches.
 - `POST /api/orders` — create a new order. Server generates `id` + `orderNo`
-  (`BQM-YYYYMMDD-XXXX`), forces `source: 'billing-desk'`, starts at status
-  `unconfirmed`. No stock moves. Body: `{ orderItems, customerData? }`.
+  (`BQM-YYYYMMDD-XXXX`), forces `source: 'in-store'` (`OrderSource:
+  `'in-store' | 'online'`), starts at status `unconfirmed`. No stock moves.
+  Body: `{ orderItems, customerData? }`.
 - `PATCH /api/orders/:id` — update specific attributes (`status` /
   `orderItems` / `totalPrice` / `customerData`). Crash-recovery path:
   re-assign items while still `unconfirmed` without recreating. Entering
