@@ -49,11 +49,3 @@ export async function getCollections(db?: Db): Promise<BqmCollections> {
     stockMovements: database.collection('stockMovements'),
   };
 }
-
-export async function closeConnection(): Promise<void> {
-  if (cachedClient) {
-    await cachedClient.close();
-    cachedClient = null;
-    cachedDb = null;
-  }
-}

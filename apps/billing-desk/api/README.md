@@ -33,4 +33,4 @@ combo-unit count; each component deducts its shape-matched share.
 
 All handlers import composed methods from `@bqm/db` and types from
 `@bqm/types`. No shared HTTP layer. Stock math never lives here — only in
-`@bqm/db` (`applyStockChange` + the order transaction).
+`@bqm/db` (the order transaction).

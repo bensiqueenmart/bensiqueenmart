@@ -86,7 +86,7 @@ create Order (status: pending)
 - Billing desk: bill generated → assistant updates status → stock deducts.
 - Both write the **same `Order` record shape**; only `source` and the UI
   differ. Stock math never lives in app code — only through the shared
-  `applyStockChange`-style composed methods in `packages/db`.
+  composed methods in `packages/db`.
 
 ## Build order & goals
 
