@@ -18,6 +18,7 @@ export interface Catalog {
 export interface PatchOrderResult {
   order: Order;
   stockDeducted: boolean;
+  stockRestored: boolean;
 }
 
 export interface OrdersPage {
@@ -41,6 +42,13 @@ export function patchOrder(id: string, patch: Partial<Record<'status' | 'totalPr
   return request<PatchOrderResult>(`/api/orders/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
+  });
+}
+
+export function deleteOrder(id: string, restoreStock: boolean) {
+  return request<{ deleted: true; stockRestored: boolean }>(`/api/orders/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ restoreStock }),
   });
 }
 

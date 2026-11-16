@@ -3,7 +3,7 @@ import { createOrder, listOrders } from '@bqm/db';
 /**
  * /api/orders
  * GET  — paginated order list, newest first. ?page=1&limit=50.
- * POST — create a new order (status starts at `pending`, no stock moves).
+ * POST — create a new order (status starts at `unconfirmed`, no stock moves).
  *        Body: { orderItems: [{ productSlug?, comboSlug?, quantity, price }],
  *                customerData?: { customerName, mobile, fullAddress } }
  *        Product-line quantity matches the product's stock shape (loose:
