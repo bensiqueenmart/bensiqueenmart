@@ -7,12 +7,25 @@ dist/
 # Vite
 apps/*/dist/
 
-# Env
-.env
-.env*.local
-apps/*/.env
-apps/*/.env*.local
+# Env (secrets — never commit; keep .env.example tracked instead)
+.env*
+!.env.example
+apps/*/.env*
+!apps/*/.env.example
 
 # OS / editor
 .DS_Store
 *.log
+logs/
+.vscode/
+.idea/
+
+# Build caches / test output
+.turbo/
+coverage/
+
+# Local databases (Atlas is source of truth; never commit dumps)
+*.db
+*.sqlite*
+*.db-journal
+dump/
