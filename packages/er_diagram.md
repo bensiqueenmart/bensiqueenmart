@@ -6,11 +6,14 @@ erDiagram
         string id
         string slug
         string name
+        string tamilName "optional"
+        string image "optional"
         string description
         string category
         boolean isQuantized
         string stockUnit
         number stockBaseQty
+        object stockPacks "optional json array of {size, count} — quantized items only, Σ(size×count) = stockBaseQty"
         number pricePerUnit "optional"
         object quantityPrice "json array of quantity and price"
         date createdAt
@@ -24,7 +27,7 @@ erDiagram
         string status
         number totalPrice
         object customerData "{ customerName, mobile, fullAddress }"
-        object orderItems "[{ productSlug, quantity, price }]"
+        object orderItems "[{ productSlug, quantity, price, packs? }] — packs is [{size, count}] on quantized product lines only, Σ(size×count) = quantity"
         date createdAt
         date updatedAt
     }
