@@ -1,12 +1,10 @@
 /**
  * Mock stock levels — small-shop approximates (committed seed).
  *
- * Companion to mock-pricing-nov-2026.ts. Sets `stockBaseQty` (base units =
- * grams, since every product uses stockUnit 'g') with a spread that covers
- * every UI case: high stock, medium, low, very low, and out-of-stock (0).
- *
- * For isQuantized items it also sets `stockPacks` ([{size, count}] buckets
- * with Σ(size×count) === stockBaseQty) with variety for UI testing:
+ * Companion to mock-pricing-nov-2026.ts. Sets `stock` with the shape chosen
+ * by `isQuantized`: loose items store base units (grams, since every product
+ * uses stockUnit 'g'); quantized items store the pack buckets themselves
+ * ([{size, count}] — the buckets ARE the stock) with variety for UI testing:
  * multi-size, single-size, few-packs, and empty (zero-stock).
  *
  * Bands in this seed:
@@ -17,6 +15,7 @@
  * - zero (0): star-anise, dates-without-seeds, rasam-powder
  *
  * Idempotent: matches docs by slug with updateOne. Safe to re-run.
+ * Also removes the pre-refactor `stockBaseQty` / `stockPacks` fields.
  *
  * Usage (read-only dry run first):
  *   ./node_modules/.bin/tsx packages/db/seeds/mock-stock-nov-2026.ts
@@ -112,9 +111,8 @@ async function main(): Promise<void> {
     await db.command({ ping: 1 });
 
     // Guard: stock table must cover exactly the products in the DB.
-    const slugs = (await db.collection('products').find({}).project({ slug: 1 }).toArray()).map(
-      (d) => d.slug as string,
-    );
+    const products = await db.collection('products').find({}).project({ slug: 1, isQuantized: 1 }).toArray();
+    const slugs = products.map((d) => d.slug as string);
     const stocked = new Set(Object.keys(STOCK));
     const missing = slugs.filter((s) => !stocked.has(s));
     const extra = [...stocked].filter((s) => !slugs.includes(s));
@@ -123,71 +121,68 @@ async function main(): Promise<void> {
     const zeros = Object.entries(STOCK).filter(([, v]) => v.grams === 0).map(([s]) => s);
     console.log(`coverage OK: ${slugs.length} products (${zeros.length} zero-stock: ${zeros.join(', ')})`);
 
-    // Guard: packs sums must equal grams for every quantized slug.
+    // Guard: packs sums must equal grams; packs only on quantized products.
+    const quantizedBySlug = new Map(products.map((p) => [p.slug as string, p.isQuantized as boolean]));
     for (const [slug, packs] of Object.entries(PACKS)) {
+      if (!quantizedBySlug.get(slug)) throw new Error(`packs on loose product: ${slug}`);
       const sum = packs.reduce((s, p) => s + p.size * p.count, 0);
       if (sum !== STOCK[slug].grams) throw new Error(`packs sum mismatch for ${slug}: ${sum} != ${STOCK[slug].grams}`);
+    }
+    for (const [slug, v] of Object.entries(STOCK)) {
+      if (!(slug in PACKS) && quantizedBySlug.get(slug)) {
+        throw new Error(`quantized product missing packs entry: ${slug}`);
+      }
+      if (slug in PACKS && v.grams === 0 && PACKS[slug].length > 0) {
+        throw new Error(`zero-stock product has packs: ${slug}`);
+      }
     }
 
     if (!apply) {
       console.log('dry run — no writes. Re-run with --apply to write.');
-      console.log(`packs cover ${Object.keys(PACKS).length} quantized products`);
+      console.log(`stock shape: ${Object.keys(PACKS).length} quantized (array), ${slugs.length - Object.keys(PACKS).length} loose (number)`);
       return;
     }
 
     const timestamp = now();
     let count = 0;
     for (const [slug, v] of Object.entries(STOCK)) {
-      if (slug in PACKS) {
-        const r = await db
-          .collection('products')
-          .updateOne({ slug }, { $set: { stockBaseQty: v.grams, stockPacks: PACKS[slug], updatedAt: timestamp } });
-        count += r.modifiedCount;
-      } else {
-        const r = await db
-          .collection('products')
-          .updateOne({ slug }, { $set: { stockBaseQty: v.grams, updatedAt: timestamp }, $unset: { stockPacks: '' } });
-        count += r.modifiedCount;
-      }
+      const stock = slug in PACKS ? PACKS[slug] : v.grams;
+      const r = await db.collection('products').updateOne(
+        { slug },
+        { $set: { stock, updatedAt: timestamp }, $unset: { stockBaseQty: '', stockPacks: '' } },
+      );
+      count += r.modifiedCount;
     }
     console.log(`wrote: ${count} products`);
 
-    // Verify: every product has a non-negative integer stock; spot-check bands.
-    const bad = await db.collection('products').countDocuments({
-      $expr: {
-        $or: [
-          { $lt: ['$stockBaseQty', 0] },
-          { $ne: ['$stockBaseQty', { $trunc: '$stockBaseQty' }] },
-        ],
-      },
-    });
-    const band = await db
-      .collection('products')
-      .aggregate([
-        {
-          $group: {
-            _id: {
-              $switch: {
-                branches: [
-                  { case: { $eq: ['$stockBaseQty', 0] }, then: 'zero' },
-                  { case: { $lt: ['$stockBaseQty', 1000] }, then: 'very-low' },
-                  { case: { $lt: ['$stockBaseQty', 5000] }, then: 'low' },
-                  { case: { $lt: ['$stockBaseQty', 20000] }, then: 'medium' },
-                ],
-                default: 'high',
-              },
-            },
-            n: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ])
-      .toArray();
+    // Verify: shape matches isQuantized, totals non-negative integers; spot-check bands.
+    const docs = await db.collection('products').find({}).project({ slug: 1, isQuantized: 1, stock: 1 }).toArray();
+    let bad = 0;
+    const bands: Record<string, number> = {};
+    for (const d of docs) {
+      const total =
+        (d as { isQuantized: boolean; stock: unknown }).isQuantized
+          ? ((d as { stock: Array<{ size: number; count: number }> }).stock ?? []).reduce(
+              (s: number, q) => s + q.size * q.count,
+              0,
+            )
+          : ((d as { stock: unknown }).stock as number);
+      const shapeOk = (d as { isQuantized: boolean }).isQuantized
+        ? Array.isArray((d as { stock: unknown }).stock)
+        : typeof (d as { stock: unknown }).stock === 'number';
+      if (!shapeOk || !Number.isInteger(total) || total < 0) {
+        console.log(`BAD: ${d.slug} shapeOk=${shapeOk} total=${total}`);
+        bad += 1;
+        continue;
+      }
+      const band = total === 0 ? 'zero' : total < 1000 ? 'very-low' : total < 5000 ? 'low' : total < 20000 ? 'medium' : 'high';
+      bands[band] = (bands[band] ?? 0) + 1;
+    }
     const spotHigh = await db.collection('products').findOne({ slug: 'idli-rice' });
     const spotZero = await db.collection('products').findOne({ slug: 'rasam-powder' });
     console.log('verify — invalid stock docs:', bad);
-    console.log('verify — bands:', JSON.stringify(band.map((b) => `${b._id}:${b.n}`)));
-    console.log('spot idli-rice:', spotHigh?.stockBaseQty, '| spot rasam-powder:', spotZero?.stockBaseQty);
+    console.log('verify — bands:', JSON.stringify(bands));
+    console.log('spot idli-rice:', JSON.stringify(spotHigh?.stock), '| spot rasam-powder:', JSON.stringify(spotZero?.stock));
     if (bad > 0) throw new Error('verification failed: invalid stock values');
     console.log('\nSTOCK APPLIED');
   } finally {
