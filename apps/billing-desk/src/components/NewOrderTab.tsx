@@ -134,6 +134,27 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
     ]);
   };
 
+  const addLooseByPrice = (p: Product, pricePaise: number) => {
+    const unitRate = p.pricePerUnit ?? 0;
+    if (!(unitRate > 0) || !Number.isFinite(pricePaise) || pricePaise <= 0) return;
+    setLines((ls) => [
+      ...ls,
+      {
+        key: `${p.slug}:loose:${Date.now()}`,
+        kind: 'product',
+        slug: p.slug,
+        name: `${p.name} (loose)`,
+        step: looseStep(p),
+        // Customer pays the entered price; quantity derives from the canonical rate.
+        quantity: Math.max(1, Math.round(pricePaise / unitRate)),
+        price: Math.round(pricePaise),
+        unit: p.stockUnit,
+        unitPrice: unitRate,
+        locked: true,
+      },
+    ]);
+  };
+
   const addCombo = (c: Combo) => {
     setLines((ls) => {
       const found = ls.find((l) => l.kind === 'combo' && l.slug === c.slug);
@@ -249,7 +270,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
         <h3>Products</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
           {visibleProducts.map((p) => (
-            <ProductCard key={p.slug} product={p} onAddTier={addTier} onAddLoose={addLoose} />
+            <ProductCard key={p.slug} product={p} onAddTier={addTier} onAddLoose={addLoose} onAddLooseByPrice={addLooseByPrice} />
           ))}
         </div>
         {!loading && visibleProducts.length === 0 && <p>No products match. Seed some in the DB first.</p>}
