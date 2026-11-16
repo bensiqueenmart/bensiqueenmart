@@ -1,92 +1,99 @@
 import { randomUUID } from 'node:crypto';
 import type { ClientSession } from 'mongodb';
+import type { QuantizedCount } from '@bqm/types';
 import { getCollections } from './client.js';
-
-export interface PackDelta {
-  /** Pack size in base units. */
-  size: number;
-  /** Signed pack count change (negative = sale, positive = restock). */
-  deltaCount: number;
-}
 
 export interface ApplyStockChangeInput {
   productSlug: string;
-  /** Signed delta in base units (negative = sale, positive = restock). */
-  deltaBaseQty: number;
+  /**
+   * Signed delta matching the product's stock shape: a base-unit number for
+   * loose products, a QuantizedCount array with signed counts for quantized
+   * ones (negative = sale, positive = restock). No cross-shape Σ check —
+   * the shapes are the same type on both sides.
+   */
+  delta: number | QuantizedCount[];
   reason: string;
   orderId?: string;
-  /**
-   * Bucket changes for isQuantized products (e.g. [{size:250,deltaCount:-2}]).
-   * Σ(size × deltaCount) must equal deltaBaseQty. Loose products omit this
-   * and deduct base qty only. Negative bucket deltas fail when the bucket
-   * lacks enough packs (insufficient-stock error, no write).
-   */
-  packDeltas?: PackDelta[];
 }
 
 function newId(prefix: string): string {
   return `${prefix}_${randomUUID().slice(0, 8)}`;
 }
 
+function assertValidDelta(delta: number | QuantizedCount[]): void {
+  if (typeof delta === 'number') {
+    if (!Number.isFinite(delta) || delta === 0) {
+      throw new Error('delta must be a non-zero finite number for loose products');
+    }
+    return;
+  }
+  if (!Array.isArray(delta) || delta.length === 0) {
+    throw new Error('delta must be a non-empty QuantizedCount array for quantized products');
+  }
+  for (const [i, q] of delta.entries()) {
+    if (!Number.isInteger(q.size) || q.size <= 0 || !Number.isInteger(q.count) || q.count === 0) {
+      throw new Error(`delta[${i}]: size must be a positive integer and count a non-zero integer`);
+    }
+  }
+}
+
+/** Audit total for a delta: flat signed base units (movement log stays a plain number). */
+export function deltaBaseTotal(delta: number | QuantizedCount[]): number {
+  return typeof delta === 'number' ? delta : delta.reduce((s, q) => s + q.size * q.count, 0);
+}
+
 /**
- * Single stock write. HARD RULE: every `stockBaseQty` mutation goes through
+ * Single stock write. HARD RULE: every `stock` mutation goes through
  * here (or the multi-line order path below, which uses the same shape).
  * $inc on the product + exactly one StockMovement row.
  *
- * Quantized path (packDeltas set): decrements/increments the matching
- * `stockPacks` buckets in the same update as `stockBaseQty`, guarded so a
- * sale fails instead of overselling a bucket. Loose path (no packDeltas):
- * base-qty $inc only, exactly as before.
+ * Quantized path (array delta): decrements/increments the matching `stock`
+ * buckets in one update, guarded so a sale fails instead of overselling a
+ * bucket. Loose path (number delta): base-qty $inc with an oversell guard.
  */
 export async function applyStockChange(
   input: ApplyStockChangeInput,
   session?: ClientSession,
 ): Promise<void> {
-  if (input.packDeltas && input.packDeltas.length > 0) {
-    let sum = 0;
-    for (const pd of input.packDeltas) {
-      if (!Number.isInteger(pd.size) || pd.size <= 0 || !Number.isInteger(pd.deltaCount) || pd.deltaCount === 0) {
-        throw new Error(`packDeltas: size must be a positive integer and deltaCount a non-zero integer`);
-      }
-      sum += pd.size * pd.deltaCount;
-    }
-    if (sum !== input.deltaBaseQty) {
-      throw new Error(`packDeltas sum (${sum}) must equal deltaBaseQty (${input.deltaBaseQty})`);
-    }
-  }
+  assertValidDelta(input.delta);
   const { products, stockMovements } = await getCollections();
   const now = new Date().toISOString();
   const opts = session ? { session } : {};
 
-  if (input.packDeltas && input.packDeltas.length > 0) {
-    const need = input.packDeltas.filter((pd) => pd.deltaCount < 0);
+  if (typeof input.delta === 'number') {
+    const filter: Record<string, unknown> =
+      input.delta < 0 ? { slug: input.productSlug, stock: { $gte: -input.delta } } : { slug: input.productSlug };
+    const res = await products.updateOne(
+      filter,
+      { $inc: { stock: input.delta }, $set: { updatedAt: now } },
+      opts,
+    );
+    if (res.matchedCount === 0) {
+      throw new Error(`insufficient stock for ${input.productSlug}`);
+    }
+  } else {
+    const need = input.delta.filter((q) => q.count < 0);
     const filter: Record<string, unknown> = {
       slug: input.productSlug,
       ...(need.length > 0
         ? {
-            $and: need.map((pd) => ({
-              stockPacks: { $elemMatch: { size: pd.size, count: { $gte: -pd.deltaCount } } },
+            $and: need.map((q) => ({
+              stock: { $elemMatch: { size: q.size, count: { $gte: -q.count } } },
             })),
           }
         : {}),
     };
-    const inc: Record<string, number> = { stockBaseQty: input.deltaBaseQty };
+    const inc: Record<string, number> = {};
     const arrayFilters: Array<Record<string, unknown>> = [];
-    input.packDeltas.forEach((pd, idx) => {
+    input.delta.forEach((q, idx) => {
       const key = `a${idx}`;
-      inc[`stockPacks.$[${key}].count`] = pd.deltaCount;
-      arrayFilters.push({ [`${key}.size`]: pd.size });
+      inc[`stock.$[${key}].count`] = q.count;
+      arrayFilters.push({ [`${key}.size`]: q.size });
     });
     const res = await products.updateOne(filter, { $inc: inc, $set: { updatedAt: now } }, { ...opts, arrayFilters });
     if (res.matchedCount === 0) {
       throw new Error(`insufficient stock in packs for ${input.productSlug}`);
     }
-  } else {
-    await products.updateOne(
-      { slug: input.productSlug },
-      { $inc: { stockBaseQty: input.deltaBaseQty }, $set: { updatedAt: now } },
-      opts,
-    );
   }
   await stockMovements.insertOne(
     {
@@ -95,7 +102,7 @@ export async function applyStockChange(
       reason: input.reason,
       ...(input.orderId ? { orderId: input.orderId } : {}),
       createdAt: now,
-      quantity: input.deltaBaseQty,
+      quantity: deltaBaseTotal(input.delta),
     },
     opts,
   );

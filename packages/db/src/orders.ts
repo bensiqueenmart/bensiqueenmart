@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import type { CustomerData, Order, OrderItem, OrderStatus } from '@bqm/types';
+import type { Combo, CustomerData, Order, OrderItem, OrderStatus, QuantizedCount } from '@bqm/types';
 import { getCollections, getMongoClient } from './client.js';
-import { buildMovementDocs } from './stock.js';
+import { buildMovementDocs, deltaBaseTotal } from './stock.js';
 
 export const ORDER_STATUSES: readonly OrderStatus[] = [
   'pending',
@@ -33,34 +33,107 @@ export interface PatchOrderResult {
   stockDeducted: boolean;
 }
 
+/** Structural check with no DB access: exactly one slug, sane quantity shape, sane price. */
 function assertValidItem(item: OrderItem, i: number): void {
   const hasProduct = typeof item.productSlug === 'string' && item.productSlug.length > 0;
   const hasCombo = typeof (item as OrderItem).comboSlug === 'string' && ((item as OrderItem).comboSlug as string).length > 0;
   if ((hasProduct ? 1 : 0) + (hasCombo ? 1 : 0) !== 1) {
     throw new Error(`orderItems[${i}]: exactly one of productSlug / comboSlug must be set`);
   }
-  if (!Number.isFinite(item.quantity) || item.quantity <= 0) {
-    throw new Error(`orderItems[${i}]: quantity must be a positive number (base units)`);
+  if (hasCombo) {
+    if (!Number.isInteger(item.quantity) || (item.quantity as number) <= 0) {
+      throw new Error(`orderItems[${i}]: combo-line quantity must be a positive integer (combo-unit count)`);
+    }
+  } else if (typeof item.quantity === 'number') {
+    if (!Number.isFinite(item.quantity) || item.quantity <= 0) {
+      throw new Error(`orderItems[${i}]: quantity must be a positive number (base units)`);
+    }
+  } else {
+    assertValidQuantized(item.quantity, `orderItems[${i}].quantity`);
   }
   if (!Number.isFinite(item.price) || item.price < 0) {
     throw new Error(`orderItems[${i}]: price must be a non-negative number (paise line total)`);
   }
-  if (item.packs !== undefined) {
-    if (hasCombo) throw new Error(`orderItems[${i}]: packs only allowed on product lines`);
-    if (!Array.isArray(item.packs) || item.packs.length === 0) {
-      throw new Error(`orderItems[${i}]: packs must be a non-empty array when set`);
-    }
-    let sum = 0;
-    for (const [j, p] of item.packs.entries()) {
-      if (!Number.isInteger(p.size) || p.size <= 0 || !Number.isInteger(p.count) || p.count <= 0) {
-        throw new Error(`orderItems[${i}].packs[${j}]: size and count must be positive integers`);
-      }
-      sum += p.size * p.count;
-    }
-    if (sum !== item.quantity) {
-      throw new Error(`orderItems[${i}]: packs sum (${sum}) must equal quantity (${item.quantity})`);
+}
+
+function assertValidQuantized(qty: unknown, what: string): asserts qty is QuantizedCount[] {
+  if (!Array.isArray(qty) || qty.length === 0) {
+    throw new Error(`${what} must be a non-empty QuantizedCount array`);
+  }
+  for (const [j, q] of (qty as QuantizedCount[]).entries()) {
+    if (!Number.isInteger(q.size) || q.size <= 0 || !Number.isInteger(q.count) || q.count <= 0) {
+      throw new Error(`${what}[${j}]: size and count must be positive integers`);
     }
   }
+}
+
+interface CatalogMaps {
+  comboBySlug: Map<string, Combo>;
+  productBySlug: Map<string, { slug: string; isQuantized: boolean }>;
+}
+
+/**
+ * Shape-vs-catalog check: every product-line quantity must match the
+ * product's own stock shape (number for loose, QuantizedCount[] for
+ * quantized); every combo component must match its product's shape.
+ * No Σ cross-checks — the shapes are the same type on both sides.
+ */
+function assertCatalogMatch(items: OrderItem[], maps: CatalogMaps): void {
+  items.forEach((item, i) => {
+    if (item.comboSlug) {
+      const combo = maps.comboBySlug.get(item.comboSlug);
+      if (!combo) throw new Error(`orderItems[${i}]: unknown comboSlug ${item.comboSlug}`);
+      if (!Array.isArray(combo.products) || combo.products.length === 0) {
+        throw new Error(`orderItems[${i}]: combo ${item.comboSlug} has no products`);
+      }
+      for (const [j, comp] of combo.products.entries()) {
+        if (typeof comp?.productSlug !== 'string' || comp.productSlug.length === 0) {
+          throw new Error(`orderItems[${i}]: combo ${item.comboSlug} products[${j}] has no productSlug`);
+        }
+        const doc = maps.productBySlug.get(comp.productSlug);
+        if (!doc) throw new Error(`orderItems[${i}]: combo ${item.comboSlug} has unknown productSlug ${comp.productSlug}`);
+        assertComponentShape(comp.quantity, doc.isQuantized, `orderItems[${i}]: combo ${item.comboSlug} products[${j}]`);
+      }
+      return;
+    }
+    const doc = maps.productBySlug.get(item.productSlug as string);
+    if (!doc) throw new Error(`orderItems[${i}]: unknown productSlug ${item.productSlug}`);
+    assertComponentShape(item.quantity, doc.isQuantized, `orderItems[${i}]`);
+  });
+}
+
+function assertComponentShape(qty: number | QuantizedCount[], isQuantized: boolean, what: string): void {
+  if (isQuantized) {
+    if (!Array.isArray(qty)) throw new Error(`${what}: quantized product needs a QuantizedCount array quantity`);
+    assertValidQuantized(qty, `${what}.quantity`);
+  } else if (typeof qty !== 'number' || !Number.isFinite(qty) || qty <= 0) {
+    throw new Error(`${what}: loose product needs a positive base-unit number quantity`);
+  }
+}
+
+/** Bulk-read the catalog maps for a set of items (one combo query + one product query, no N+1). */
+async function fetchCatalogMaps(items: OrderItem[]): Promise<CatalogMaps> {
+  const { combos, products } = await getCollections();
+  const comboSlugs = [...new Set(items.map((it) => it.comboSlug).filter((s): s is string => typeof s === 'string'))];
+  const comboDocs =
+    comboSlugs.length > 0 ? await combos.find({ slug: { $in: comboSlugs } }).toArray() : [];
+  const comboBySlug = new Map(comboDocs.map((c) => [c.slug, c]));
+  const involved = new Set<string>();
+  for (const it of items) {
+    if (it.comboSlug) {
+      for (const comp of comboBySlug.get(it.comboSlug)?.products ?? []) {
+        if (typeof comp?.productSlug === 'string') involved.add(comp.productSlug);
+      }
+    } else if (typeof it.productSlug === 'string') {
+      involved.add(it.productSlug);
+    }
+  }
+  const productDocs =
+    involved.size > 0 ? await products.find({ slug: { $in: [...involved] } }).toArray() : [];
+  return {
+    comboBySlug: comboBySlug as CatalogMaps['comboBySlug'],
+    productBySlug: new Map(productDocs.map((pd) => [pd.slug, pd])),
+  };
 }
 
 function sumLineTotals(items: OrderItem[]): number {
@@ -81,6 +154,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
     throw new Error('orderItems must be a non-empty array');
   }
   input.orderItems.forEach(assertValidItem);
+  assertCatalogMatch(input.orderItems, await fetchCatalogMaps(input.orderItems));
 
   const { orders } = await getCollections();
   const now = new Date().toISOString();
@@ -146,7 +220,7 @@ export async function listOrders(page = 1, limit = 50): Promise<ListOrdersResult
  *   transaction as the status flip. Repeat PATCHes to `paid` are no-ops for
  *   stock (idempotent: existing movements for the order mean "already done").
  * - Combo lines expand to one movement per component product, each decremented
- *   by the line quantity in base units.
+ *   by the shape-matched component quantity times the combo-unit count.
  */
 export async function patchOrder(id: string, patch: PatchOrderInput): Promise<PatchOrderResult> {
   if (patch.status && !(ORDER_STATUSES as readonly string[]).includes(patch.status)) {
@@ -183,8 +257,10 @@ export async function patchOrder(id: string, patch: PatchOrderInput): Promise<Pa
 
       let stockDeducted = false;
       const enteringPaid = nextStatus === STOCK_DEDUCT_STATUS && existing.status !== STOCK_DEDUCT_STATUS;
-      if (enteringPaid && !alreadyDeducted) {
-        // Resolve combo lines -> component product slugs (one query for all combos).
+      // Validate new items against the live catalog and, on the paid
+      // transition, deduct shape-identical stock — all in the txn snapshot.
+      if (patch.orderItems !== undefined || (enteringPaid && !alreadyDeducted)) {
+        // Resolve combo lines -> component products (one query for all combos).
         const comboSlugs = [
           ...new Set(
             nextItems.map((it) => it.comboSlug).filter((s): s is string => typeof s === 'string'),
@@ -192,98 +268,124 @@ export async function patchOrder(id: string, patch: PatchOrderInput): Promise<Pa
         ];
         const comboDocs =
           comboSlugs.length > 0
-            ? await combos.find({ slug: { $in: comboSlugs } }).toArray()
+            ? await combos.find({ slug: { $in: comboSlugs } }, opts).toArray()
             : [];
         const comboBySlug = new Map(comboDocs.map((c) => [c.slug, c]));
 
-        const deductions: Array<{ productSlug: string; deltaBaseQty: number; packs?: Array<{ size: number; count: number }> }> = [];
-        for (const [i, item] of nextItems.entries()) {
-          if (item.comboSlug) {
-            const combo = comboBySlug.get(item.comboSlug);
-            if (!combo) throw new Error(`orderItems[${i}]: unknown comboSlug ${item.comboSlug}`);
-            for (const slug of combo.products) {
-              // Combo components carry no pack breakdown — base-qty only (existing behavior).
-              deductions.push({ productSlug: slug, deltaBaseQty: -item.quantity });
+        // One product read for every involved slug (lines + combo components).
+        const involved = new Set<string>();
+        for (const it of nextItems) {
+          if (it.comboSlug) {
+            for (const comp of comboBySlug.get(it.comboSlug)?.products ?? []) {
+              if (typeof comp?.productSlug === 'string') involved.add(comp.productSlug);
             }
-          } else {
-            deductions.push({ productSlug: item.productSlug as string, deltaBaseQty: -item.quantity, packs: item.packs });
+          } else if (typeof it.productSlug === 'string') {
+            involved.add(it.productSlug);
           }
         }
-
-        // One product read for every involved slug: decides bucket vs base-only path.
-        const involvedSlugs = [...new Set(deductions.map((d) => d.productSlug))];
-        const productDocs = await products.find({ slug: { $in: involvedSlugs } }).toArray();
+        const productDocs =
+          involved.size > 0
+            ? await products.find({ slug: { $in: [...involved] } }, opts).toArray()
+            : [];
         const productBySlug = new Map(productDocs.map((pd) => [pd.slug, pd]));
+        const maps = {
+          comboBySlug: comboBySlug as CatalogMaps['comboBySlug'],
+          productBySlug: productBySlug as CatalogMaps['productBySlug'],
+        };
+        assertCatalogMatch(nextItems, maps);
 
-        // Aggregate per product: base grams + required packs per size (no N+1 loop).
-        const baseByProduct = new Map<string, number>();
-        const packsByProduct = new Map<string, Map<number, number>>();
-        for (const [i, d] of deductions.entries()) {
-          baseByProduct.set(d.productSlug, (baseByProduct.get(d.productSlug) ?? 0) + d.deltaBaseQty);
-          if (d.packs && d.packs.length > 0) {
-            const doc = productBySlug.get(d.productSlug);
-            if (!doc) throw new Error(`orderItems: unknown productSlug ${d.productSlug}`);
-            if (!doc.isQuantized) throw new Error(`orderItems: packs not allowed for loose product ${d.productSlug}`);
-            let perSize = packsByProduct.get(d.productSlug);
-            if (!perSize) {
-              perSize = new Map<number, number>();
-              packsByProduct.set(d.productSlug, perSize);
-            }
-            for (const pk of d.packs) {
-              perSize.set(pk.size, (perSize.get(pk.size) ?? 0) + pk.count);
+        if (enteringPaid && !alreadyDeducted) {
+          // Expand lines to signed shape-matched deltas. Quantized counts
+          // scale by combo-unit count (2 combos × [{size:500,count:1}] = -[{size:500,count:2}]).
+          const deductions: Array<{ productSlug: string; delta: number | QuantizedCount[] }> = [];
+          for (const item of nextItems) {
+            if (item.comboSlug) {
+              const lineQty = item.quantity as number;
+              const combo = comboBySlug.get(item.comboSlug);
+              for (const comp of combo?.products ?? []) {
+                if (typeof comp.quantity === 'number') {
+                  deductions.push({ productSlug: comp.productSlug, delta: -(lineQty * comp.quantity) });
+                } else {
+                  deductions.push({
+                    productSlug: comp.productSlug,
+                    delta: (comp.quantity as QuantizedCount[]).map((q) => ({ size: q.size, count: -(q.count * lineQty) })),
+                  });
+                }
+              }
+            } else if (typeof item.quantity === 'number') {
+              deductions.push({ productSlug: item.productSlug as string, delta: -item.quantity });
+            } else {
+              deductions.push({
+                productSlug: item.productSlug as string,
+                delta: (item.quantity as QuantizedCount[]).map((q) => ({ size: q.size, count: -q.count })),
+              });
             }
           }
-        }
-        const ops: Array<Record<string, unknown>> = [];
-        for (const [slug, delta] of baseByProduct.entries()) {
-          const perSize = packsByProduct.get(slug);
-          if (perSize && perSize.size > 0) {
+
+          // Aggregate per product: loose totals + per-size pack counts (no N+1 loop).
+          const looseByProduct = new Map<string, number>();
+          const quantByProduct = new Map<string, Map<number, number>>();
+          for (const d of deductions) {
+            if (typeof d.delta === 'number') {
+              looseByProduct.set(d.productSlug, (looseByProduct.get(d.productSlug) ?? 0) + d.delta);
+            } else {
+              let perSize = quantByProduct.get(d.productSlug);
+              if (!perSize) {
+                perSize = new Map<number, number>();
+                quantByProduct.set(d.productSlug, perSize);
+              }
+              for (const q of d.delta) {
+                perSize.set(q.size, (perSize.get(q.size) ?? 0) + q.count);
+              }
+            }
+          }
+          const ops: Array<Record<string, unknown>> = [];
+          const movementLines: Array<{ productSlug: string; deltaBaseQty: number }> = [];
+          for (const [slug, delta] of looseByProduct.entries()) {
+            ops.push({
+              updateOne: {
+                filter: delta < 0 ? { slug, stock: { $gte: -delta } } : { slug },
+                update: { $inc: { stock: delta }, $set: { updatedAt: now } },
+              },
+            });
+            movementLines.push({ productSlug: slug, deltaBaseQty: delta });
+          }
+          for (const [slug, perSize] of quantByProduct.entries()) {
             const need = [...perSize.entries()];
-            const inc: Record<string, number> = { stockBaseQty: delta };
+            const inc: Record<string, number> = {};
             const arrayFilters: Array<Record<string, unknown>> = [];
             need.forEach(([size, count], idx) => {
               const key = `b${idx}`;
-              inc[`stockPacks.$[${key}].count`] = -count;
+              inc[`stock.$[${key}].count`] = count;
               arrayFilters.push({ [`${key}.size`]: size });
             });
             ops.push({
               updateOne: {
                 filter: {
                   slug,
-                  stockBaseQty: { $gte: -delta },
-                  $and: need.map(([size, count]) => ({
-                    stockPacks: { $elemMatch: { size, count: { $gte: count } } },
-                  })),
+                  $and: need
+                    .filter(([, count]) => count < 0)
+                    .map(([size, count]) => ({
+                      stock: { $elemMatch: { size, count: { $gte: -count } } },
+                    })),
                 },
                 update: { $inc: inc, $set: { updatedAt: now } },
                 arrayFilters,
               },
             });
-          } else {
-            // Loose lines and combo components: base-qty only, exactly as before.
-            ops.push({
-              updateOne: {
-                filter: { slug },
-                update: { $inc: { stockBaseQty: delta }, $set: { updatedAt: now } },
-              },
+            movementLines.push({
+              productSlug: slug,
+              deltaBaseQty: deltaBaseTotal(need.map(([size, count]) => ({ size, count }))),
             });
           }
+          const bulkRes = await products.bulkWrite(ops as never, opts);
+          const matched = (bulkRes as unknown as { matchedCount: number }).matchedCount;
+          if (matched !== ops.length) {
+            throw new Error('insufficient stock for one or more products');
+          }
+          await stockMovements.insertMany(buildMovementDocs(movementLines, 'sale', id, now), opts);
+          stockDeducted = true;
         }
-        const bulkRes = await products.bulkWrite(ops as never, opts);
-        const matched = (bulkRes as unknown as { matchedCount: number }).matchedCount;
-        if (matched !== ops.length) {
-          throw new Error('insufficient stock in packs for one or more products');
-        }
-        await stockMovements.insertMany(
-          buildMovementDocs(
-            [...baseByProduct.entries()].map(([productSlug, deltaBaseQty]) => ({ productSlug, deltaBaseQty })),
-            'sale',
-            id,
-            now,
-          ),
-          opts,
-        );
-        stockDeducted = true;
       }
 
       await orders.updateOne(
