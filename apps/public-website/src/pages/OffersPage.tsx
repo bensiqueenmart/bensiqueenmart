@@ -5,29 +5,12 @@ import {
   MessageSquare, Flame, Clock, Truck, Zap, Leaf, Package, Star,
   Gift, ShoppingBag, SlidersHorizontal, ChevronRight, Eye, Check,
 } from 'lucide-react';
-import { useOffers } from '../context/OffersContext';
+import { useCatalog } from '../context/CatalogContext';
 import { useCart } from '../context/CartContext';
-import { resolveComboItems } from '../utils/comboUtils';
 import { DealDetailModal } from '../components/DealDetailModal';
 import { SEOHead } from '../components/SEOHead';
 import { STORE_CONFIG } from '../config/storeConfig';
-import { ComboOffer } from '../types';
-
-/* ── Days-left helper ───────────────────────────────────────── */
-function useDaysLeft(endDate?: string) {
-  const [days, setDays] = useState<number | null>(null);
-  useEffect(() => {
-    if (!endDate) { setDays(null); return; }
-    const calc = () => {
-      const diff = new Date(endDate).getTime() - Date.now();
-      setDays(Math.max(0, Math.ceil(diff / 86_400_000)));
-    };
-    calc();
-    const id = setInterval(calc, 60_000);
-    return () => clearInterval(id);
-  }, [endDate]);
-  return days;
-}
+import type { PublicCombo } from '@bqm/types';
 
 /* ── Floating Particle Background Configuration ─────────────── */
 interface Particle { id: number; x: number; size: number; opacity: number; speed: number; delay: number; drift: number }
@@ -51,60 +34,30 @@ function useFadeIn(threshold = 0.12) {
   return { ref, vis };
 }
 
-/* ── Extract or generate smart itemized tags for combos ──────── */
-function getBundleHighlights(offer: ComboOffer): string[] {
-  const t = (offer.title + ' ' + offer.description).toLowerCase();
-  if (t.includes('spice') || t.includes('masala')) {
-    return ['Turmeric (200g)', 'Red Chilli (200g)', 'Coriander (200g)', 'Malabar Pepper (100g)'];
-  }
-  if (t.includes('nut') || t.includes('almond') || t.includes('cashew') || t.includes('dry fruit')) {
-    return ['Grade-W240 Cashews (500g)', 'California Almonds (500g)', 'Sun-Dried Raisins (500g)'];
-  }
-  if (t.includes('rice') || t.includes('breakfast') || t.includes('idli')) {
-    return ['1kg Premium Idli Rice', '+ Free 200g Roasted Rava', 'Fluffy Idlis & Kesari'];
-  }
-  if (t.includes('dal') || t.includes('pulse')) {
-    return ['Unpolished Toor Dal', 'Premium Urad Dal', 'Hand-Cleaned Moong'];
-  }
-  return ['100% Unpolished', 'Zero Preservatives', 'Stone-Milled Purity'];
-}
-
 /* ══════════════════════════════════════════════════════════════ */
-/* §  MODERN 3-COLUMN DEAL CARD                                   */
+/* §  MODERN 3-COLUMN DEAL CARD (PublicCombo)                     */
 /* ══════════════════════════════════════════════════════════════ */
 interface DealGridCardProps {
-  offer: ComboOffer;
+  offer: PublicCombo;
   index: number;
-  onOpenDetails: (offer: ComboOffer) => void;
+  onOpenDetails: (offer: PublicCombo) => void;
 }
 
 const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails }) => {
   const { addComboToCart } = useCart();
   const [justAdded, setJustAdded] = useState(false);
-  const daysLeft = useDaysLeft(offer.endDate);
-  const urgency = daysLeft !== null && daysLeft <= 7;
-  const highlights = getBundleHighlights(offer);
-  const resolvedItems = resolveComboItems(offer);
+  const unavailable = !offer.available;
+  const contentsText = offer.contents.map((c) => `${c.name} (${c.qty})`).join(', ');
   const fade = useFadeIn(0.08);
 
   const whatsappMessage = encodeURIComponent(
-    `Hello Bensi Queen, I would like to claim the promotional offer: "${offer.title}" (${offer.discountLabel}).`
+    `Hello Bensi Queen, I would like to claim the promotional offer: "${offer.name}".`
   );
-
-  const summaryText =
-    offer.includedSummary ||
-    resolvedItems.map((r) => `${r.product.englishName} (${r.weight})`).join(', ');
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addComboToCart(
-      offer.title,
-      offer.id,
-      offer.comboName || `Combo ${index + 1}`,
-      summaryText,
-      offer.image || '/images/hero/dry-fruits-hero.jpg',
-      offer.comboNumber || index + 1
-    );
+    if (unavailable) return;
+    addComboToCart(offer, contentsText);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 3000);
   };
@@ -119,7 +72,7 @@ const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails
         transition: `opacity 0.5s ease ${index * 0.1}s, transform 0.5s ease ${index * 0.1}s, box-shadow 0.3s, border-color 0.3s`,
       }}
     >
-      {/* ── Top Image (Click to View Description & Items) ── */}
+      {/* Image */}
       <div
         onClick={() => onOpenDetails(offer)}
         className="relative h-60 sm:h-64 overflow-hidden bg-[#123B26]/10 flex-shrink-0 cursor-pointer"
@@ -127,19 +80,16 @@ const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails
       >
         <img
           src={offer.image || '/images/combo-dry-fruits.jpg'}
-          alt={offer.title}
+          alt={offer.name}
           loading="lazy"
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = '/images/combo-dry-fruits.jpg';
           }}
-          className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
+          className={`w-full h-full object-cover group-hover:scale-108 transition-transform duration-700${unavailable ? ' grayscale opacity-55' : ''}`}
         />
-
-        {/* Soft bottom vignette */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent pointer-events-none" />
 
-        {/* Hover pill indicator */}
         <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
           <span className="inline-flex items-center gap-1.5 bg-black/80 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-full border border-white/20 shadow-xl">
             <Eye className="w-3.5 h-3.5 text-[#F2C94C]" />
@@ -147,58 +97,29 @@ const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails
           </span>
         </div>
 
-        {/* Top Badges */}
-        <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-2 z-10">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="inline-flex items-center gap-1 bg-[#123B26]/90 text-[#A8C66C] border border-[#A8C66C]/40 text-xs font-black px-3 py-1.5 rounded-full shadow-lg backdrop-blur-md">
-              <Sparkles className="w-3.5 h-3.5 text-[#F2C94C]" />
-              <span>{offer.comboName || `Combo ${index + 1}`}</span>
-            </span>
-            <span className="inline-flex items-center space-x-1.5 bg-[#F2C94C] text-[#123B26] text-xs font-black px-3.5 py-1.5 rounded-full shadow-lg uppercase tracking-wider">
-              <Flame className="w-3.5 h-3.5 fill-[#123B26]" />
-              <span>{offer.discountLabel}</span>
-            </span>
-          </div>
-
-          {urgency ? (
-            <span className="inline-flex items-center space-x-1 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-sm animate-pulse">
-              <Clock className="w-3 h-3" />
-              <span>Ends in {daysLeft}d</span>
-            </span>
-          ) : offer.featured ? (
-            <span className="inline-flex items-center space-x-1 bg-[#123B26]/90 backdrop-blur-sm text-[#A8C66C] border border-[#A8C66C]/40 text-[10px] font-bold px-3 py-1 rounded-full shadow-md">
-              <Sparkles className="w-3 h-3 text-[#F2C94C]" />
-              <span>Store Special</span>
-            </span>
-          ) : null}
-        </div>
-
-        {/* Bottom Validity Bar */}
-        <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white z-10">
-          <span className="inline-flex items-center space-x-1.5 bg-black/60 backdrop-blur-md text-white text-[11px] font-medium px-3 py-1 rounded-full border border-white/15">
-            <Calendar className="w-3 h-3 text-[#A8C66C]" />
-            <span>{offer.validUntil}</span>
-          </span>
-
-          <span className="text-[10px] font-bold text-[#A8C66C] bg-[#123B26]/85 px-2.5 py-0.5 rounded-full border border-[#A8C66C]/30 backdrop-blur-sm">
-            WhatsApp Verified
+        <div className="absolute top-4 left-4 z-10">
+          <span className="inline-flex items-center gap-1 bg-[#123B26]/90 text-[#A8C66C] border border-[#A8C66C]/40 text-xs font-black px-3 py-1.5 rounded-full shadow-lg backdrop-blur-md">
+            <Sparkles className="w-3.5 h-3.5 text-[#F2C94C]" />
+            <span>Combo {index + 1}</span>
           </span>
         </div>
+
+        {unavailable && (
+          <span className="absolute top-4 right-4 z-10 bg-black/80 backdrop-blur-md text-white/90 text-[10px] font-bold px-2.5 py-1 rounded-full">
+            Out of stock — back soon
+          </span>
+        )}
       </div>
 
-      {/* ── Card Content Body ── */}
+      {/* Content */}
       <div className="p-6 flex-1 flex flex-col justify-between space-y-5">
         <div className="space-y-3">
-          {/* Title (Clickable) */}
           <h3
             onClick={() => onOpenDetails(offer)}
             className="font-playfair text-xl font-bold text-[#123B26] group-hover:text-[#205C38] transition-colors leading-snug cursor-pointer"
-            title="Click to view full description"
           >
-            {offer.title}
+            {offer.name}
           </h3>
-
-          {/* Description */}
           <p
             onClick={() => onOpenDetails(offer)}
             className="font-poppins text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-3 cursor-pointer"
@@ -206,92 +127,75 @@ const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails
             {offer.description}
           </p>
 
-          {/* Included Items Pills (Clickable) */}
-          <div
-            onClick={() => onOpenDetails(offer)}
-            className="pt-1 cursor-pointer group/items"
-            title="Click to view all item details"
-          >
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#205C38] flex items-center gap-1">
-                <Package className="w-3 h-3 text-[#205C38]" />
-                <span>Included in this deal:</span>
-              </p>
-              <span className="text-[10px] font-bold text-[#205C38] group-hover/items:underline flex items-center gap-0.5">
-                <span>View Items</span>
-                <ChevronRight className="w-3 h-3" />
-              </span>
-            </div>
+          <div onClick={() => onOpenDetails(offer)} className="pt-1 cursor-pointer group/items">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#205C38] flex items-center gap-1 mb-1.5">
+              <Package className="w-3 h-3 text-[#205C38]" />
+              <span>Included in this deal:</span>
+            </p>
             <div className="flex flex-wrap gap-1.5">
-              {highlights.map((item, i) => (
+              {offer.contents.map((item, i) => (
                 <span
                   key={i}
                   className="inline-flex items-center space-x-1 text-[11px] font-semibold text-[#123B26] bg-[#DCE8C8]/60 border border-[#A8C66C]/40 px-2.5 py-1 rounded-lg group-hover/items:bg-[#DCE8C8]"
                 >
                   <CheckCircle2 className="w-2.5 h-2.5 text-[#205C38]" />
-                  <span>{item}</span>
+                  <span>{item.name} ({item.qty})</span>
                 </span>
               ))}
             </div>
           </div>
         </div>
 
-        {/* ── Terms Box & Action Buttons ── */}
-        <div className="space-y-3.5 pt-3 border-t border-[#E8DFC8]">
-          {/* Terms note */}
-          <div className="flex items-start space-x-2 bg-[#F7F5E8] border border-[#DCE8C8] rounded-xl p-2.5 text-[11px] text-gray-600">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#205C38] flex-shrink-0 mt-0.5" />
-            <span className="line-clamp-2 italic">{offer.termsAndConditions}</span>
-          </div>
+        {/* Actions */}
+        <div className="space-y-2 pt-3 border-t border-[#E8DFC8]">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={unavailable}
+            title={unavailable ? 'Out of stock — back soon' : 'Add to cart'}
+            className={`w-full inline-flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl font-extrabold text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95 ${
+              unavailable
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : justAdded
+                  ? 'bg-[#123B26] text-white'
+                  : 'bg-[#205C38] hover:bg-[#164328] text-white'
+            }`}
+          >
+            {unavailable ? (
+              <span>Out of stock</span>
+            ) : justAdded ? (
+              <>
+                <Check className="w-4 h-4 text-[#A8C66C]" />
+                <span>✓ Added to Cart!</span>
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-4 h-4 text-[#A8C66C]" />
+                <span>Add to Cart</span>
+              </>
+            )}
+          </button>
 
-          {/* Action Buttons: Add Deal to Cart + View Details + WhatsApp */}
-          <div className="space-y-2 pt-1">
-            {/* Primary: Add Deal to Cart */}
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleAddToCart}
-              className={`w-full relative overflow-hidden inline-flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl font-extrabold text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95 group/btn cursor-pointer ${
-                justAdded
-                  ? 'bg-[#123B26] text-white shadow-emerald-900/30'
-                  : 'bg-[#205C38] hover:bg-[#164328] text-white shadow-[#205C38]/25'
-              }`}
+              onClick={() => onOpenDetails(offer)}
+              className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl bg-[#F7F5E8] hover:bg-[#DCE8C8] text-[#123B26] font-bold text-xs border border-[#DCE8C8] transition-colors"
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-              {justAdded ? (
-                <>
-                  <Check className="w-4 h-4 text-[#A8C66C] relative z-10" />
-                  <span className="relative z-10">✓ Added {offer.comboName || 'Combo'} to Cart!</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-4 h-4 text-[#A8C66C] relative z-10" />
-                  <span className="relative z-10">Add {offer.comboName || 'Combo'} to Cart</span>
-                </>
-              )}
+              <Eye className="w-3.5 h-3.5 text-[#205C38]" />
+              <span>View Details</span>
             </button>
 
-            {/* Secondary: View Details modal & WhatsApp */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onOpenDetails(offer)}
-                className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl bg-[#F7F5E8] hover:bg-[#DCE8C8] text-[#123B26] font-bold text-xs border border-[#DCE8C8] transition-colors"
-              >
-                <Eye className="w-3.5 h-3.5 text-[#205C38]" />
-                <span>View Details</span>
-              </button>
-
-              <a
-                href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${whatsappMessage}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Claim or inquire on WhatsApp"
-                className="inline-flex items-center justify-center py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1fab57] text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all"
-              >
-                <MessageSquare className="w-3.5 h-3.5 mr-1" />
-                <span>WhatsApp</span>
-              </a>
-            </div>
+            <a
+              href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${whatsappMessage}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Claim or inquire on WhatsApp"
+              className="inline-flex items-center justify-center py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1fab57] text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all"
+            >
+              <MessageSquare className="w-3.5 h-3.5 mr-1" />
+              <span>WhatsApp</span>
+            </a>
           </div>
         </div>
       </div>
@@ -303,9 +207,9 @@ const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails
 /* §  MAIN DEALS & OFFERS PAGE                                    */
 /* ══════════════════════════════════════════════════════════════ */
 export const OffersPage: React.FC = () => {
-  const { activeOffers, setIsOwnerModalOpen } = useOffers();
+  const { combos: activeOffers } = useCatalog();
   const [activeTab, setActiveTab] = useState<'all' | 'combos' | 'spices' | 'discounts'>('all');
-  const [selectedOffer, setSelectedOffer] = useState<ComboOffer | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<PublicCombo | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const heroFade = useFadeIn(0.05);
@@ -313,7 +217,7 @@ export const OffersPage: React.FC = () => {
   const stepsFade = useFadeIn(0.1);
   const customFade = useFadeIn(0.1);
 
-  const handleOpenDetails = (offer: ComboOffer) => {
+  const handleOpenDetails = (offer: PublicCombo) => {
     setSelectedOffer(offer);
     setIsDetailModalOpen(true);
   };
@@ -321,7 +225,7 @@ export const OffersPage: React.FC = () => {
   // Filter offers based on tab selection
   const filteredOffers = activeOffers.filter((o) => {
     if (activeTab === 'all') return true;
-    const text = (o.title + ' ' + o.description + ' ' + o.discountLabel).toLowerCase();
+    const text = (o.name + ' ' + o.description).toLowerCase();
     if (activeTab === 'combos') return text.includes('combo') || text.includes('bundle') || text.includes('pack');
     if (activeTab === 'spices') return text.includes('spice') || text.includes('powder') || text.includes('masala');
     if (activeTab === 'discounts') return text.includes('%') || text.includes('discount') || text.includes('buy 1');
@@ -451,14 +355,6 @@ export const OffersPage: React.FC = () => {
                   <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                 </Link>
 
-                <button
-                  type="button"
-                  onClick={() => setIsOwnerModalOpen(true)}
-                  className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-semibold text-sm transition-all"
-                >
-                  <ShieldCheck className="w-4 h-4 text-[#A8C66C]" />
-                  <span>Owner Portal</span>
-                </button>
               </div>
             </div>
 

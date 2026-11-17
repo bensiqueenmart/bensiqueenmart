@@ -1,20 +1,13 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CartItem, Product } from '../types';
-import { WeightOption } from '../config/storeConfig';
+import type { PublicCombo, PublicProduct } from '@bqm/types';
+import type { CartItem } from '../types';
 
 export interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, weight: WeightOption, quantity?: number) => void;
-  addComboToCart: (
-    comboTitle: string,
-    comboId: string,
-    comboNameOrItems: any,
-    includedText?: string,
-    image?: string,
-    comboNumber?: number
-  ) => void;
+  addToCart: (product: PublicProduct, weight: string, quantity?: number) => void;
+  addComboToCart: (combo: PublicCombo, includedText?: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
-  updateWeight: (itemId: string, newWeight: WeightOption) => void;
+  updateWeight: (itemId: string, newWeight: string) => void;
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
   totalProductsCount: number;
@@ -64,9 +57,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const closeToast = () => setToastMessage(null);
 
-  const addToCart = (product: Product, weight: WeightOption, quantity: number = 1) => {
+  const addToCart = (product: PublicProduct, weight: string, quantity: number = 1) => {
     const itemId = `${product.id}-${weight}`;
-    
+
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex((item) => item.id === itemId);
       if (existingIndex > -1) {
@@ -82,10 +75,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const newItem: CartItem = {
           id: itemId,
           productId: product.id,
-          englishName: product.englishName,
-          tamilName: product.tamilName,
-          categoryName: product.categoryName,
-          image: product.image,
+          englishName: product.name,
+          tamilName: product.tamilName ?? '',
+          categoryName: product.category,
+          image: product.image ?? '',
           weight,
           quantity,
         };
@@ -93,7 +86,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    setToastMessage(`Added ${product.englishName} (${weight}) to your cart.`);
+    setToastMessage(`Added ${product.name} (${weight}) to your cart.`);
   };
 
   /**
@@ -101,32 +94,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * All included products are preserved in `comboIncludedText` to display below the title.
    * Multiple combos can be added and adjusted cleanly.
    */
-  const addComboToCart = (
-    comboTitle: string,
-    comboId: string,
-    comboNameOrItems: any,
-    includedText?: string,
-    image?: string,
-    comboNumber?: number
-  ) => {
-    let resolvedComboName = 'Combo';
-    let resolvedSummary = includedText || '';
-    let resolvedImage = image || '/images/hero/dry-fruits-hero.jpg';
-    let resolvedNumber = comboNumber;
-
-    if (typeof comboNameOrItems === 'string') {
-      resolvedComboName = comboNameOrItems;
-    } else if (Array.isArray(comboNameOrItems)) {
-      // Legacy call: extract summary text from items
-      resolvedSummary = comboNameOrItems
-        .map((i: any) => `${i.product.englishName} (${i.weight})`)
-        .join(', ');
-      if (comboNameOrItems[0]?.product?.image) {
-        resolvedImage = comboNameOrItems[0].product.image;
-      }
-    }
-
-    const itemId = `combo-${comboId}`;
+  const addComboToCart = (combo: PublicCombo, includedText?: string) => {
+    const itemId = `combo-${combo.id}`;
 
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex((i) => i.id === itemId);
@@ -141,24 +110,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         const newComboItem: CartItem = {
           id: itemId,
-          productId: comboId,
-          englishName: comboTitle,
-          tamilName: 'சிறப்பு காம்போ பேக்',
+          productId: combo.id,
+          englishName: combo.name,
+          tamilName: combo.tamilName ?? '',
           categoryName: 'Special Combo',
-          image: resolvedImage,
+          image: combo.image ?? '',
           weight: 'Combo Pack',
           quantity: 1,
           isCombo: true,
-          comboName: resolvedComboName,
-          comboNumber: resolvedNumber,
-          comboId,
-          comboIncludedText: resolvedSummary,
+          comboName: combo.name,
+          comboId: combo.id,
+          comboIncludedText: includedText ?? '',
         };
         return [...prevItems, newComboItem];
       }
     });
 
-    setToastMessage(`Added "${resolvedComboName}: ${comboTitle}" to your cart!`);
+    setToastMessage(`Added "${combo.name}" to your cart!`);
     setIsCartOpen(true);
   };
 
@@ -172,17 +140,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  const updateWeight = (itemId: string, newWeight: WeightOption) => {
+  const updateWeight = (itemId: string, newWeight: string) => {
     setItems((prev) => {
       const currentItem = prev.find((item) => item.id === itemId);
       if (!currentItem) return prev;
-      
+
       // If it's a fixed combo, weight cannot be changed
       if (currentItem.isCombo) return prev;
 
       const newId = `${currentItem.productId}-${newWeight}`;
       const existingNewWeightItem = prev.find((item) => item.id === newId);
-      
+
       if (existingNewWeightItem && existingNewWeightItem.id !== itemId) {
         return prev
           .filter((item) => item.id !== itemId)

@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { ArrowRight, ShieldCheck, Sparkles, Truck, HeartHandshake } from 'lucide-react';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { BUSINESS } from '../config/siteContent';
 
 export const Hero: React.FC = () => {
   return (
@@ -118,8 +119,8 @@ export const Hero: React.FC = () => {
                   BQ
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-[#155B32]">Chitlapakkam</p>
-                  <p className="text-[11px] text-gray-500">Chennai 600064</p>
+                  <p className="text-xs font-semibold text-[#155B32]">{BUSINESS.city}</p>
+                  <p className="text-[11px] text-gray-500">{BUSINESS.city} {BUSINESS.pincode}</p>
                 </div>
               </div>
 

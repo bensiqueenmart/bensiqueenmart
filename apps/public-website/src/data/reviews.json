@@ -1,0 +1,71 @@
+[
+    {
+        "id": "rev-1",
+        "authorName": "S. Lakshmi",
+        "location": "Chitlapakkam, Chennai",
+        "reviewText": "The Toor Dal is genuinely unpolished and cooks into the most aromatic, authentic sambar. The 1kg pack is clean, well-sealed, and delivered promptly via WhatsApp.",
+        "rating": 5,
+        "reviewDate": "October 2026",
+        "verifiedPurchase": true,
+        "isApproved": true,
+        "source": "seed"
+    },
+    {
+        "id": "rev-2",
+        "authorName": "Karthik R.",
+        "location": "Tambaram Sanatorium",
+        "reviewText": "Very impressed with the Cashew Nuts (முந்திரி பருப்பு) and Almonds. Crisp, fresh, and large-sized without any breakage. Placing the order on WhatsApp took less than a minute.",
+        "rating": 5,
+        "reviewDate": "October 2026",
+        "verifiedPurchase": true,
+        "isApproved": true,
+        "source": "seed"
+    },
+    {
+        "id": "rev-3",
+        "authorName": "Meenakshi Sundaram",
+        "location": "Chromepet, Chennai",
+        "reviewText": "Ordered Idli Rice and cold-pressed Sesame Oil. The idlis turned out soft and fluffy. Having five pack sizes (100g to 1kg) is very practical for our joint family pantry.",
+        "rating": 5,
+        "reviewDate": "September 2026",
+        "verifiedPurchase": true,
+        "isApproved": true,
+        "source": "seed"
+    },
+    {
+        "id": "about-kavitha-s",
+        "authorName": "Kavitha S.",
+        "location": "Chitlapakkam",
+        "reviewText": "The Toor Dal is genuinely unpolished — the sambar turns out so much more aromatic than anything from a supermarket. Bensi Queen is now my permanent go-to store.",
+        "rating": 5,
+        "reviewDate": "",
+        "verifiedPurchase": false,
+        "isApproved": true,
+        "featuredOnAbout": true,
+        "source": "seed"
+    },
+    {
+        "id": "about-murali-r",
+        "authorName": "Murali R.",
+        "location": "Chromepet",
+        "reviewText": "Ordered Cashew Nuts and California Almonds. They arrived the same evening, perfectly packed, super fresh. The WhatsApp ordering made everything so simple.",
+        "rating": 5,
+        "reviewDate": "",
+        "verifiedPurchase": false,
+        "isApproved": true,
+        "featuredOnAbout": true,
+        "source": "seed"
+    },
+    {
+        "id": "about-priya-n",
+        "authorName": "Priya N.",
+        "location": "Selaiyur",
+        "reviewText": "The Sambar Powder smells exactly like home-ground masala. No artificial color, genuine flavor. I have been ordering monthly supplies for over a year now.",
+        "rating": 5,
+        "reviewDate": "",
+        "verifiedPurchase": false,
+        "isApproved": true,
+        "featuredOnAbout": true,
+        "source": "seed"
+    }
+]

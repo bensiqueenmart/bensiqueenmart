@@ -1,18 +1,20 @@
 ﻿import React, { useState } from 'react';
-import { Plus, Minus, ShoppingBag, Check, Eye, Info, MessageSquare, Sparkles, ChevronDown } from 'lucide-react';
-import { Product } from '../types';
-import { WeightOption, STORE_CONFIG } from '../config/storeConfig';
+import { Plus, Minus, ShoppingBag, Check, Eye, Info, MessageSquare, ChevronDown } from 'lucide-react';
+import type { PublicProduct } from '@bqm/types';
+import { imageSrc, packOptions, prettyCategory } from '../api';
+import { STORE_CONFIG } from '../config/storeConfig';
 import { useCart } from '../context/CartContext';
 import { ProductDetailModal } from './ProductDetailModal';
 
 interface ProductCardProps {
-  product: Product;
+  product: PublicProduct;
   layout?: 'grid' | 'list';
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
   const { addToCart } = useCart();
-  const [selectedWeight, setSelectedWeight] = useState<WeightOption>('500g');
+  const options = packOptions(product);
+  const [selectedWeight, setSelectedWeight] = useState<string>(options[0] ?? '');
   const [quantity, setQuantity] = useState<number>(1);
   const [isAdded, setIsAdded] = useState<boolean>(false);
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
@@ -22,6 +24,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
   const handleDecrement = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   const handleAddToCart = () => {
+    if (!product.available) return;
     addToCart(product, selectedWeight, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);
@@ -29,10 +32,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
 
   const handleDirectWhatsAppOrder = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const text = `Hello Bensi Queen, I would like to order: ${product.englishName} (${product.tamilName}) - ${quantity} pack(s) of ${selectedWeight}. Please confirm doorstep delivery.`;
+    const text = `Hello Bensi Queen, I would like to order: ${product.name}${product.tamilName ? ` (${product.tamilName})` : ''} - ${quantity} pack(s) of ${selectedWeight}. Please confirm doorstep delivery.`;
     const url = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
+
+  const imgSrc = imageSrc(product.image);
+  const unavailable = !product.available;
 
   // Compact List Layout
   if (layout === 'list') {
@@ -43,31 +49,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             onClick={() => setShowDetailModal(true)}
             className="flex items-center space-x-4 cursor-pointer w-full sm:w-auto flex-1 min-w-0"
           >
-            <div className="w-20 h-20 rounded-xl overflow-hidden border border-[#E8DFC8] flex-shrink-0 bg-white">
-              <img
-                src={product.image}
-                alt={`${product.englishName} – ${product.tamilName}`}
-                loading="lazy"
-                className="w-full h-full object-cover object-center"
-              />
+            <div className="w-20 h-20 rounded-xl overflow-hidden border border-[#E8DFC8] flex-shrink-0 bg-white relative">
+              {imgSrc ? (
+                <img
+                  src={imgSrc}
+                  alt={`${product.name}${product.tamilName ? ` – ${product.tamilName}` : ''}`}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/images/Products_Cover.jpg';
+                  }}
+                  className={`w-full h-full object-cover object-center${unavailable ? ' grayscale opacity-55' : ''}`}
+                />
+              ) : null}
+              {unavailable && (
+                <span className="absolute bottom-1 left-1 right-1 text-center bg-[#123B26]/85 text-white text-[9px] font-bold px-1 py-0.5 rounded">
+                  Out of stock
+                </span>
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center space-x-2">
                 <span className="text-[10px] font-bold text-[#205C38] uppercase tracking-wide bg-[#DCE8C8]/60 px-2 py-0.5 rounded-full">
-                  {product.categoryName}
+                  {prettyCategory(product.category)}
                 </span>
-                {product.popular && (
-                  <span className="text-[10px] font-black text-[#123B26] bg-[#F2C94C] px-2 py-0.5 rounded-full uppercase">
-                    Popular
-                  </span>
-                )}
               </div>
               <h3 className="font-poppins text-base font-bold text-[#123B26] truncate hover:text-[#205C38] transition-colors mt-0.5">
-                {product.englishName}
+                {product.name}
               </h3>
-              <p className="font-mukta text-xs font-semibold text-[#205C38]">
-                {product.tamilName}
-              </p>
+              {product.tamilName && (
+                <p className="font-mukta text-xs font-semibold text-[#205C38]">
+                  {product.tamilName}
+                </p>
+              )}
             </div>
           </div>
 
@@ -75,10 +89,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
           <div className="relative flex-shrink-0">
             <select
               value={selectedWeight}
-              onChange={(e) => setSelectedWeight(e.target.value as WeightOption)}
+              onChange={(e) => setSelectedWeight(e.target.value)}
               className="appearance-none bg-[#FCFAF5] hover:bg-white border border-[#DCE8C8] focus:border-[#123B26] text-[#123B26] font-extrabold text-xs rounded-xl px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-[#A8C66C]/30 cursor-pointer shadow-xs transition-all"
             >
-              {STORE_CONFIG.weightOptions.map((weight) => (
+              {options.map((weight) => (
                 <option key={weight} value={weight} className="bg-white text-[#123B26] font-bold">
                   {weight} Pack
                 </option>
@@ -113,11 +127,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             <button
               type="button"
               onClick={handleAddToCart}
+              disabled={unavailable}
+              title={unavailable ? 'Out of stock — back soon' : 'Add to cart'}
               className={`flex items-center space-x-1.5 py-2 px-3.5 rounded-xl font-bold text-xs transition-all shadow-sm active:scale-95 ${
-                isAdded ? 'bg-[#205C38] text-white' : 'bg-[#123B26] hover:bg-[#205C38] text-white'
+                unavailable
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : isAdded
+                    ? 'bg-[#205C38] text-white'
+                    : 'bg-[#123B26] hover:bg-[#205C38] text-white'
               }`}
             >
-              {isAdded ? (
+              {unavailable ? (
+                <span>Out of stock</span>
+              ) : isAdded ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-[#A8C66C]" />
                   <span>Added</span>
@@ -161,25 +183,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         <div
           onClick={() => setShowDetailModal(true)}
           className="relative w-full h-52 sm:h-56 overflow-hidden cursor-pointer border-b border-[#F0EDE0] bg-white"
-          title={`Click to view details for ${product.englishName}`}
+          title={`Click to view details for ${product.name}`}
         >
-          <img
-            src={product.image}
-            alt={`${product.englishName} – ${product.tamilName}`}
-            loading="lazy"
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-          />
+          {imgSrc ? (
+            <img
+              src={imgSrc}
+              alt={`${product.name}${product.tamilName ? ` – ${product.tamilName}` : ''}`}
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/images/Products_Cover.jpg';
+              }}
+              className={`w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500${unavailable ? ' grayscale opacity-55' : ''}`}
+            />
+          ) : null}
 
           {/* Category badge */}
           <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#123B26] text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-xs border border-[#DCE8C8] uppercase tracking-wider z-10">
-            {product.categoryName}
+            {prettyCategory(product.category)}
           </span>
 
-          {/* Popular Choice tag */}
-          {product.popular && (
-            <span className="absolute top-3 right-3 bg-[#F2C94C] text-[#123B26] text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-xs uppercase tracking-wide z-10 flex items-center space-x-1">
-              <Sparkles className="w-3 h-3 text-[#123B26]" />
-              <span>Popular</span>
+          {/* Out-of-stock pill */}
+          {unavailable && (
+            <span className="absolute top-3 right-3 bg-[#123B26]/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-xs uppercase tracking-wide z-10">
+              Out of stock — back soon
             </span>
           )}
 
@@ -201,11 +228,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
               onClick={() => setShowDetailModal(true)}
               className="font-poppins text-base font-extrabold text-[#123B26] leading-snug cursor-pointer hover:text-[#205C38] transition-colors"
             >
-              {product.englishName}
+              {product.name}
             </h3>
-            <p className="font-mukta text-sm font-semibold text-[#205C38] mt-0.5">
-              {product.tamilName}
-            </p>
+            {product.tamilName && (
+              <p className="font-mukta text-sm font-semibold text-[#205C38] mt-0.5">
+                {product.tamilName}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -250,10 +279,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
               <select
                 id={`weight-${product.id}`}
                 value={selectedWeight}
-                onChange={(e) => setSelectedWeight(e.target.value as WeightOption)}
+                onChange={(e) => setSelectedWeight(e.target.value)}
                 className="w-full appearance-none bg-[#FCFAF5] hover:bg-white border border-[#DCE8C8] focus:border-[#123B26] text-[#123B26] font-extrabold text-xs rounded-xl px-3.5 py-2.5 pr-9 focus:outline-none focus:ring-2 focus:ring-[#A8C66C]/30 cursor-pointer shadow-xs transition-all"
               >
-                {STORE_CONFIG.weightOptions.map((weight) => (
+                {options.map((weight) => (
                   <option key={weight} value={weight} className="bg-white text-[#123B26] font-bold">
                     {weight} Pack
                   </option>
@@ -292,13 +321,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             <button
               type="button"
               onClick={handleAddToCart}
+              disabled={unavailable}
+              title={unavailable ? 'Out of stock — back soon' : 'Add to cart'}
               className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-sm active:scale-95 ${
-                isAdded
-                  ? 'bg-[#205C38] text-white'
-                  : 'bg-[#123B26] hover:bg-[#205C38] text-white'
+                unavailable
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : isAdded
+                    ? 'bg-[#205C38] text-white'
+                    : 'bg-[#123B26] hover:bg-[#205C38] text-white'
               }`}
             >
-              {isAdded ? (
+              {unavailable ? (
+                <span>Out of stock</span>
+              ) : isAdded ? (
                 <>
                   <Check className="w-4 h-4 text-[#A8C66C]" />
                   <span>Added!</span>

@@ -1,38 +1,12 @@
-import { WeightOption } from '../config/storeConfig';
-
-export type ProductCategory =
-  | 'all'
-  | 'pulses'
-  | 'rice-grains'
-  | 'chickpeas'
-  | 'spices'
-  | 'masalas'
-  | 'oils'
-  | 'household'
-  | 'nuts-dryfruits';
+/** Product category slug (e.g. 'pulses', 'spices'). 'all' means no filter. */
+export type ProductCategory = string;
 
 export interface CategoryInfo {
-  id: ProductCategory;
-  englishLabel: string;
-  tamilLabel: string;
-  iconName?: string;
-  count?: number;
-  seoDescription?: string;
-  image?: string;
-}
-
-export interface Product {
   id: string;
-  englishName: string;
-  tamilName: string;
-  category: ProductCategory;
-  categoryName: string;
-  image: string;
-  description: string;
-  availableWeights: WeightOption[];
-  featured?: boolean;
-  popular?: boolean;
-  seoKeywords?: string[];
+  englishLabel: string;
+  tamilLabel?: string;
+  image?: string;
+  count?: number;
 }
 
 export interface CartItem {
@@ -42,13 +16,13 @@ export interface CartItem {
   tamilName: string;
   categoryName: string;
   image: string;
-  weight: WeightOption | string;
+  weight: string;
   quantity: number;
   isCombo?: boolean;
   comboName?: string; // e.g. "Combo 1"
   comboNumber?: number; // e.g. 1
   comboId?: string;
-  comboIncludedText?: string; // e.g. "Grade-W240 Cashews (500g), California Almonds (500g), Sun-Dried Raisins (500g)"
+  comboIncludedText?: string; // e.g. "Cashew Nuts (500g), Almonds (500g)"
 }
 
 export interface CustomerDetails {
@@ -66,44 +40,6 @@ export interface OrderSummaryData {
   items: CartItem[];
   totalItemCount: number;
   totalQuantity: number;
-}
-
-export type OfferType =
-  | 'percentage_discount'
-  | 'bogo'
-  | 'fixed_combo'
-  | 'announcement';
-
-export type OfferStatus = 'draft' | 'active' | 'inactive';
-
-export interface ComboIncludedItem {
-  productId: string;
-  weight: WeightOption;
-  quantity?: number;
-  label?: string;
-}
-
-export interface ComboOffer {
-  id: string;
-  comboNumber?: number; // 1, 2, 3, etc.
-  comboName?: string; // "Combo 1", "Combo 2", etc.
-  title: string;
-  description: string;
-  offerType: OfferType;
-  discountPercentage?: number;
-  discountLabel: string;
-  image: string; // 16:9 ratio recommended
-  startDate?: string;
-  endDate?: string;
-  validUntil: string;
-  termsAndConditions: string;
-  ctaText?: string;
-  status: OfferStatus;
-  isActive: boolean; // computed/synced with status === 'active'
-  featured?: boolean;
-  createdAt: string;
-  includedItems?: ComboIncludedItem[];
-  includedSummary?: string;
 }
 
 export interface CustomerReview {

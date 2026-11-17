@@ -1,0 +1,39 @@
+{
+    "areas": [
+        "Chitlapakkam",
+        "Tambaram Sanatorium",
+        "Chromepet & MIT Road",
+        "Hasthinapuram",
+        "Selaiyur",
+        "East Tambaram",
+        "Pallavaram",
+        "Medavakkam"
+    ],
+    "zones": [
+        {
+            "area": "Chitlapakkam",
+            "time": "Within 30–45 mins",
+            "status": "Available Now"
+        },
+        {
+            "area": "Selaiyur & Hasthinapuram",
+            "time": "Morning & Evening Batches",
+            "status": "Daily Route"
+        },
+        {
+            "area": "Chromepet & MIT Road",
+            "time": "Within 1 hour",
+            "status": "Available Now"
+        },
+        {
+            "area": "Tambaram Sanatorium",
+            "time": "Evening Dispatch",
+            "status": "Scheduled"
+        },
+        {
+            "area": "Medavakkam & Sembakkam",
+            "time": "Daily Morning Dispatch",
+            "status": "Scheduled"
+        }
+    ]
+}

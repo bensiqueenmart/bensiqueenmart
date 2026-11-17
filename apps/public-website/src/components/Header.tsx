@@ -14,11 +14,12 @@ import {
   Headphones,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useCatalog } from '../context/CatalogContext';
 import { STORE_CONFIG } from '../config/storeConfig';
-import { CATEGORIES } from '../data/products';
 
 export const Header: React.FC = () => {
   const { totalPackagesCount, setIsCartOpen } = useCart();
+  const { categories, products } = useCatalog();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
@@ -221,10 +222,10 @@ export const Header: React.FC = () => {
                       <Sparkles className="w-3 h-3" />
                       <span>Store Categories</span>
                     </span>
-                    <span className="bg-[#205C38] text-[#A8C66C] px-2 py-0.5 rounded-full text-[9px] font-black">35 Items</span>
+                    <span className="bg-[#205C38] text-[#A8C66C] px-2 py-0.5 rounded-full text-[9px] font-black">{products.length} Items</span>
                   </div>
                   <div className="max-h-72 overflow-y-auto py-1">
-                    {CATEGORIES.slice(1).map((cat) => (
+                    {categories.map((cat) => (
                       <Link
                         key={cat.id}
                         to={`/products?category=${cat.id}`}
@@ -244,7 +245,7 @@ export const Header: React.FC = () => {
                       onClick={() => setCategoriesDropdownOpen(false)}
                       className="flex items-center justify-center space-x-1.5 w-full py-2.5 rounded-xl bg-[#A8C66C] hover:bg-[#97b55b] text-[#123B26] font-bold text-xs transition-colors duration-200"
                     >
-                      <span>View All 35 Products</span>
+                      <span>View All {products.length} Products</span>
                       <ArrowRight className="w-3 h-3" />
                     </Link>
                   </div>
@@ -274,9 +275,9 @@ export const Header: React.FC = () => {
                       onClick={() => setProductsDropdownOpen(false)}
                       className="block px-4 py-2.5 text-xs font-bold text-[#A8C66C] hover:bg-[#205C38]/60 border-b border-white/[0.08]"
                     >
-                      All Products (35 Items)
+                      All Products ({products.length} Items)
                     </Link>
-                    {CATEGORIES.slice(1).map((c) => (
+                    {categories.map((c) => (
                       <Link
                         key={c.id}
                         to={`/products?category=${c.id}`}
@@ -375,7 +376,7 @@ export const Header: React.FC = () => {
                 <span className="text-[10px] text-white/40">8 categories</span>
               </div>
               <div className="grid grid-cols-2 gap-1.5 p-3 text-xs">
-                {CATEGORIES.slice(1).map((cat) => (
+                {categories.map((cat) => (
                   <Link
                     key={cat.id}
                     to={`/products?category=${cat.id}`}
@@ -425,7 +426,7 @@ export const Header: React.FC = () => {
                 className="w-full flex items-center justify-center space-x-2 py-3 rounded-full bg-[#A8C66C] hover:bg-[#97b55b] text-[#123B26] font-bold text-sm uppercase tracking-wider shadow-md transition-all"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Shop All 35 Products</span>
+                <span>Shop All {products.length} Products</span>
               </Link>
               <a
                 href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}`}

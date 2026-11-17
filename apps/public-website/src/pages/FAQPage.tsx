@@ -7,104 +7,12 @@ import {
 import { Link } from 'react-router-dom';
 import { SEOHead } from '../components/SEOHead';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { FAQS } from '../config/siteContent';
+import type { FaqItem } from '../types/content';
 
 type FAQCategory = 'all' | 'ordering' | 'weights' | 'delivery' | 'quality';
 
-interface FAQItem {
-  id: number;
-  category: 'ordering' | 'weights' | 'delivery' | 'quality';
-  categoryLabel: string;
-  question: string;
-  answer: string;
-  popular?: boolean;
-}
-
-const FAQ_ITEMS: FAQItem[] = [
-  {
-    id: 1,
-    category: 'ordering',
-    categoryLabel: 'Ordering & WhatsApp',
-    question: 'How can I place an order on this website?',
-    answer:
-      'Ordering is simple and requires zero account creation or advance online payments! Browse our 35-item provision catalog, pick your preferred weight (100g, 200g, 500g, 750g, or 1kg) and quantity, and click "Add to Cart". In your slide-out cart, click "Proceed to Checkout", fill in your delivery name, mobile, and neighborhood address, and click "Place Order via WhatsApp". A neat, itemized order is automatically opened in WhatsApp for you to send directly to the store owner.',
-    popular: true,
-  },
-  {
-    id: 2,
-    category: 'weights',
-    categoryLabel: 'Weights & Sizes',
-    question: 'What pack sizes and weights are available for each product?',
-    answer:
-      'Every single item at Bensi Queen is conveniently available in five standard pack weights: 100g, 200g, 500g, 750g, and 1kg. You can choose your desired weight from the custom dropdown selector on each product card. If you want to buy different weights of the same product (for example, 500g Toor Dal for regular sambar and 1kg for a family gathering), each weight is added as an independent line item in your cart.',
-    popular: true,
-  },
-  {
-    id: 3,
-    category: 'quality',
-    categoryLabel: 'Purity & Quality',
-    question: 'Why are commodity prices not displayed on the website?',
-    answer:
-      'Bensi Queen operates as a neighborhood family provision store. Prices of agricultural staples like dals, pulses, and dry fruits fluctuate daily based on market harvest rates. Rather than showing outdated online prices, our owner inspects the freshest batch in-store and shares the exact, transparent billing on your WhatsApp order chat before dispatch.',
-    popular: true,
-  },
-  {
-    id: 4,
-    category: 'delivery',
-    categoryLabel: 'Delivery & Payment',
-    question: 'How does payment work? Do I need to pay online in advance?',
-    answer:
-      'Zero advance online prepayment is required! You pay only after receiving and inspecting your fresh grocery package at your doorstep. We accept Cash on Delivery (COD) as well as instant UPI payments (Google Pay, PhonePe, Paytm, or BHIM) directly to the delivery person or store UPI ID.',
-    popular: true,
-  },
-  {
-    id: 5,
-    category: 'delivery',
-    categoryLabel: 'Delivery & Payment',
-    question: 'Which areas do you deliver to in Chennai?',
-    answer:
-      'We provide fast neighborhood doorstep delivery across Chitlapakkam, Tambaram Sanatorium, Chromepet, Hasthinapuram, Selaiyur, East Tambaram, Sembakkam, and Medavakkam. Chitlapakkam and Chromepet orders are typically dispatched within 30 to 45 minutes.',
-  },
-  {
-    id: 6,
-    category: 'ordering',
-    categoryLabel: 'Ordering & WhatsApp',
-    question: 'Can I download or print a PDF summary of my order?',
-    answer:
-      'Yes, absolutely! On the Checkout page, simply click "Download PDF". An itemized, printable document containing your unique order reference, date, customer details, and complete list of provisions with exact weights is immediately generated for your household records.',
-  },
-  {
-    id: 7,
-    category: 'quality',
-    categoryLabel: 'Purity & Quality',
-    question: 'What is the quality guarantee on pulses, dals, and spices?',
-    answer:
-      'All pulses and lentils at Bensi Queen are 100% naturally dried and unpolished — free from artificial yellow dyes, chalk powders, or chemical gloss wax. Our spice powders (turmeric, red chilli, coriander, and pepper) are stone-milled in small batches from whole, cleaned spices with zero artificial preservatives or synthetic colors.',
-  },
-  {
-    id: 8,
-    category: 'weights',
-    categoryLabel: 'Weights & Sizes',
-    question: 'Do you sell nuts, dry fruits, and cooking oils?',
-    answer:
-      'Yes! We offer whole crunchy Grade-W240 Cashew Nuts, California Almonds, Sun-dried seeded Black Raisins, and soft Dates (with and without seeds). We also stock cold-pressed sesame / gingelly oil, pure coconut oil, and double-filtered cooking oils.',
-  },
-  {
-    id: 9,
-    category: 'ordering',
-    categoryLabel: 'Ordering & WhatsApp',
-    question: 'What are your operating hours?',
-    answer:
-      'Bensi Queen is open 7 days a week, Monday through Sunday, from 7:00 AM to 9:30 PM. Orders submitted on WhatsApp during operating hours are reviewed immediately for packing and delivery dispatch.',
-  },
-  {
-    id: 10,
-    category: 'delivery',
-    categoryLabel: 'Delivery & Payment',
-    question: 'Where is your physical grocery store located?',
-    answer:
-      'Our retail store is located at No. 3, Jothi Nagar, 5th Street, Sankara Apartment, Chitlapakkam, Chennai - 600064 (near Chitlapakkam Lake & Tambaram Sanatorium). You are welcome to visit our shop in person or order via WhatsApp for doorstep delivery!',
-  },
-];
+const FAQ_ITEMS: FaqItem[] = FAQS;
 
 export const FAQPage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<FAQCategory>('all');

@@ -1,0 +1,42 @@
+[
+    {
+        "id": "1",
+        "titleEn": "Different Types of Indian Pulses and Their Everyday Uses",
+        "titleTa": "இந்திய பருப்பு வகைகளும் அவற்றின் அன்றாட சமையல் பயன்பாடுகளும்",
+        "excerptEn": "From comforting toor dal sambar to fluffy urad dal idlis and protein-rich yellow moong khichdi, understand how to pick the finest pulses for your family.",
+        "excerptTa": "சாம்பாருக்கு துவரம் பருப்பு முதல் மெதுவான இட்லிக்கு உளுத்தம் பருப்பு வரை, பாரம்பரிய பருப்பு வகைகளின் ஆரோக்கிய நன்மைகள்.",
+        "category": "Kitchen Essentials",
+        "readTime": "4 min read",
+        "image": "/images/toor-dal.jpg"
+    },
+    {
+        "id": "2",
+        "titleEn": "Common Spices Used in South Indian Cooking & Their Health Benefits",
+        "titleTa": "தென்னிந்திய சமையலில் நறுமண மசாலாக்களும் அவற்றின் மருத்துவக் குணங்களும்",
+        "excerptEn": "Explore the science of South Indian tadka — how mustard seeds, whole cumin, black peppercorns, and turmeric protect immunity and enhance digestion.",
+        "excerptTa": "தாளிப்பின் ரகசியங்கள்: கடுகு, மிளகு, சீரகம் மற்றும் மஞ்சளின் அரிய மருத்துவ பலன்கள்.",
+        "category": "Spices & Health",
+        "readTime": "5 min read",
+        "image": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+        "id": "3",
+        "titleEn": "A Beginner’s Guide to Choosing Quality Nuts and Dry Fruits",
+        "titleTa": "உயர்தர முந்திரி, பாதாம் மற்றும் உலர் பழங்கள் தேர்வு செய்யும் வழிகாட்டி",
+        "excerptEn": "How to spot fresh California almonds, creamy whole cashews, natural black raisins, and nutrient-dense soft dates without artificial coatings.",
+        "excerptTa": "ரசாயனக் கலப்பின்றி இயற்கையாக உலர்த்தப்பட்ட ஆரோக்கியமான நட்ஸ் மற்றும் உலர் பழங்களை கண்டறியும் முறைகள்.",
+        "category": "Nutrition Guide",
+        "readTime": "3 min read",
+        "image": "https://images.unsplash.com/photo-1508061252224-411652431cf3?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+        "id": "4",
+        "titleEn": "Essential Grocery Items Every South Indian Kitchen Pantry Needs",
+        "titleTa": "தென்னிந்திய அஞ்சறைப்பெட்டிக்கு தேவையான அத்தியாவசிய மளிகைப் பொருட்கள்",
+        "excerptEn": "The comprehensive checklist of grains, lentils, cold-pressed gingelly oil, and grandma’s secret spice blends for delicious home-cooked meals.",
+        "excerptTa": "சுவையான வீட்டுச் சாப்பாட்டிற்கு எப்போதுமே சமையலறையில் இருக்க வேண்டிய மளிகைப் பட்டியல்.",
+        "category": "Pantry Tips",
+        "readTime": "4 min read",
+        "image": "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=600&q=80"
+    }
+]

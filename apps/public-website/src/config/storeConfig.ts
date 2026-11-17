@@ -1,47 +1,41 @@
-﻿// Central Store Configuration for BENSI QUEEN
-// Edit these values to update contact information, phone, address, and social links across the entire store.
+﻿import { BUSINESS, DELIVERY } from './siteContent';
+
+// Central Store Configuration for BENSI QUEEN
+// Values come from src/data/business.json + src/data/delivery.json (single source of truth).
+// Edit the JSON files (later via the /edit console) — never hardcode these elsewhere.
 
 export const STORE_CONFIG = {
-  storeName: "Bensi Queen",
-  tagline: "Bringing Nature's Goodness to Your Kitchen.",
-  subTagline: "Discover quality pulses, aromatic spices, delicious nuts and everyday grocery essentials at Bensi Queen.",
-  
+  storeName: BUSINESS.storeName,
+  tagline: BUSINESS.tagline,
+  subTagline: BUSINESS.subTagline,
+
   // WhatsApp ordering destination (international format without + or spaces)
-  OWNER_WHATSAPP_NUMBER: "916369448863",
-  
+  OWNER_WHATSAPP_NUMBER: BUSINESS.ownerWhatsappNumber,
+
   // Contact phone number displayed to customers
-  phone: "6369448863",
-  displayPhone: "+91 63694 48863",
-  email: "contact@bensiqueen.com",
-  
+  phone: BUSINESS.phone,
+  displayPhone: BUSINESS.displayPhone,
+  email: BUSINESS.email,
+
   // Physical store address
-  address: "No. 3, Jothi Nagar, 5th Street, Sankara Apartment, Chitlapakkam, Chennai - 600064",
-  landmark: "Near Chitlapakkam Lake / Tambaram Sanatorium",
-  city: "Chennai",
-  pincode: "600064",
-  state: "Tamil Nadu",
-  
+  address: BUSINESS.address,
+  landmark: BUSINESS.landmark,
+  city: BUSINESS.city,
+  pincode: BUSINESS.pincode,
+  state: BUSINESS.state,
+
   // Operating hours
-  businessHours: "Monday to Sunday: 7:00 AM – 9:30 PM",
-  
+  businessHours: BUSINESS.businessHours,
+
   // Assets
-  logoUrl: "/images/bensi-queen-logo.jpg",
-  websiteUrl: "https://bensiqueen.com",
-  
+  logoUrl: BUSINESS.logoUrl,
+  websiteUrl: BUSINESS.websiteUrl,
+
   // Service Areas
-  serviceAreas: [
-    "Chitlapakkam",
-    "Tambaram Sanatorium",
-    "Chromepet",
-    "Hasthinapuram",
-    "Selaiyur",
-    "East Tambaram",
-    "Pallavaram",
-    "Medavakkam"
-  ],
-  
+  serviceAreas: DELIVERY.areas,
+
   // Supported Weights across all products
-  weightOptions: ["100g", "200g", "500g", "750g", "1kg"] as const,
+  weightOptions: ['100g', '200g', '500g', '750g', '1kg'] as const,
 };
 
-export type WeightOption = typeof STORE_CONFIG.weightOptions[number];
+export type WeightOption = (typeof STORE_CONFIG.weightOptions)[number];

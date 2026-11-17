@@ -2,7 +2,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, Sparkles, Tag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { STORE_CONFIG, WeightOption } from '../config/storeConfig';
+import { STORE_CONFIG } from '../config/storeConfig';
 import { SEOHead } from '../components/SEOHead';
 
 export const CartPage: React.FC = () => {
@@ -143,7 +143,7 @@ export const CartPage: React.FC = () => {
                         <select
                           value={item.weight}
                           onChange={(e) =>
-                            updateWeight(item.id, e.target.value as WeightOption)
+                            updateWeight(item.id, e.target.value)
                           }
                           className="bg-[#F7F5E8] border border-[#DCE8C8] text-xs font-bold text-[#123B26] rounded-lg px-2 py-1 focus:outline-none"
                         >

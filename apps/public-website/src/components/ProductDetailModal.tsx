@@ -12,12 +12,13 @@ import {
   CheckCircle2,
   ChevronDown,
 } from 'lucide-react';
-import { Product } from '../types';
-import { WeightOption, STORE_CONFIG } from '../config/storeConfig';
+import type { PublicProduct } from '@bqm/types';
+import { imageSrc, packOptions, prettyCategory } from '../api';
+import { STORE_CONFIG } from '../config/storeConfig';
 import { useCart } from '../context/CartContext';
 
 interface ProductDetailModalProps {
-  product: Product | null;
+  product: PublicProduct | null;
   onClose: () => void;
 }
 
@@ -26,16 +27,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onClose,
 }) => {
   const { addToCart } = useCart();
-  const [selectedWeight, setSelectedWeight] = useState<WeightOption>('500g');
+  const options = product ? packOptions(product) : [];
+  const [selectedWeight, setSelectedWeight] = useState<string>(options[0] ?? '');
   const [quantity, setQuantity] = useState<number>(1);
   const [isAdded, setIsAdded] = useState<boolean>(false);
 
   if (!product) return null;
+  const unavailable = !product.available;
 
   const handleIncrement = () => setQuantity((q) => q + 1);
   const handleDecrement = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   const handleAddToCart = () => {
+    if (unavailable) return;
     addToCart(product, selectedWeight, quantity);
     setIsAdded(true);
     setTimeout(() => {
@@ -44,7 +48,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   const handleWhatsAppInquiry = () => {
-    const text = `Hello Bensi Queen, I would like to inquire about ${product.englishName} (${product.tamilName}) - ${quantity} pack(s) of ${selectedWeight}.`;
+    const text = `Hello Bensi Queen, I would like to inquire about ${product.name}${product.tamilName ? ` (${product.tamilName})` : ''} - ${quantity} pack(s) of ${selectedWeight}.`;
     const url = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -67,18 +71,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Product Image */}
           <div className="relative bg-white min-h-[260px] md:min-h-[380px] flex items-center justify-center overflow-hidden border-b md:border-b-0 md:border-r border-[#DCE8C8]">
-            <img
-              src={product.image}
-              alt={`${product.englishName} – ${product.tamilName}`}
-              className="w-full h-full object-cover object-center"
-            />
+            {imageSrc(product.image) ? (
+              <img
+                src={imageSrc(product.image)}
+                alt={`${product.name}${product.tamilName ? ` – ${product.tamilName}` : ''}`}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/images/Products_Cover.jpg';
+                }}
+                className={`w-full h-full object-cover object-center${unavailable ? ' grayscale opacity-55' : ''}`}
+              />
+            ) : null}
             {/* Category Badge */}
             <span className="absolute top-4 left-4 bg-[#DCE8C8]/95 backdrop-blur-xs text-[#123B26] text-xs font-bold px-3 py-1 rounded-full shadow-xs border border-[#A8C66C]/40 uppercase tracking-wider">
-              {product.categoryName}
+              {prettyCategory(product.category)}
             </span>
-            {product.popular && (
-              <span className="absolute bottom-4 left-4 bg-[#F2C94C] text-[#123B26] text-xs font-black px-3 py-1 rounded-full shadow-xs uppercase tracking-wide">
-                Popular Choice
+            {unavailable && (
+              <span className="absolute bottom-4 left-4 bg-[#123B26]/90 text-white text-xs font-black px-3 py-1 rounded-full shadow-xs uppercase tracking-wide">
+                Out of stock — back soon
               </span>
             )}
           </div>
@@ -88,11 +98,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div>
               {/* Product Names */}
               <h2 className="font-playfair text-2xl font-bold text-[#123B26] leading-tight">
-                {product.englishName}
+                {product.name}
               </h2>
-              <p className="font-mukta text-lg font-bold text-[#205C38] mt-0.5">
-                {product.tamilName}
-              </p>
+              {product.tamilName && (
+                <p className="font-mukta text-lg font-bold text-[#205C38] mt-0.5">
+                  {product.tamilName}
+                </p>
+              )}
 
               {/* Full Product Description */}
               <div className="mt-4 pt-4 border-t border-gray-200">
@@ -127,7 +139,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
             {/* Weight Selection & Quantity */}
             <div className="space-y-4 pt-4 border-t border-gray-200">
-              
+
               {/* Weight Selector Dropdown */}
               <div>
                 <label
@@ -140,10 +152,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <select
                     id={`modal-weight-${product.id}`}
                     value={selectedWeight}
-                    onChange={(e) => setSelectedWeight(e.target.value as WeightOption)}
+                    onChange={(e) => setSelectedWeight(e.target.value)}
                     className="w-full appearance-none bg-white border-2 border-[#DCE8C8] hover:border-[#205C38] focus:border-[#123B26] text-[#123B26] font-black text-sm rounded-2xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-[#A8C66C]/40 cursor-pointer shadow-xs transition-all"
                   >
-                    {STORE_CONFIG.weightOptions.map((weight) => (
+                    {options.map((weight) => (
                       <option key={weight} value={weight} className="bg-white text-[#123B26] font-bold">
                         {weight} Pack
                       </option>
@@ -181,13 +193,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <button
                   type="button"
                   onClick={handleAddToCart}
+                  disabled={unavailable}
+                  title={unavailable ? 'Out of stock — back soon' : 'Add to cart'}
                   className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-button active:scale-95 ${
-                    isAdded
-                      ? 'bg-[#205C38] text-white'
-                      : 'bg-[#123B26] hover:bg-[#205C38] text-white'
+                    unavailable
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : isAdded
+                        ? 'bg-[#205C38] text-white'
+                        : 'bg-[#123B26] hover:bg-[#205C38] text-white'
                   }`}
                 >
-                  {isAdded ? (
+                  {unavailable ? (
+                    <span>Out of stock</span>
+                  ) : isAdded ? (
                     <>
                       <Check className="w-4 h-4 text-[#A8C66C]" />
                       <span>Added to Cart!</span>

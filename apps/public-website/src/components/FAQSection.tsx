@@ -4,72 +4,12 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { HOME_FAQS } from '../config/siteContent';
+import type { FaqItem } from '../types/content';
 
 type FAQCategory = 'all' | 'ordering' | 'weights' | 'delivery' | 'quality';
 
-interface FAQItem {
-  id: number;
-  category: 'ordering' | 'weights' | 'delivery' | 'quality';
-  categoryLabel: string;
-  question: string;
-  answer: string;
-  popular?: boolean;
-}
-
-const FAQ_ITEMS: FAQItem[] = [
-  {
-    id: 1,
-    category: 'ordering',
-    categoryLabel: 'Ordering & WhatsApp',
-    question: 'How can I place an order on this website?',
-    answer:
-      'Browse our 35-item catalog, choose your pack weights (100g to 1kg) and quantity, and click "Add to Cart". In the checkout screen, enter your address and click "Place Order via WhatsApp". A structured order summary is automatically prepared for you to send to the store owner in one tap.',
-    popular: true,
-  },
-  {
-    id: 2,
-    category: 'weights',
-    categoryLabel: 'Weights & Sizes',
-    question: 'What pack sizes/weights are available for pulses and spices?',
-    answer:
-      'Every item in our store supports five standard pack weights: 100g, 200g, 500g, 750g, and 1kg. Select your preferred weight directly from the dropdown on each product card.',
-    popular: true,
-  },
-  {
-    id: 3,
-    category: 'quality',
-    categoryLabel: 'Purity & Quality',
-    question: 'Why are commodity prices not displayed on the website?',
-    answer:
-      'Agricultural commodities fluctuate in price with market harvests. Our owner reviews daily rates and shares the exact, transparent billing on your WhatsApp order chat before delivery dispatch.',
-    popular: true,
-  },
-  {
-    id: 4,
-    category: 'delivery',
-    categoryLabel: 'Delivery & Payment',
-    question: 'How does payment work? Do I need to pay online in advance?',
-    answer:
-      'No advance online prepayment is required! You pay only after receiving and inspecting your fresh grocery package at your doorstep via Cash on Delivery or UPI (Google Pay, PhonePe, Paytm).',
-    popular: true,
-  },
-  {
-    id: 5,
-    category: 'delivery',
-    categoryLabel: 'Delivery & Payment',
-    question: 'Which areas do you deliver to in Chennai?',
-    answer:
-      'We provide fast neighborhood delivery across Chitlapakkam, Tambaram Sanatorium, Chromepet, Hasthinapuram, Selaiyur, East Tambaram, Sembakkam, and Medavakkam. Orders in Chitlapakkam are dispatched in 30–45 mins.',
-  },
-  {
-    id: 6,
-    category: 'quality',
-    categoryLabel: 'Purity & Quality',
-    question: 'What is the quality guarantee on pulses, dals, and spices?',
-    answer:
-      'All pulses at Bensi Queen are 100% naturally dried and unpolished — zero chemical wax, chalk, or artificial colors. All spices are stone-milled in small batches for full natural aroma.',
-  },
-];
+const FAQ_ITEMS: FaqItem[] = HOME_FAQS;
 
 export const FAQSection: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<FAQCategory>('all');

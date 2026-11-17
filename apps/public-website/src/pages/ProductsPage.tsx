@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { ProductCard } from '../components/ProductCard';
-import { ProductCategory, Product } from '../types';
-import { ALL_PRODUCTS, CATEGORIES } from '../data/products';
+import { ProductCategory } from '../types';
 import {
   Search,
   X,
@@ -25,19 +24,7 @@ import {
 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { STORE_CONFIG } from '../config/storeConfig';
-import { useOffers } from '../context/OffersContext';
-
-type SortOption = 'featured' | 'name-asc' | 'popular';
-type FilterBadge = 'all' | 'popular' | 'featured';
-
-const QUICK_SEARCH_TAGS = [
-  'Toor Dal',
-  'Urad Dal',
-  'Cashew Nuts',
-  'Sambar Powder',
-  'Sesame Oil',
-  'Idli Rice',
-];
+import { useCatalog } from '../context/CatalogContext';
 
 export const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,12 +33,11 @@ export const ProductsPage: React.FC = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(initialCategory);
   const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
-  const [sortBy, setSortBy] = useState<SortOption>('featured');
-  const [filterBadge, setFilterBadge] = useState<FilterBadge>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { offers } = useOffers();
-  const activeOffersCount = offers.filter((o) => o.status === 'active' || o.isActive).length;
+  const { products, categories, combos, loading } = useCatalog();
+  const QUICK_SEARCH_TAGS = products.slice(0, 6).map((p) => p.name);
+  const activeOffersCount = combos.filter((c) => c.available).length;
 
   useEffect(() => {
     const cat = (searchParams.get('category') as ProductCategory) || 'all';
@@ -85,54 +71,31 @@ export const ProductsPage: React.FC = () => {
   const handleResetFilters = () => {
     setSelectedCategory('all');
     setSearchQuery('');
-    setSortBy('featured');
-    setFilterBadge('all');
     setSearchParams({});
   };
 
-  // Filter and sort products
+  // Filter products (availability badges live on the card; no featured/popular tags)
   const filteredProducts = useMemo(() => {
-    let result = ALL_PRODUCTS.filter((product) => {
+    const q = searchQuery.toLowerCase().trim();
+    return products.filter((product) => {
       const matchesCategory =
         selectedCategory === 'all' || product.category === selectedCategory;
-
-      const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
-        product.englishName.toLowerCase().includes(q) ||
-        product.tamilName.includes(q) ||
-        product.categoryName.toLowerCase().includes(q) ||
-        product.description.toLowerCase().includes(q) ||
-        (product.seoKeywords && product.seoKeywords.some((k) => k.toLowerCase().includes(q)));
-
-      const matchesBadge =
-        filterBadge === 'all' ||
-        (filterBadge === 'popular' && product.popular) ||
-        (filterBadge === 'featured' && product.featured);
-
-      return matchesCategory && matchesSearch && matchesBadge;
+        product.name.toLowerCase().includes(q) ||
+        (product.tamilName ?? '').includes(q) ||
+        product.category.toLowerCase().includes(q) ||
+        product.description.toLowerCase().includes(q);
+      return matchesCategory && matchesSearch;
     });
+  }, [products, selectedCategory, searchQuery]);
 
-    // Sorting
-    if (sortBy === 'name-asc') {
-      result = [...result].sort((a, b) => a.englishName.localeCompare(b.englishName));
-    } else if (sortBy === 'popular') {
-      result = [...result].sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
-    } else {
-      // 'featured'
-      result = [...result].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-    }
-
-    return result;
-  }, [selectedCategory, searchQuery, sortBy, filterBadge]);
-
-  const activeCategoryInfo = CATEGORIES.find((c) => c.id === selectedCategory);
+  const activeCategoryInfo = categories.find((c) => c.id === selectedCategory);
   const pageTitle =
     selectedCategory === 'all'
       ? 'All Grocery Products & Kitchen Provisions | Bensi Queen'
       : `${activeCategoryInfo?.englishLabel || 'Products'} (${activeCategoryInfo?.tamilLabel || ''}) | Bensi Queen`;
   const pageDescription =
-    activeCategoryInfo?.seoDescription ||
     'Browse the full Bensi Queen groceries catalogue. Pulses, whole spices, rice, cold-pressed oils, and premium dry fruits in Chitlapakkam, Chennai.';
 
   const handleWhatsAppCustomList = () => {
@@ -142,7 +105,15 @@ export const ProductsPage: React.FC = () => {
   };
 
   const hasActiveFilters =
-    selectedCategory !== 'all' || searchQuery.trim() !== '' || filterBadge !== 'all';
+    selectedCategory !== 'all' || searchQuery.trim() !== '';
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F7F5E8] flex items-center justify-center text-[#205C38] font-poppins text-sm">
+        Loading catalogue…
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#F7F5E8] min-h-screen text-[#123B26]">
@@ -174,7 +145,7 @@ export const ProductsPage: React.FC = () => {
                 <Leaf className="w-3.5 h-3.5 text-[#A8C66C]" />
                 <span>Bensi Queen Pantry</span>
                 <span className="text-white/40">•</span>
-                <span className="text-white font-extrabold">{ALL_PRODUCTS.length} Quality Provisions</span>
+                <span className="text-white font-extrabold">{products.length} Quality Provisions</span>
               </div>
 
               {/* Dynamic Headline */}
@@ -195,8 +166,7 @@ export const ProductsPage: React.FC = () => {
 
               {/* Description */}
               <p className="font-poppins text-xs sm:text-sm text-white/80 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                {activeCategoryInfo?.seoDescription ||
-                  'Handpicked unpolished pulses, cold-pressed oils, stone-milled spices, and whole dry fruits. Pick custom weights from 100g to 1kg and enjoy doorstep delivery in Chitlapakkam with zero prepayment.'}
+                {'Handpicked unpolished pulses, cold-pressed oils, stone-milled spices, and whole dry fruits. Pick custom weights from 100g to 1kg and enjoy doorstep delivery in Chitlapakkam with zero prepayment.'}
               </p>
 
               {/* Mini Trust Highlights */}
@@ -265,7 +235,7 @@ export const ProductsPage: React.FC = () => {
       <section className="bg-white border-b border-[#E8DFC8] py-4 sm:py-5 shadow-xs sticky top-16 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-3 overflow-x-auto no-scrollbar py-1">
-            {CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const isActive = selectedCategory === cat.id;
               return (
                 <button
@@ -378,23 +348,7 @@ export const ProductsPage: React.FC = () => {
               )}
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center space-x-2 self-end lg:self-auto flex-wrap sm:flex-nowrap">
-              <div className="flex items-center space-x-1.5 bg-[#FCFAF5] border border-[#E8DFC8] rounded-2xl px-3 py-2 text-xs">
-                <ArrowUpDown className="w-3.5 h-3.5 text-[#205C38]" />
-                <span className="font-bold text-gray-600">Sort:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="bg-transparent font-bold text-[#123B26] focus:outline-none cursor-pointer"
-                >
-                  <option value="featured">Featured First</option>
-                  <option value="name-asc">Name (A–Z)</option>
-                  <option value="popular">Most Popular</option>
-                </select>
-              </div>
-
-              {/* View Switcher (Grid vs List) */}
+            {/* View Switcher (Grid vs List) */}
               <div className="flex items-center border border-[#E8DFC8] rounded-2xl bg-[#FCFAF5] p-1 space-x-1">
                 <button
                   type="button"
@@ -423,7 +377,6 @@ export const ProductsPage: React.FC = () => {
                   <List className="w-4 h-4" />
                 </button>
               </div>
-            </div>
 
           </div>
 
@@ -450,38 +403,11 @@ export const ProductsPage: React.FC = () => {
 
           {/* Row 3: Filter Badges + Summary */}
           <div className="pt-3 border-t border-[#F0EDE0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center space-x-2">
-              <span className="font-bold text-gray-600 flex items-center space-x-1">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#205C38]" />
-                <span>Filter:</span>
-              </span>
-              {(
-                [
-                  { id: 'all', label: 'All Items' },
-                  { id: 'popular', label: '🔥 Popular Staples' },
-                  { id: 'featured', label: '⭐ Featured Only' },
-                ] as const
-              ).map(({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setFilterBadge(id)}
-                  className={`px-3 py-1 rounded-full font-bold transition-all ${
-                    filterBadge === id
-                      ? 'bg-[#205C38] text-white shadow-xs'
-                      : 'bg-[#FCFAF5] text-gray-700 border border-[#E8DFC8] hover:border-[#205C38]'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
             {/* Results count & Clear */}
             <div className="flex items-center space-x-3 self-end sm:self-auto">
               <span className="text-gray-500 font-medium">
                 Showing <strong className="text-[#123B26] font-extrabold">{filteredProducts.length}</strong> of{' '}
-                {ALL_PRODUCTS.length} products
+                {products.length} products
               </span>
 
               {hasActiveFilters && (

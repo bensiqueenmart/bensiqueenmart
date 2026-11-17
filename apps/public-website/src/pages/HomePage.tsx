@@ -29,117 +29,28 @@ import {
   Flame,
   ShieldCheck,
 } from 'lucide-react';
-import { useOffers } from '../context/OffersContext';
+import { useCatalog } from '../context/CatalogContext';
 import { useReviews } from '../context/ReviewsContext';
 import { SEOHead } from '../components/SEOHead';
 import { DealCard } from '../components/DealCard';
 import { DealDetailModal } from '../components/DealDetailModal';
 import { HeroProductCarousel } from '../components/HeroProductCarousel';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { HOME, DELIVERY } from '../config/siteContent';
+
+// Derived aliases — edit src/data/home.json + src/data/delivery.json, never here.
+const DELIVERY_ZONES = DELIVERY.zones;
+const COMPARISON_POINTS = HOME.comparisonPoints;
+const MARQUEE_ITEMS = HOME.marqueeItems;
+const RATING_BARS = HOME.ratingBars;
+const CYCLE_WORDS = HOME.cycleWords;
 
 /* ─────────────────────────── DATA ──────────────────────────── */
 
-const FEATURED_CATEGORIES = [
-  {
-    id: 'pulses',
-    name: 'Pulses & Lentils',
-    tamilName: 'பருப்பு வகைகள்',
-    count: 5,
-    image: '/images/pulses-and-lentils.jpg',
-    tag: 'High Protein',
-  },
-  {
-    id: 'spices',
-    name: 'Spices & Powders',
-    tamilName: 'மசாலா வகைகள்',
-    count: 9,
-    image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80',
-    tag: 'Stone Milled',
-  },
-  {
-    id: 'nuts-dryfruits',
-    name: 'Nuts & Dry Fruits',
-    tamilName: 'கொட்டை வகைகள்',
-    count: 5,
-    image: '/images/nuts-and-dry-fruits.jpg',
-    tag: 'Fresh Harvest',
-  },
-  {
-    id: 'masalas',
-    name: 'South Masalas',
-    tamilName: 'தென்னிந்திய மசாலா',
-    count: 7,
-    image: '/images/south-masalas.jpg',
-    tag: 'Home Style',
-  },
-  {
-    id: 'rice-grains',
-    name: 'Rice & Grains',
-    tamilName: 'அரிசி வகைகள்',
-    count: 2,
-    image: '/images/rice-and-grains.jpg',
-    tag: 'Fluffy Idlis',
-  },
-  {
-    id: 'oils',
-    name: 'Cooking Oils',
-    tamilName: 'சமையல் எண்ணெய்',
-    count: 3,
-    image: '/images/cooking-oils.jpg',
-    tag: 'Cold Pressed',
-  },
-];
 
-const DELIVERY_ZONES = [
-  { area: 'Chitlapakkam', time: 'Within 30–45 mins', status: 'Available Now' },
-  { area: 'Selaiyur & Hasthinapuram', time: 'Morning & Evening Batches', status: 'Daily Route' },
-  { area: 'Chromepet & MIT Road', time: 'Within 1 hour', status: 'Available Now' },
-  { area: 'Tambaram Sanatorium', time: 'Evening Dispatch', status: 'Scheduled' },
-  { area: 'Medavakkam & Sembakkam', time: 'Daily Morning Dispatch', status: 'Scheduled' },
-];
 
-const COMPARISON_POINTS = [
-  {
-    feature: 'Processing Method',
-    bensi: 'Naturally dried & unpolished with no chemical waxing',
-    supermarket: 'Industrial chemical buffing for cosmetic shine',
-  },
-  {
-    feature: 'Spices & Aroma',
-    bensi: 'Stone-milled in small batches for natural oils & aroma',
-    supermarket: 'High-heat industrial grinding that strips natural oils',
-  },
-  {
-    feature: 'Ordering Experience',
-    bensi: '1-tap WhatsApp chat with friendly local store owner',
-    supermarket: 'Impersonal checkouts, app logins & payment gateway bugs',
-  },
-  {
-    feature: 'Payment Safety',
-    bensi: 'Zero online prepayment — Pay with Cash / UPI at your doorstep',
-    supermarket: 'Mandatory upfront cards/wallets before order confirmation',
-  },
-  {
-    feature: 'Freshness Guarantee',
-    bensi: 'Daily morning and evening fresh neighborhood dispatch',
-    supermarket: 'Months-old warehouse central distribution stock',
-  },
-];
 
-const MARQUEE_ITEMS = [
-  'Toor Dal', 'Chana Dal', 'Urad Dal', 'Moong Dal', 'Rajma',
-  'Turmeric Powder', 'Red Chilli Powder', 'Coriander Powder', 'Cumin Seeds',
-  'Cashew Nuts', 'Almonds', 'Pista', 'Raisins', 'Walnuts',
-  'Basmati Rice', 'Sesame Oil', 'Coconut Oil', 'Mustard Seeds',
-];
 
-const RATING_BARS = [
-  { stars: 5, pct: 85 },
-  { stars: 4, pct: 12 },
-  { stars: 3, pct: 3 },
-  { stars: 2, pct: 0 },
-  { stars: 1, pct: 0 },
-];
 
 /* ─────────────────────── FLOATING PARTICLE CONFIG ─────────── */
 interface Particle {
@@ -169,7 +80,7 @@ function generateParticles(n: number): Particle[] {
 const HERO_PARTICLES = generateParticles(22);
 
 /* ─────────────────── TYPEWRITER CYCLING HOOK ───────────────── */
-const CYCLE_WORDS = ['Pure Pulses', 'Fresh Spices', 'Premium Nuts', 'Cold-Press Oils', 'Pantry Essentials'];
+// All marketing content below is derived from src/data/ (single source of truth).
 
 function useTypewriter(words: string[], typingSpeed = 70, pauseMs = 1800, deletingSpeed = 40) {
   const [displayed, setDisplayed] = useState('');
@@ -261,7 +172,7 @@ function useCountUp(target: number, duration = 1600) {
 /* ─────────────────────── COMPONENT ─────────────────────────── */
 
 export const HomePage: React.FC = () => {
-  const { activeOffers } = useOffers();
+  const { products, combos: activeOffers, categories } = useCatalog();
   const { activeReviews } = useReviews();
   const navigate = useNavigate();
 
@@ -310,7 +221,7 @@ export const HomePage: React.FC = () => {
   const [selectedZone, setSelectedZone] = useState(DELIVERY_ZONES[0]);
 
   // Animated counters
-  const productsCount = useCountUp(35);
+  const productsCount = useCountUp(products.length);
   const homesCount = useCountUp(500);
   const yearsCount = useCountUp(5);
 
@@ -644,13 +555,13 @@ export const HomePage: React.FC = () => {
               to="/products"
               className="inline-flex items-center space-x-2 text-xs font-bold text-[#123B26] hover:text-[#205C38] border-2 border-[#123B26] hover:bg-[#123B26] hover:text-white px-5 py-2.5 rounded-full transition-all duration-200 self-start sm:self-auto"
             >
-              <span>View All 35 Products</span>
+              <span>View All {products.length} Products</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
-            {FEATURED_CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <Link
                 key={cat.id}
                 to={`/products?category=${cat.id}`}
@@ -660,7 +571,7 @@ export const HomePage: React.FC = () => {
                   <div className="h-32 overflow-hidden bg-[#F7F5E8] relative">
                     <img
                       src={cat.image}
-                      alt={cat.name}
+                      alt={cat.englishLabel}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <span className="absolute top-2 right-2 bg-[#123B26] text-[#A8C66C] text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
@@ -670,13 +581,13 @@ export const HomePage: React.FC = () => {
 
                   <div className="p-3.5 space-y-1">
                     <span className="text-[9px] font-bold text-[#205C38] uppercase tracking-wider block">
-                      {cat.tag}
+                      {'Fresh Stock'}
                     </span>
                     <h3 className="font-poppins text-xs sm:text-sm font-bold text-[#123B26] group-hover:text-[#205C38] transition-colors leading-tight">
-                      {cat.name}
+                      {cat.englishLabel}
                     </h3>
                     <p className="font-mukta text-[11px] text-[#205C38]/80 font-medium">
-                      {cat.tamilName}
+                      {cat.tamilLabel ?? ''}
                     </p>
                   </div>
                 </div>
@@ -977,8 +888,8 @@ export const HomePage: React.FC = () => {
                   step: '01',
                   icon: ShoppingBag,
                   title: 'Browse & Pick Staples',
-                  desc: 'Explore 35 kitchen provisions — unpolished pulses, stone-milled spices and premium crunchy nuts. Select weights from 100g to 1kg.',
-                  badge: '35 Clean Provisions',
+                  desc: 'Explore our kitchen provisions — unpolished pulses, stone-milled spices and premium crunchy nuts. Select weights from 100g to 1kg.',
+                  badge: 'Clean Provisions',
                 },
                 {
                   step: '02',

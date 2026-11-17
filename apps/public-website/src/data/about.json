@@ -1,0 +1,139 @@
+{
+    "productCategories": [
+        {
+            "num": "01",
+            "title": "Pulses & Lentils",
+            "tamilTitle": "பருப்பு வகைகள்",
+            "desc": "Unpolished Toor Dal, Urad Dal, Moong Dal, Kadalai Paruppu, and Rajma — protein-rich dals sourced for maximum nutrition and natural flavor.",
+            "items": [
+                "Toor Dal",
+                "Urad Dal",
+                "Moong Dal",
+                "Kadalai Paruppu",
+                "Rajma"
+            ],
+            "image": "/images/pulses-and-lentils.jpg",
+            "tag": "High Protein",
+            "category": "pulses"
+        },
+        {
+            "num": "02",
+            "title": "South Masalas",
+            "tamilTitle": "தென்னிந்திய மசாலா",
+            "desc": "Traditional South Indian spice blends ground in-house. Aromatic Sambar Powder, Pepper Rasam, authentic Biryani and Chicken Masalas.",
+            "items": [
+                "Sambar Powder",
+                "Rasam Powder",
+                "Biryani Masala",
+                "Chicken Masala",
+                "Garam Masala"
+            ],
+            "image": "/images/south-masalas.jpg",
+            "tag": "Stone-Ground",
+            "category": "masalas"
+        },
+        {
+            "num": "03",
+            "title": "Spices & Powders",
+            "tamilTitle": "மசாலா தூள் & விதைகள்",
+            "desc": "Pure Turmeric, Chilli, Coriander, Mustard, Black Pepper, Cumin, Fennel, and Fenugreek — with zero artificial colors or fillers.",
+            "items": [
+                "Turmeric Powder",
+                "Red Chilli Powder",
+                "Coriander Powder",
+                "Cumin Seeds",
+                "Mustard"
+            ],
+            "image": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80",
+            "tag": "No Fillers",
+            "category": "spices"
+        },
+        {
+            "num": "04",
+            "title": "Nuts & Dry Fruits",
+            "tamilTitle": "கொட்டை & உலர் பழங்கள்",
+            "desc": "Whole Cashews, California Almonds, Seedless Black Raisins, and succulent Dates — hand-sorted for crunch, flavor, and freshness.",
+            "items": [
+                "Whole Cashews",
+                "California Almonds",
+                "Black Raisins",
+                "Dates",
+                "Pista"
+            ],
+            "image": "/images/nuts-and-dry-fruits.jpg",
+            "tag": "Fresh Harvest",
+            "category": "nuts-dryfruits"
+        },
+        {
+            "num": "05",
+            "title": "Rice & Grains",
+            "tamilTitle": "அரிசி வகைகள்",
+            "desc": "Clean parboiled Idli Rice and evenly roasted Sooji / Rava — staple grains for fluffy idlis, crispy dosas, and golden upma.",
+            "items": [
+                "Idli Rice",
+                "Sooji / Rava"
+            ],
+            "image": "/images/rice-and-grains.jpg",
+            "tag": "Fluffy Idlis",
+            "category": "rice-grains"
+        },
+        {
+            "num": "06",
+            "title": "Cooking Oils",
+            "tamilTitle": "சமையல் எண்ணெய்",
+            "desc": "Cold-pressed Sesame Oil, pure Coconut Oil, and double-filtered Refined Oil — authentic flavors trusted in South Indian kitchens for generations.",
+            "items": [
+                "Sesame Oil",
+                "Coconut Oil",
+                "Refined Oil"
+            ],
+            "image": "/images/cooking-oils.jpg",
+            "tag": "Cold Pressed",
+            "category": "oils"
+        }
+    ],
+    "trustPillars": [
+        {
+            "icon": "ShieldCheck",
+            "title": "Purity First, Always",
+            "desc": "Every product at Bensi Queen is selected with zero tolerance for artificial polish, synthetic colors, or chemical preservatives. What you receive is exactly what nature intended."
+        },
+        {
+            "icon": "MapPin",
+            "title": "Hyperlocal Neighborhood Store",
+            "desc": "We are proudly rooted in Chitlapakkam, Chennai — a friendly community grocery that knows your household preferences, respects your time, and grows with your family."
+        },
+        {
+            "icon": "Truck",
+            "title": "Doorstep Delivery Promise",
+            "desc": "Fresh dispatch every morning and evening across Chitlapakkam, Chromepet, Selaiyur, Tambaram, and surrounding areas. Cash or UPI accepted comfortably at your door."
+        },
+        {
+            "icon": "Heart",
+            "title": "Community-Rooted Care",
+            "desc": "Every order placed at Bensi Queen supports a local family business that has built its identity on honest pricing, clean products, and genuine neighborly service."
+        }
+    ],
+    "timeline": [
+        {
+            "year": "2019",
+            "title": "The Beginning",
+            "desc": "Bensi Queen opened as a small neighborhood provisions store in Chitlapakkam, Jothi Nagar — serving a handful of trusted families with quality kitchen essentials."
+        },
+        {
+            "year": "2021",
+            "title": "Growing the Catalogue",
+            "desc": "Expanded from core pulses and spices to include premium dry fruits, cold-pressed oils, traditional South Indian masalas, and household essentials — growing to 35+ products."
+        },
+        {
+            "year": "2023",
+            "title": "WhatsApp Ordering",
+            "desc": "Launched a simple WhatsApp ordering system to serve busy families who could now order from home without visiting the store, with same-day doorstep delivery."
+        },
+        {
+            "year": "2025",
+            "title": "Online Store Launch",
+            "desc": "Launched our full digital storefront to help Chennai families browse the complete catalogue, select custom pack weights, and place orders anytime — 24/7."
+        }
+    ]
+}

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { BUSINESS } from '../config/siteContent';
 
 interface SEOHeadProps {
   title: string;
@@ -15,11 +16,11 @@ interface SEOHeadProps {
 export const SEOHead: React.FC<SEOHeadProps> = ({
   title,
   description,
-  canonical = 'https://bensiqueen.com/',
+  canonical = `${BUSINESS.websiteUrl}/`,
   noindex = false,
   keywords,
-  image = 'https://bensiqueen.com/images/bensi-queen-logo.jpg',
-  imageAlt = 'Bensi Queen - Quality Pulses, Spices, Nuts & Everyday Groceries',
+  image = `${BUSINESS.websiteUrl}${BUSINESS.logoUrl}`,
+  imageAlt = `${BUSINESS.storeName} - Quality Pulses, Spices, Nuts & Everyday Groceries`,
   type = 'website',
   structuredData,
 }) => {

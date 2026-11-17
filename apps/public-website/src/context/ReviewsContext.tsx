@@ -9,49 +9,16 @@ interface ReviewsContextType {
   deleteReview: (id: string) => void;
   toggleApproval: (id: string) => void;
   resetToDefaultReviews: () => void;
+  isOwnerModalOpen: boolean;
+  setIsOwnerModalOpen: (open: boolean) => void;
 }
 
 const REVIEWS_STORAGE_KEY = 'bensi_queen_reviews_v1';
 
-// Initial sample reviews for preview (clearly flagged as sample content)
-const DEFAULT_REVIEWS: CustomerReview[] = [
-  {
-    id: 'rev-1',
-    authorName: 'S. Lakshmi',
-    location: 'Chitlapakkam, Chennai',
-    reviewText:
-      'The Toor Dal is genuinely unpolished and cooks into the most aromatic, authentic sambar. The 1kg pack is clean, well-sealed, and delivered promptly via WhatsApp.',
-    rating: 5,
-    reviewDate: 'October 2026',
-    verifiedPurchase: true,
-    isApproved: true,
-    isSample: true, // Marked as sample until owner approves real reviews
-  },
-  {
-    id: 'rev-2',
-    authorName: 'Karthik R.',
-    location: 'Tambaram Sanatorium',
-    reviewText:
-      'Very impressed with the Cashew Nuts (முந்திரி பருப்பு) and Almonds. Crisp, fresh, and large-sized without any breakage. Placing the order on WhatsApp took less than a minute.',
-    rating: 5,
-    reviewDate: 'October 2026',
-    verifiedPurchase: true,
-    isApproved: true,
-    isSample: true,
-  },
-  {
-    id: 'rev-3',
-    authorName: 'Meenakshi Sundaram',
-    location: 'Chromepet, Chennai',
-    reviewText:
-      'Ordered Idli Rice and cold-pressed Sesame Oil. The idlis turned out soft and fluffy. Having five pack sizes (100g to 1kg) is very practical for our joint family pantry.',
-    rating: 5,
-    reviewDate: 'September 2026',
-    verifiedPurchase: true,
-    isApproved: true,
-    isSample: true,
-  },
-];
+import { SEED_REVIEWS } from '../config/siteContent';
+
+// Seed reviews — single source of truth is src/data/reviews.json (owner-editable).
+const DEFAULT_REVIEWS: CustomerReview[] = SEED_REVIEWS.map((r) => ({ ...r, isSample: true }));
 
 const ReviewsContext = createContext<ReviewsContextType | undefined>(undefined);
 
@@ -108,6 +75,8 @@ export const ReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setReviews(DEFAULT_REVIEWS);
   };
 
+  const [isOwnerModalOpen, setIsOwnerModalOpen] = useState(false);
+
   // Only approved reviews are shown publicly to customers
   const activeReviews = reviews.filter((r) => r.isApproved);
 
@@ -121,6 +90,8 @@ export const ReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deleteReview,
         toggleApproval,
         resetToDefaultReviews,
+        isOwnerModalOpen,
+        setIsOwnerModalOpen,
       }}
     >
       {children}

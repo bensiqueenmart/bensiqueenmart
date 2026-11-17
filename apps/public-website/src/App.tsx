@@ -1,13 +1,12 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
-import { OffersProvider } from './context/OffersContext';
 import { ReviewsProvider } from './context/ReviewsContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { ToastNotification } from './components/ToastNotification';
-import { OwnerPortalModal } from './components/OwnerPortalModal';
+import { CatalogProvider } from './context/CatalogContext';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import { StructuredData } from './components/StructuredData';
 
@@ -68,9 +67,6 @@ export const AppContent: React.FC = () => {
       {/* Toast Notification */}
       <ToastNotification />
 
-      {/* Owner Management Portal (Combo Offers + Reviews) */}
-      <OwnerPortalModal />
-
       {/* Floating WhatsApp Quick Action Button */}
       <FloatingWhatsApp />
     </div>
@@ -80,13 +76,13 @@ export const AppContent: React.FC = () => {
 export function App() {
   return (
     <BrowserRouter>
-      <OffersProvider>
+      <CatalogProvider>
         <ReviewsProvider>
           <CartProvider>
             <AppContent />
           </CartProvider>
         </ReviewsProvider>
-      </OffersProvider>
+      </CatalogProvider>
     </BrowserRouter>
   );
 }

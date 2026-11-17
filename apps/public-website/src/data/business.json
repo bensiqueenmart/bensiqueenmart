@@ -1,0 +1,24 @@
+{
+    "storeName": "Bensi Queen",
+    "tagline": "Bringing Nature's Goodness to Your Kitchen.",
+    "subTagline": "Discover quality pulses, aromatic spices, delicious nuts and everyday grocery essentials at Bensi Queen.",
+    "ownerWhatsappNumber": "916369448863",
+    "phone": "6369448863",
+    "displayPhone": "+91 63694 48863",
+    "email": "contact@bensiqueen.com",
+    "address": "No. 3, Jothi Nagar, 5th Street, Sankara Apartment, Chitlapakkam, Chennai - 600064",
+    "streetAddress": "No 3, Jothi Nagar, 5th Street, Sankara Apartment, Chitlapakkam",
+    "landmark": "Near Chitlapakkam Lake / Tambaram Sanatorium",
+    "city": "Chennai",
+    "pincode": "600064",
+    "state": "Tamil Nadu",
+    "openTime": "07:00",
+    "closeTime": "21:30",
+    "businessHours": "Monday to Sunday: 7:00 AM – 9:30 PM",
+    "geo": {
+        "lat": 12.9373,
+        "lng": 80.1415
+    },
+    "logoUrl": "/images/bensi-queen-logo.jpg",
+    "websiteUrl": "https://bensiqueen.com"
+}

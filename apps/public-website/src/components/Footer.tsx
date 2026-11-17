@@ -1,12 +1,12 @@
 ﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import { STORE_CONFIG } from '../config/storeConfig';
-import { CATEGORIES } from '../data/products';
-import { MapPin, Phone, MessageSquare, ShieldCheck, Tag } from 'lucide-react';
-import { useOffers } from '../context/OffersContext';
+import { DELIVERY, BUSINESS } from '../config/siteContent';
+import { MapPin, Phone, MessageSquare, Tag } from 'lucide-react';
+import { useCatalog } from '../context/CatalogContext';
 
 export const Footer: React.FC = () => {
-  const { setIsOwnerModalOpen } = useOffers();
+  const { categories } = useCatalog();
 
   const directWhatsAppUrl = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
     'Hello Bensi Queen, I would like to inquire about your grocery products.'
@@ -114,7 +114,7 @@ export const Footer: React.FC = () => {
               Categories
             </h4>
             <ul className="space-y-2 text-xs">
-              {CATEGORIES.slice(1).map((cat) => (
+              {categories.map((cat) => (
                 <li key={cat.id}>
                   <Link
                     to={`/products?category=${cat.id}`}
@@ -151,19 +151,7 @@ export const Footer: React.FC = () => {
 
               <div className="pt-2 border-t border-white/10 text-[11px] text-white/60">
                 <p className="font-semibold text-white/80">Service Locations:</p>
-                <p>Chitlapakkam, Tambaram, Chromepet, Hasthinapuram, Chennai - 600064</p>
-              </div>
-
-              {/* Owner Portal Link */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsOwnerModalOpen(true)}
-                  className="inline-flex items-center space-x-1.5 text-[11px] text-[#F2C94C] hover:underline font-semibold"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Owner Admin: Manage Combo Offers</span>
-                </button>
+                <p>{DELIVERY.areas.join(', ')} - {BUSINESS.pincode}</p>
               </div>
             </div>
           </div>
@@ -176,7 +164,7 @@ export const Footer: React.FC = () => {
             &copy; {new Date().getFullYear()} BENSI QUEEN. All rights reserved. Bringing nature&apos;s goodness to your kitchen.
           </p>
           <div className="flex items-center space-x-4 text-[11px]">
-            <span>Chitlapakkam, Chennai</span>
+            <span>{DELIVERY.areas[0]}, {BUSINESS.city}</span>
             <span>•</span>
             <span>WhatsApp Ordering</span>
             <span>•</span>

@@ -1,0 +1,78 @@
+{
+    "comparisonPoints": [
+        {
+            "feature": "Processing Method",
+            "bensi": "Naturally dried & unpolished with no chemical waxing",
+            "supermarket": "Industrial chemical buffing for cosmetic shine"
+        },
+        {
+            "feature": "Spices & Aroma",
+            "bensi": "Stone-milled in small batches for natural oils & aroma",
+            "supermarket": "High-heat industrial grinding that strips natural oils"
+        },
+        {
+            "feature": "Ordering Experience",
+            "bensi": "1-tap WhatsApp chat with friendly local store owner",
+            "supermarket": "Impersonal checkouts, app logins & payment gateway bugs"
+        },
+        {
+            "feature": "Payment Safety",
+            "bensi": "Zero online prepayment — Pay with Cash / UPI at your doorstep",
+            "supermarket": "Mandatory upfront cards/wallets before order confirmation"
+        },
+        {
+            "feature": "Freshness Guarantee",
+            "bensi": "Daily morning and evening fresh neighborhood dispatch",
+            "supermarket": "Months-old warehouse central distribution stock"
+        }
+    ],
+    "marqueeItems": [
+        "Toor Dal",
+        "Chana Dal",
+        "Urad Dal",
+        "Moong Dal",
+        "Rajma",
+        "Turmeric Powder",
+        "Red Chilli Powder",
+        "Coriander Powder",
+        "Cumin Seeds",
+        "Cashew Nuts",
+        "Almonds",
+        "Pista",
+        "Raisins",
+        "Walnuts",
+        "Basmati Rice",
+        "Sesame Oil",
+        "Coconut Oil",
+        "Mustard Seeds"
+    ],
+    "ratingBars": [
+        {
+            "stars": 5,
+            "pct": 85
+        },
+        {
+            "stars": 4,
+            "pct": 12
+        },
+        {
+            "stars": 3,
+            "pct": 3
+        },
+        {
+            "stars": 2,
+            "pct": 0
+        },
+        {
+            "stars": 1,
+            "pct": 0
+        }
+    ],
+    "cycleWords": [
+        "Pure Pulses",
+        "Fresh Spices",
+        "Premium Nuts",
+        "Cold-Press Oils",
+        "Pantry Essentials"
+    ]
+}

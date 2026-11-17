@@ -2,6 +2,7 @@
 import { Star, ChevronLeft, ChevronRight, CheckCircle2, MessageSquare, ExternalLink, Quote, ThumbsUp } from 'lucide-react';
 import { useReviews } from '../context/ReviewsContext';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { HOME } from '../config/siteContent';
 
 export const CustomerReviews: React.FC = () => {
   const { activeReviews } = useReviews();
@@ -15,13 +16,7 @@ export const CustomerReviews: React.FC = () => {
     `Bensi Queen Grocery store ${STORE_CONFIG.address}`
   )}`;
 
-  const RATING_BARS = [
-    { stars: 5, pct: 80 },
-    { stars: 4, pct: 15 },
-    { stars: 3, pct: 5 },
-    { stars: 2, pct: 0 },
-    { stars: 1, pct: 0 },
-  ];
+  const RATING_BARS = HOME.ratingBars;
 
   return (
     <section className="relative bg-[#123B26] text-white overflow-hidden py-20 sm:py-28">

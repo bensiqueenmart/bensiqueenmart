@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { Phone, MapPin, Clock, MessageSquare, ExternalLink } from 'lucide-react';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { DELIVERY } from '../config/siteContent';
 
 export const ContactSection: React.FC = () => {
   const directWhatsAppUrl = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
@@ -95,7 +96,7 @@ export const ContactSection: React.FC = () => {
             </p>
             <div className="pt-2 border-t border-gray-100">
               <p className="text-[11px] text-gray-500 font-medium">
-                Delivery Suburbs: Chitlapakkam, Tambaram Sanatorium, Chromepet, Hasthinapuram & nearby areas.
+                Delivery Suburbs: {DELIVERY.areas.slice(0, 4).join(', ')} & nearby areas.
               </p>
             </div>
           </div>

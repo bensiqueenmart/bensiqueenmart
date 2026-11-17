@@ -23,6 +23,15 @@ import {
 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { BUSINESS, ABOUT, DELIVERY, ABOUT_TESTIMONIALS, pillarIcon } from '../config/siteContent';
+import { useCatalog } from '../context/CatalogContext';
+
+// Derived aliases — edit src/data/*.json, never here.
+const PRODUCT_CATEGORIES = ABOUT.productCategories;
+const TRUST_PILLARS = ABOUT.trustPillars.map((p) => ({ ...p, icon: pillarIcon(p.icon) }));
+const TIMELINE = ABOUT.timeline;
+const SERVICE_AREAS = DELIVERY.areas;
+const TESTIMONIALS = ABOUT_TESTIMONIALS.map((r) => ({ name: r.authorName, location: r.location, text: r.reviewText, rating: r.rating }));
 
 /* ─────────────────────────── AnimatedCounter ──────────────────────────── */
 interface CounterProps {
@@ -71,149 +80,14 @@ const AnimatedCounter: React.FC<CounterProps> = ({
 };
 
 /* ───────────────────────────── DATA ARRAYS ─────────────────────────────── */
-const PRODUCT_CATEGORIES = [
-  {
-    num: '01',
-    title: 'Pulses & Lentils',
-    tamilTitle: 'பருப்பு வகைகள்',
-    desc: 'Unpolished Toor Dal, Urad Dal, Moong Dal, Kadalai Paruppu, and Rajma — protein-rich dals sourced for maximum nutrition and natural flavor.',
-    items: ['Toor Dal', 'Urad Dal', 'Moong Dal', 'Kadalai Paruppu', 'Rajma'],
-    image: '/images/pulses-and-lentils.jpg',
-    tag: 'High Protein',
-    category: 'pulses',
-  },
-  {
-    num: '02',
-    title: 'South Masalas',
-    tamilTitle: 'தென்னிந்திய மசாலா',
-    desc: 'Traditional South Indian spice blends ground in-house. Aromatic Sambar Powder, Pepper Rasam, authentic Biryani and Chicken Masalas.',
-    items: ['Sambar Powder', 'Rasam Powder', 'Biryani Masala', 'Chicken Masala', 'Garam Masala'],
-    image: '/images/south-masalas.jpg',
-    tag: 'Stone-Ground',
-    category: 'masalas',
-  },
-  {
-    num: '03',
-    title: 'Spices & Powders',
-    tamilTitle: 'மசாலா தூள் & விதைகள்',
-    desc: 'Pure Turmeric, Chilli, Coriander, Mustard, Black Pepper, Cumin, Fennel, and Fenugreek — with zero artificial colors or fillers.',
-    items: ['Turmeric Powder', 'Red Chilli Powder', 'Coriander Powder', 'Cumin Seeds', 'Mustard'],
-    image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80',
-    tag: 'No Fillers',
-    category: 'spices',
-  },
-  {
-    num: '04',
-    title: 'Nuts & Dry Fruits',
-    tamilTitle: 'கொட்டை & உலர் பழங்கள்',
-    desc: 'Whole Cashews, California Almonds, Seedless Black Raisins, and succulent Dates — hand-sorted for crunch, flavor, and freshness.',
-    items: ['Whole Cashews', 'California Almonds', 'Black Raisins', 'Dates', 'Pista'],
-    image: '/images/nuts-and-dry-fruits.jpg',
-    tag: 'Fresh Harvest',
-    category: 'nuts-dryfruits',
-  },
-  {
-    num: '05',
-    title: 'Rice & Grains',
-    tamilTitle: 'அரிசி வகைகள்',
-    desc: 'Clean parboiled Idli Rice and evenly roasted Sooji / Rava — staple grains for fluffy idlis, crispy dosas, and golden upma.',
-    items: ['Idli Rice', 'Sooji / Rava'],
-    image: '/images/rice-and-grains.jpg',
-    tag: 'Fluffy Idlis',
-    category: 'rice-grains',
-  },
-  {
-    num: '06',
-    title: 'Cooking Oils',
-    tamilTitle: 'சமையல் எண்ணெய்',
-    desc: 'Cold-pressed Sesame Oil, pure Coconut Oil, and double-filtered Refined Oil — authentic flavors trusted in South Indian kitchens for generations.',
-    items: ['Sesame Oil', 'Coconut Oil', 'Refined Oil'],
-    image: '/images/cooking-oils.jpg',
-    tag: 'Cold Pressed',
-    category: 'oils',
-  },
-];
 
-const TRUST_PILLARS = [
-  {
-    icon: ShieldCheck,
-    title: 'Purity First, Always',
-    desc: 'Every product at Bensi Queen is selected with zero tolerance for artificial polish, synthetic colors, or chemical preservatives. What you receive is exactly what nature intended.',
-  },
-  {
-    icon: MapPin,
-    title: 'Hyperlocal Neighborhood Store',
-    desc: 'We are proudly rooted in Chitlapakkam, Chennai — a friendly community grocery that knows your household preferences, respects your time, and grows with your family.',
-  },
-  {
-    icon: Truck,
-    title: 'Doorstep Delivery Promise',
-    desc: 'Fresh dispatch every morning and evening across Chitlapakkam, Chromepet, Selaiyur, Tambaram, and surrounding areas. Cash or UPI accepted comfortably at your door.',
-  },
-  {
-    icon: Heart,
-    title: 'Community-Rooted Care',
-    desc: 'Every order placed at Bensi Queen supports a local family business that has built its identity on honest pricing, clean products, and genuine neighborly service.',
-  },
-];
 
-const TIMELINE = [
-  {
-    year: '2019',
-    title: 'The Beginning',
-    desc: 'Bensi Queen opened as a small neighborhood provisions store in Chitlapakkam, Jothi Nagar — serving a handful of trusted families with quality kitchen essentials.',
-  },
-  {
-    year: '2021',
-    title: 'Growing the Catalogue',
-    desc: 'Expanded from core pulses and spices to include premium dry fruits, cold-pressed oils, traditional South Indian masalas, and household essentials — growing to 35+ products.',
-  },
-  {
-    year: '2023',
-    title: 'WhatsApp Ordering',
-    desc: 'Launched a simple WhatsApp ordering system to serve busy families who could now order from home without visiting the store, with same-day doorstep delivery.',
-  },
-  {
-    year: '2025',
-    title: 'Online Store Launch',
-    desc: 'Launched our full digital storefront to help Chennai families browse the complete catalogue, select custom pack weights, and place orders anytime — 24/7.',
-  },
-];
 
-const SERVICE_AREAS = [
-  'Chitlapakkam',
-  'Tambaram Sanatorium',
-  'Chromepet & MIT Road',
-  'Hasthinapuram',
-  'Selaiyur',
-  'East Tambaram',
-  'Pallavaram',
-  'Medavakkam',
-];
 
-const TESTIMONIALS = [
-  {
-    name: 'Kavitha S.',
-    location: 'Chitlapakkam',
-    text: 'The Toor Dal is genuinely unpolished — the sambar turns out so much more aromatic than anything from a supermarket. Bensi Queen is now my permanent go-to store.',
-    rating: 5,
-  },
-  {
-    name: 'Murali R.',
-    location: 'Chromepet',
-    text: 'Ordered Cashew Nuts and California Almonds. They arrived the same evening, perfectly packed, super fresh. The WhatsApp ordering made everything so simple.',
-    rating: 5,
-  },
-  {
-    name: 'Priya N.',
-    location: 'Selaiyur',
-    text: 'The Sambar Powder smells exactly like home-ground masala. No artificial color, genuine flavor. I have been ordering monthly supplies for over a year now.',
-    rating: 5,
-  },
-];
 
 /* ════════════════════════════════════════════════════════════════════════ */
 export const AboutPage: React.FC = () => {
+  const { products, categories } = useCatalog();
   const handleWhatsApp = () => {
     const text = `Hello Bensi Queen! I would like to know more about your products and services.`;
     const url = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
@@ -277,7 +151,7 @@ export const AboutPage: React.FC = () => {
                   className="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-[#A8C66C] hover:bg-[#97b55b] text-[#123B26] font-bold text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95"
                 >
                   <ShoppingBag className="w-4 h-4 text-[#123B26]" />
-                  <span>Browse 35 Products</span>
+                  <span>Browse {products.length} Products</span>
                 </Link>
                 <button
                   type="button"
@@ -312,7 +186,7 @@ export const AboutPage: React.FC = () => {
                 </div>
 
                 <div className="absolute -bottom-4 -right-4 bg-[#123B26] text-white border border-[#A8C66C]/40 rounded-2xl px-4 py-3 shadow-xl font-poppins">
-                  <p className="text-2xl font-black leading-none text-[#A8C66C]">35+</p>
+                  <p className="text-2xl font-black leading-none text-[#A8C66C]">{products.length}+</p>
                   <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">Kitchen Provisions</p>
                 </div>
 
@@ -348,7 +222,7 @@ export const AboutPage: React.FC = () => {
             {[
               { icon: Users, value: 500, suffix: '+', label: 'Happy Families', sublabel: 'Across Chitlapakkam & Chennai' },
               { icon: Package, value: 35, suffix: '+', label: 'Kitchen Provisions', sublabel: 'Pulses, Spices, Oils & More' },
-              { icon: Truck, value: 7, suffix: ' Zones', label: 'Delivery Areas', sublabel: 'From Chitlapakkam to Pallavaram' },
+              { icon: Truck, value: DELIVERY.areas.length, suffix: ' Zones', label: 'Delivery Areas', sublabel: `From ${DELIVERY.areas[0]} to ${DELIVERY.areas[DELIVERY.areas.length - 1]}` },
               { icon: Award, value: 4, suffix: '.9 ★', label: 'Customer Rating', sublabel: 'Verified by Real Families' },
             ].map(({ icon: Icon, value, suffix, label, sublabel }, i) => (
               <div key={i} className="text-center px-4 py-4 sm:py-0 space-y-1.5">
@@ -418,7 +292,7 @@ export const AboutPage: React.FC = () => {
               <span>Store Catalogue</span>
             </span>
             <h2 className="font-playfair text-3xl sm:text-4xl font-extrabold text-[#123B26]">
-              35+ Kitchen Provisions, 8 Categories
+              {products.length}+ Kitchen Provisions, {categories.length} Categories
             </h2>
             <p className="font-poppins text-sm text-gray-600 leading-relaxed">
               A thoughtfully curated range of South Indian kitchen staples that bring authentic home-cooking flavors to your table, every day.
@@ -477,7 +351,7 @@ export const AboutPage: React.FC = () => {
               className="inline-flex items-center space-x-2 px-8 py-3.5 rounded-full bg-[#123B26] hover:bg-[#205C38] text-white font-bold text-xs uppercase tracking-wider shadow-lg transition-all active:scale-95"
             >
               <ShoppingBag className="w-4 h-4 text-[#A8C66C]" />
-              <span>Explore Full Catalogue (35 Products)</span>
+              <span>Explore Full Catalogue ({products.length} Products)</span>
               <ArrowRight className="w-4 h-4 text-[#A8C66C]" />
             </Link>
           </div>
@@ -557,7 +431,7 @@ export const AboutPage: React.FC = () => {
                 step: '01',
                 icon: ShoppingBag,
                 title: 'Browse & Choose',
-                desc: 'Explore 35+ kitchen provisions on our website. Pick your products and select pack weights from 100g to 1kg.',
+                desc: `Explore ${products.length}+ kitchen provisions on our website. Pick your products and select pack weights from 100g to 1kg.`,
                 isWhatsApp: false,
               },
               {

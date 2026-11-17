@@ -1,11 +1,11 @@
 ﻿import React from 'react';
+import type { PublicProduct } from '@bqm/types';
 import { ProductCard } from './ProductCard';
-import { ProductCategory } from '../types';
-import { ALL_PRODUCTS, CATEGORIES } from '../data/products';
-import { Search, X, PackageOpen } from 'lucide-react';
+import { useCatalog } from '../context/CatalogContext';
+import { Search, X, PackageOpen, Loader2 } from 'lucide-react';
 
 interface ProductListProps {
-  selectedCategory: ProductCategory;
+  selectedCategory: string;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   onResetFilters: () => void;
@@ -17,7 +17,39 @@ export const ProductList: React.FC<ProductListProps> = ({
   setSearchQuery,
   onResetFilters,
 }) => {
-  const filteredProducts = ALL_PRODUCTS.filter((product) => {
+  const { products, categories, loading, error, retry } = useCatalog();
+
+  if (loading) {
+    return (
+      <section id="products" className="py-12 bg-[#F7F5E8] min-h-[600px]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center py-24 text-[#205C38]">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <span className="font-poppins text-sm font-semibold">Loading fresh provisions…</span>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="products" className="py-12 bg-[#F7F5E8] min-h-[600px]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-3xl p-12 text-center border border-[#E8DFC8] max-w-lg mx-auto my-12">
+            <h3 className="font-playfair text-xl font-bold text-[#123B26]">Couldn&apos;t load the catalogue</h3>
+            <p className="text-xs text-gray-500 mt-2 font-poppins">{error}</p>
+            <button
+              onClick={retry}
+              className="mt-6 inline-flex items-center px-5 py-2.5 rounded-full bg-[#123B26] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#205C38] transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const filteredProducts = products.filter((product: PublicProduct) => {
     const matchesCategory =
       selectedCategory === 'all' || product.category === selectedCategory;
 
@@ -25,20 +57,20 @@ export const ProductList: React.FC<ProductListProps> = ({
     if (!q) return matchesCategory;
 
     const matchesSearch =
-      product.englishName.toLowerCase().includes(q) ||
-      product.tamilName.toLowerCase().includes(q) ||
-      product.categoryName.toLowerCase().includes(q) ||
+      product.name.toLowerCase().includes(q) ||
+      (product.tamilName ?? '').includes(q) ||
+      product.category.toLowerCase().includes(q) ||
       product.description.toLowerCase().includes(q);
 
     return matchesCategory && matchesSearch;
   });
 
-  const activeCategoryInfo = CATEGORIES.find((c) => c.id === selectedCategory);
+  const activeCategoryInfo = categories.find((c) => c.id === selectedCategory);
 
   return (
     <section id="products" className="py-12 bg-[#F7F5E8] min-h-[600px]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-4 border-b border-[#DCE8C8] gap-4">
           <div>
@@ -73,7 +105,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               )}
             </div>
             <div className="text-[11px] text-gray-500 mt-1 text-right">
-              Showing {filteredProducts.length} of {ALL_PRODUCTS.length} products
+              Showing {filteredProducts.length} of {products.length} products
             </div>
           </div>
         </div>

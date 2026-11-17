@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { BUSINESS } from '../config/siteContent';
 import { Check, Heart, Shield, Sparkles, ArrowRight } from 'lucide-react';
 
 export const AboutUs: React.FC = () => {
@@ -71,7 +72,7 @@ export const AboutUs: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-[#123B26]">Neighborhood Care</h4>
-                  <p className="text-[11px] text-gray-500 font-poppins">Convenient WhatsApp orders directly to your doorstep in Chitlapakkam.</p>
+                  <p className="text-[11px] text-gray-500 font-poppins">Convenient WhatsApp orders directly to your doorstep in {BUSINESS.city}.</p>
                 </div>
               </div>
             </div>
