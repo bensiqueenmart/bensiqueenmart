@@ -42,10 +42,30 @@ export async function getDb(): Promise<Db> {
 
 export async function getCollections(db?: Db): Promise<BqmCollections> {
   const database = db ?? (await getDb());
-  return {
+  const collections: BqmCollections = {
     products: database.collection('products'),
     combos: database.collection('combos'),
     orders: database.collection('orders'),
     stockMovements: database.collection('stockMovements'),
   };
+  await ensureIndexes(collections);
+  return collections;
+};
+
+// Indexes are created once per cold start; warm invocations skip via the
+// cached promise. createIndex is idempotent, so concurrent cold starts racing
+// here is harmless.
+let indexesPromise: Promise<void> | null = null;
+
+function ensureIndexes(collections: BqmCollections): Promise<void> {
+  if (!indexesPromise) {
+    indexesPromise = (async () => {
+      // Orders tab + recent-orders peek both read newest-first.
+      await collections.orders.createIndex({ createdAt: -1 });
+    })().catch((err) => {
+      indexesPromise = null;
+      throw err;
+    });
+  }
+  return indexesPromise;
 }

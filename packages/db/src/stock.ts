@@ -14,14 +14,14 @@ export function deltaBaseTotal(delta: number | QuantizedCount[]): number {
 export function buildMovementDocs(
   lines: Array<{ productSlug: string; deltaBaseQty: number }>,
   reason: string,
-  orderId: string,
+  orderId: string | undefined,
   now: string,
 ) {
   return lines.map((l) => ({
     id: newId('mov'),
     productSlug: l.productSlug,
     reason,
-    orderId,
+    ...(orderId ? { orderId } : {}),
     createdAt: now,
     quantity: l.deltaBaseQty,
   }));
