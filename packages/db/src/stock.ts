@@ -12,13 +12,14 @@ export function deltaBaseTotal(delta: number | QuantizedCount[]): number {
 
 /** One movement row per product line — used by order deduction. */
 export function buildMovementDocs(
-  lines: Array<{ productSlug: string; deltaBaseQty: number }>,
+  lines: Array<{ productId: string; productSlug: string; deltaBaseQty: number }>,
   reason: string,
   orderId: string | undefined,
   now: string,
 ) {
   return lines.map((l) => ({
     id: newId('mov'),
+    productId: l.productId,
     productSlug: l.productSlug,
     reason,
     ...(orderId ? { orderId } : {}),

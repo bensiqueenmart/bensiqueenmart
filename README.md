@@ -32,7 +32,7 @@ admin console — all sharing one MongoDB Atlas database.
 
 - Stock (`stock`) changes ONLY via atomic ops — never read-modify-write.
 - Exactly ONE `StockMovement` audit doc per stock change.
-- Money is stored in paise (`pricePaise`) to avoid float errors.
+- Money is stored in rupees (number, 2-decimal rounded). Quantities stay in base units.
 
 ## Local dev
 

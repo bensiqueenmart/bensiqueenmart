@@ -62,6 +62,16 @@ function ensureIndexes(collections: BqmCollections): Promise<void> {
     indexesPromise = (async () => {
       // Orders tab + recent-orders peek both read newest-first.
       await collections.orders.createIndex({ createdAt: -1 });
+      // Id is the behavioral join key everywhere; slug stays unique so the
+      // live catalog can resolve wire (slug-keyed) input exactly once.
+      await Promise.all([
+        collections.products.createIndex({ id: 1 }, { unique: true }),
+        collections.products.createIndex({ slug: 1 }, { unique: true }),
+        collections.combos.createIndex({ id: 1 }, { unique: true }),
+        collections.combos.createIndex({ slug: 1 }, { unique: true }),
+        collections.orders.createIndex({ id: 1 }, { unique: true }),
+        collections.stockMovements.createIndex({ id: 1 }, { unique: true }),
+      ]);
     })().catch((err) => {
       indexesPromise = null;
       throw err;
