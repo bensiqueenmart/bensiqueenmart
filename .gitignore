@@ -24,6 +24,9 @@ logs/
 .turbo/
 coverage/
 
+# Edit-console skill doc (fetched from worklancerssupport-design/skills)
+EDIT_CONSOLE.md
+
 # Local databases (Atlas is source of truth; never commit dumps)
 *.db
 *.sqlite*
