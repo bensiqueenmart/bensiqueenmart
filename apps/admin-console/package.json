@@ -6,6 +6,7 @@
   "description": "Owner's admin console for Bensi Queen Mart: controls all digital data — website, billing, inventory, and sales.",
   "scripts": {
     "dev": "vite --port 5174",
+    "dev:api": "tsx dev-server.ts",
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview"
   },
@@ -20,6 +21,8 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "dotenv": "^18.0.10",
+    "tsx": "^4.23.15",
     "typescript": "~5.6.3",
     "vite": "^6.2.0"
   }

@@ -1,19 +1,40 @@
-# admin-console `api/` — planned private suite
+# admin-console `api/` — private suite
 
 This app owns its API surface. Its UI calls ONLY these same-origin
 endpoints. No other app may call them.
 
-Planned endpoints (to be implemented in the next phase):
+Every endpoint except `POST /api/auth/login` requires the admin session
+cookie (see `api/_auth.ts`): single user from `ADMIN_USER`, password hash
+in `ADMIN_PASS_SHA256`, cookie HMAC-signed with `AUTH_SECRET`.
 
-- `GET /api/products` + `POST /api/products` + `PATCH /api/products/:id` —
-  catalogue CRUD (pricing, variants, `isActive`).
-- `POST /api/products/:id/adjust` — overwrite / increment stock safely
-  (atomic `$inc` or `$set` + `StockMovement` with reason
-  `manual-adjust` / `restock` / `correction`).
-- `GET /api/orders?status=pending` + `POST /api/orders/:id/close` —
-  manually match up and close completed WhatsApp orders (decrements stock,
-  flips invoice to `paid`, writes `whatsapp-order-closeout` movements).
-- `GET /api/reports/*` — stock / sales summaries.
+Inventory:
 
-All handlers import connection + atomic primitives from `@bqm/db`
-and types from `@bqm/types`. No shared HTTP layer.
+- `GET /api/products` — whole catalog (products + combos, incl. inactive).
+- `POST /api/products` — create a product. Non-zero opening stock writes
+  one `create` movement.
+- `PATCH /api/products/:slug` — edit display/pricing data. `stock` and
+  `isQuantized` are rejected (stock moves only via adjust below).
+- `POST /api/products/:slug/adjust` — `{ delta, reason }` with reason
+  `restock` | `manual-adjust` | `correction`. Exactly one movement.
+- `PATCH /api/combos/:slug` — edit display data, components, totalPrice,
+  isActive.
+
+Orders (identical semantics to billing-desk):
+
+- `GET /api/orders` + `POST /api/orders` — list newest-first / create
+  (`unconfirmed`, no stock moves).
+- `GET /api/orders/:id` + `PATCH /api/orders/:id` + `DELETE /api/orders/:id`
+  — fetch / status+items patch with `sale`/`restore` / delete with optional
+  `delete-restore`. Movements are never deleted.
+
+Auth:
+
+- `POST /api/auth/login` — `{ username, password }` → session cookie.
+- `POST /api/auth/logout` — clears the session cookie.
+- `GET /api/auth/me` — session probe for the lock screen.
+
+Not yet built (dashboard spec pending): `GET /api/analytics/*`,
+`GET /api/reports/*`.
+
+All handlers import composed methods from `@bqm/db` and types from
+`@bqm/types`. No shared HTTP layer.
