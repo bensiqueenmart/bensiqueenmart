@@ -5,7 +5,7 @@ import { isAuthenticated } from '../../_auth.js';
  * POST /api/products/:slug/adjust — add or correct stock outside the order
  * lifecycle. Body: { delta, reason } where delta matches the product's shape
  * (base-unit number for loose, QuantizedCount[] for quantized; negative =
- * take out) and reason is one of `restock` | `manual-adjust` | `correction`.
+ * take out) and reason is one of `restock` | `adjust`.
  * Exactly one StockMovement is written.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

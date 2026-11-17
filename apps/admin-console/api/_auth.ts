@@ -3,12 +3,12 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 /**
  * Single-admin auth for the admin console. One user, no roles, no session
  * store (serverless-safe): a successful login sets an HttpOnly
- * SameSite=Strict cookie holding an HMAC-signed token with a 12h expiry.
+ * SameSite=Strict cookie holding an HMAC-signed token with a 30min expiry.
  * Every other endpoint calls `assertAuth` first and 401s without it.
  */
 
 const COOKIE_NAME = 'admin_session';
-const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const SESSION_TTL_MS = 30 * 60 * 1000;
 
 function b64uEncode(buf: Buffer): string {
   return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

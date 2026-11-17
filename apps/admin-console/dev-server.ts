@@ -3,12 +3,15 @@ import { config } from 'dotenv';
 import productsHandler from './api/products.js';
 import productBySlugHandler from './api/products/[slug].js';
 import adjustHandler from './api/products/[slug]/adjust.js';
+import combosHandler from './api/combos.js';
 import comboBySlugHandler from './api/combos/[slug].js';
+import signHandler from './api/images/sign.js';
 import ordersHandler from './api/orders.js';
 import orderByIdHandler from './api/orders/[id].js';
 import loginHandler from './api/auth/login.js';
 import logoutHandler from './api/auth/logout.js';
 import meHandler from './api/auth/me.js';
+import githubFileHandler from './api/edit/github-file.js';
 
 config({ path: new URL('../../.env', import.meta.url) });
 
@@ -28,8 +31,21 @@ const routes: Array<{ match: (path: string, method: string) => string | null; ha
     handler: meHandler as unknown as Handler,
   },
   {
+    match: (path, method) =>
+      path === '/api/edit/github-file' && (method === 'GET' || method === 'PUT') ? 'github-file' : null,
+    handler: githubFileHandler as unknown as Handler,
+  },
+  {
     match: (path) => (path === '/api/products' ? 'products' : null),
     handler: productsHandler as unknown as Handler,
+  },
+  {
+    match: (path) => (path === '/api/combos' ? 'combos' : null),
+    handler: combosHandler as unknown as Handler,
+  },
+  {
+    match: (path, method) => (path === '/api/images/sign' && method === 'POST' ? 'sign' : null),
+    handler: signHandler as unknown as Handler,
   },
   {
     match: (path) => {
