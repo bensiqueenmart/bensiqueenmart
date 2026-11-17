@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Combo } from '@bqm/types';
-import { paise } from '../api';
+import { rupees } from '../api';
 import { comboContentLabel, type ComboContent, type DisplayLang } from './BillPanel';
 
 const card: React.CSSProperties = { border: '1px solid #e0a100', borderRadius: 8, padding: 10, background: '#fff8e6', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' };
@@ -40,7 +40,7 @@ export default function ComboCard({ combo: c, lang, contents, onAdd }: { combo: 
         })}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 8 }}>
-        <strong>{paise(c.totalPrice)}</strong>
+        <strong>{rupees(c.totalPrice)}</strong>
         <button style={btn} onClick={() => onAdd(c)}>Add</button>
       </div>
     </div>

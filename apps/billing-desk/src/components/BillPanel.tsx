@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import type { Order, OrderStatus, QuantizedCount } from '@bqm/types';
-import { paise } from '../api';
+import { rupees } from '../api';
+
+/** Round rupees to 2 decimals. */
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Display language for product/combo names. 'en' (default): English dominant, Tamil subtle; 'ta': vice-versa. */
 export type DisplayLang = 'en' | 'ta';
@@ -15,12 +18,12 @@ export interface DraftLine {
   tamilName?: string;
   step: number;
   quantity: number;
-  price: number; // line total, paise — editable (custom price)
+  price: number; // line total, rupees (2-decimal) — editable (custom price)
   /** Fixed pack size in base units — set only for tier (fixed-quantity) lines. */
   packSize?: number;
   /** Display unit (product stockUnit, '' for combos). */
   unit: string;
-  /** Canonical rate in paise/base-unit — set once for loose lines, never sent to backend. */
+  /** Canonical rate in rupees/base-unit — set once for loose lines, never sent to backend. */
   unitPrice?: number;
   /** Loose-line qty⇄price sync. True by default; pack/combo lines never set it. */
   locked?: boolean;
@@ -119,7 +122,7 @@ export default function BillPanel(p: Props) {
           if (quantity <= 0) return null;
           // Re-price proportionally from the current line total (preserves custom prices).
           const unitRate = l.quantity > 0 ? l.price / l.quantity : 0;
-          return { ...l, quantity, price: Math.round(unitRate * quantity) };
+          return { ...l, quantity, price: r2(unitRate * quantity) };
         })
         .filter((l): l is DraftLine => l !== null),
     );
@@ -127,7 +130,7 @@ export default function BillPanel(p: Props) {
 
   const setPrice = (key: string, price: number) => {
     if (!Number.isFinite(price) || price < 0) return;
-    price = Math.round(price);
+    price = r2(price);
     p.onLinesChange(
       p.lines.map((l) => {
         if (l.key !== key) return l;
@@ -146,7 +149,7 @@ export default function BillPanel(p: Props) {
         const rate = l.locked ? (l.unitPrice ?? 0) : 0;
         // Locked: canonical rate. Unlocked: re-price proportionally (preserves custom prices).
         const unitRate = rate > 0 ? rate : l.quantity > 0 ? l.price / l.quantity : 0;
-        return { ...l, quantity, price: Math.round(unitRate * quantity) };
+        return { ...l, quantity, price: r2(unitRate * quantity) };
       }),
     );
   };
@@ -171,7 +174,7 @@ export default function BillPanel(p: Props) {
     setDraft(key, 'price', ok && String(v) === raw.trim() ? undefined : raw);
     if (ok) {
       setDraft(key, 'qty', undefined); // locked derive may rewrite the quantity
-      setPrice(key, v * 100);
+      setPrice(key, v);
     } else {
       p.onLinesChange(p.lines.map((l) => (l.key === key ? { ...l, price: NaN } : l)));
     }
@@ -186,7 +189,7 @@ export default function BillPanel(p: Props) {
         if (l.locked) return { ...l, locked: false };
         // Re-locking: keep quantity, snap price back to the canonical rate.
         const rate = l.unitPrice ?? 0;
-        return { ...l, locked: true, price: Math.round(l.quantity * rate) };
+        return { ...l, locked: true, price: r2(l.quantity * rate) };
       }),
     );
   };
@@ -263,7 +266,7 @@ export default function BillPanel(p: Props) {
               <span style={{ fontSize: 13, color: '#888' }}>₹</span>
               <input
                 type="number"
-                value={text[l.key]?.price ?? (Number.isFinite(l.price) ? String(l.price / 100) : '')}
+                value={text[l.key]?.price ?? (Number.isFinite(l.price) ? String(l.price) : '')}
                 min={0}
                 step={0.01}
                 title="line total in ₹ (editable = custom price)"
@@ -287,7 +290,7 @@ export default function BillPanel(p: Props) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', margin: '12px 0', fontSize: 18 }}>
         <span>Total</span>
-        <strong>{paise(total)}</strong>
+        <strong>{rupees(total)}</strong>
       </div>
 
       <input
@@ -334,7 +337,7 @@ export default function BillPanel(p: Props) {
       {status === 'confirmed' && p.order && (
         <>
           <div style={{ background: '#e6f7e6', border: '1px solid #6c6', borderRadius: 6, padding: 8, marginBottom: 8, fontSize: 14 }}>
-            Confirmed {paise(p.order.totalPrice)} · stock deducted · <code>{p.order.orderNo}</code>
+            Confirmed {rupees(p.order.totalPrice)} · stock deducted · <code>{p.order.orderNo}</code>
           </div>
           <button style={{ ...btn, width: '100%' }} onClick={p.onNewBill}>Start new bill</button>
         </>

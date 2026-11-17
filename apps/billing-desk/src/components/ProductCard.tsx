@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import type { Product } from '@bqm/types';
-import { paise } from '../api';
+import { rupees } from '../api';
 import type { DisplayLang } from './BillPanel';
+
+/** Round rupees to 2 decimals. */
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
 const card: React.CSSProperties = { border: '1px solid #ddd', borderRadius: 8, padding: 10, background: '#fff' };
 const btn: React.CSSProperties = { padding: '6px 12px', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff' };
@@ -12,7 +15,7 @@ interface Props {
   lang: DisplayLang;
   onAddTier: (product: Product, quantity: number, price: number) => void;
   onAddLoose: (product: Product, quantity: number) => void;
-  onAddLooseByPrice: (product: Product, pricePaise: number) => void;
+  onAddLooseByPrice: (product: Product, priceRupees: number) => void;
 }
 
 export default function ProductCard({ product: p, lang, onAddTier, onAddLoose, onAddLooseByPrice }: Props) {
@@ -34,11 +37,11 @@ export default function ProductCard({ product: p, lang, onAddTier, onAddLoose, o
   // The field touched most recently wins when both hold valid values.
   const usePrice = priceOk && (!qtyOk || looseLast === 'price');
   const canAdd = qtyOk || priceOk;
-  const derivedQty = priceOk ? Math.max(1, Math.round((priceNum * 100) / rate)) : 0;
+  const derivedQty = priceOk ? Math.max(1, Math.round(priceNum / rate)) : 0;
 
   const addLooseClicked = () => {
     if (usePrice) {
-      onAddLooseByPrice(p, Math.round(priceNum * 100));
+      onAddLooseByPrice(p, r2(priceNum));
     } else if (qtyOk) {
       onAddLoose(p, qtyNum);
     } else {
@@ -81,7 +84,7 @@ export default function ProductCard({ product: p, lang, onAddTier, onAddLoose, o
           <select value={tierIdx} onChange={(e) => setTierIdx(Number(e.target.value))} style={{ ...input, flex: 1 }}>
             {tiers.map((t, i) => (
               <option key={t.quantity} value={i}>
-                {t.quantity}{p.stockUnit} · {paise(t.price)}
+                {t.quantity}{p.stockUnit} · {rupees(t.price)}
               </option>
             ))}
           </select>
@@ -118,7 +121,7 @@ export default function ProductCard({ product: p, lang, onAddTier, onAddLoose, o
               ? 'price not set — enter line total on the bill'
               : priceOk
                 ? `≈ ${derivedQty}${p.stockUnit} for ₹${priceNum}`
-                : `${paise(rate)}/${p.stockUnit}`}
+                : `${rupees(rate)}/${p.stockUnit}`}
           </div>
         </div>
       )}

@@ -11,6 +11,9 @@ const input: React.CSSProperties = { padding: '6px 8px', border: '1px solid #ccc
 
 const looseStep = (p: Product) => (p.stockUnit === 'g' || p.stockUnit === 'ml' ? 100 : 1);
 
+/** Round rupees to 2 decimals. */
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
 export default function NewOrderTab({ onError }: { onError: (msg: string) => void }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [combos, setCombos] = useState<Combo[]>([]);
@@ -142,7 +145,7 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
         ...(p.tamilName ? { tamilName: `${p.tamilName} (loose)` } : {}),
         step: looseStep(p),
         quantity,
-        price: Math.round(unitRate * quantity),
+        price: r2(unitRate * quantity),
         unit: p.stockUnit,
         unitPrice: unitRate,
         locked: true,
@@ -150,9 +153,9 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
     ]);
   };
 
-  const addLooseByPrice = (p: Product, pricePaise: number) => {
+  const addLooseByPrice = (p: Product, priceRupees: number) => {
     const unitRate = p.pricePerUnit ?? 0;
-    if (!(unitRate > 0) || !Number.isFinite(pricePaise) || pricePaise <= 0) return;
+    if (!(unitRate > 0) || !Number.isFinite(priceRupees) || priceRupees <= 0) return;
     setLines((ls) => [
       ...ls,
       {
@@ -163,8 +166,8 @@ export default function NewOrderTab({ onError }: { onError: (msg: string) => voi
         ...(p.tamilName ? { tamilName: `${p.tamilName} (loose)` } : {}),
         step: looseStep(p),
         // Customer pays the entered price; quantity derives from the canonical rate.
-        quantity: Math.max(1, Math.round(pricePaise / unitRate)),
-        price: Math.round(pricePaise),
+        quantity: Math.max(1, Math.round(priceRupees / unitRate)),
+        price: r2(priceRupees),
         unit: p.stockUnit,
         unitPrice: unitRate,
         locked: true,

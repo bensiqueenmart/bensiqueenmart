@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Order, OrderItem, OrderStatus } from '@bqm/types';
-import { deleteOrder, getCatalog, getOrder, listOrders, paise, patchOrder } from '../api';
+import { deleteOrder, getCatalog, getOrder, listOrders, rupees, patchOrder } from '../api';
 
 const btn: React.CSSProperties = { padding: '6px 12px', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff' };
 const card: React.CSSProperties = { border: '1px solid #ddd', borderRadius: 8, padding: 10, background: '#fff' };
@@ -23,6 +23,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
   const [names, setNames] = useState<Record<string, string>>({});
   const [units, setUnits] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [missing, setMissing] = useState<string[]>([]);
 
   const load = async (p = 1) => {
     setLoading(true);
@@ -52,6 +53,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
 
   const view = async (id: string) => {
     setSelectedId(id);
+    setMissing([]);
     try {
       setViewing(await getOrder(id));
     } catch (e) {
@@ -66,6 +68,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
       const result = await patchOrder(viewing.id, { status });
       setViewing(result.order);
       setOrders((os) => os.map((o) => (o.id === result.order.id ? result.order : o)));
+      setMissing(result.missingProducts ?? []);
     } catch (e) {
       onError(String(e));
     } finally {
@@ -78,7 +81,8 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
     setBusy(true);
     try {
       // Unconfirmed orders hold no stock, so the choice only matters when confirmed.
-      await deleteOrder(deleting.id, deleting.status === 'confirmed' && restoreChoice);
+      const result = await deleteOrder(deleting.id, deleting.status === 'confirmed' && restoreChoice);
+      setMissing(result.missingProducts ?? []);
       setOrders((os) => os.filter((o) => o.id !== deleting.id));
       setViewing(null);
       setSelectedId(null);
@@ -97,7 +101,8 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
     return d.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   };
 
-  const label = (slug: string) => names[slug] ?? slug;
+  /** Snapshot-first label: stored name survives product deletion/rename; catalog map is the fallback. */
+  const label = (it: OrderItem) => it.name ?? names[it.productSlug ?? it.comboSlug ?? ''] ?? it.productSlug ?? it.comboSlug ?? '?';
 
   /** Fixed columns shared by the header and every row: status, time, price, order id, source, items, toggle. */
   const rowGrid: React.CSSProperties = {
@@ -109,12 +114,12 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
 
   /** Line quantity in its own shape: `230g` loose, `200g × 5` quantized, plain count for combos. */
   const qtyLabel = (it: OrderItem) => {
-    if (it.comboSlug) return `× ${it.quantity as number}`;
+    if (it.comboId ?? it.comboSlug) return `× ${it.quantity as number}`;
+    const unit = it.stockUnit ?? (it.productSlug ? (units[it.productSlug] ?? '') : '');
     if (Array.isArray(it.quantity)) {
-      const unit = it.productSlug ? (units[it.productSlug] ?? '') : '';
       return it.quantity.map((q) => `${q.size}${unit} × ${q.count}`).join(' + ');
     }
-    return `× ${it.quantity}${it.productSlug ? (units[it.productSlug] ?? '') : ''}`;
+    return `× ${it.quantity}${unit}`;
   };
 
   return (
@@ -127,6 +132,11 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
           <button style={btn} disabled={!hasMore || loading} onClick={() => load(page + 1)}>Next →</button>
         </span>
       </div>
+      {missing.length > 0 && (
+        <div style={{ background: '#fff8e1', border: '1px solid #ffb300', borderRadius: 8, padding: 8, marginTop: 12, fontSize: 13 }}>
+          Deleted products skipped ({missing.join(', ')}) — movement recorded, stock write skipped.
+        </div>
+      )}
 
       {loading && <p>Loading orders…</p>}
       {!loading && orders.length === 0 && <p>No orders yet. Create one from the New Order tab.</p>}
@@ -150,7 +160,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
               <div style={rowGrid}>
                 <strong style={{ fontSize: 14, color: STATUS_COLOR[o.status as OrderStatus] ?? 'inherit' }}>{o.status}</strong>
                 <span style={{ fontSize: 13, color: '#333' }}>{timeLabel(o.createdAt)}</span>
-                <strong style={{ fontSize: 16 }}>{paise(o.totalPrice)}</strong>
+                <strong style={{ fontSize: 16 }}>{rupees(o.totalPrice)}</strong>
                 <span style={{ minWidth: 0 }}>
                   <code style={{ fontSize: 13 }}>{o.orderNo}</code>
                   {o.customerData?.customerName && (
@@ -177,10 +187,10 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
                 <div style={{ borderTop: '1px solid #eee', marginTop: 8, paddingTop: 8 }}>
                   {viewing.orderItems.map((it, i) => (
                     <div key={i} style={{ fontSize: 14 }}>
-                      {label(it.productSlug ?? it.comboSlug ?? '?')} {qtyLabel(it)} — {paise(it.price)}
+                      {label(it)} {qtyLabel(it)} — {rupees(it.price)}
                     </div>
                   ))}
-                  <div style={{ marginTop: 6 }}><strong>Total {paise(viewing.totalPrice)}</strong></div>
+                  <div style={{ marginTop: 6 }}><strong>Total {rupees(viewing.totalPrice)}</strong></div>
                   {viewing.customerData?.customerName && (
                     <div style={{ fontSize: 13, color: '#555' }}>
                       {viewing.customerData.customerName}{viewing.customerData.mobile ? ` · ${viewing.customerData.mobile}` : ''}

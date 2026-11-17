@@ -6,6 +6,8 @@ import { createOrder, listOrders } from '@bqm/db';
  * POST — create a new order (status starts at `unconfirmed`, no stock moves).
  *        Body: { orderItems: [{ productSlug?, comboSlug?, quantity, price }],
  *                customerData?: { customerName, mobile, fullAddress } }
+ *        Wire lines are slug-keyed; the server resolves them to ids and
+ *        snapshots display data at write time (stored refs are id-keyed).
  *        Product-line quantity matches the product's stock shape (loose:
  *        base-unit number; quantized: QuantizedCount[]); combo-line quantity
  *        is the combo-unit count.
