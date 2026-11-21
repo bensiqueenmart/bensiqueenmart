@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { login } from '../api';
+import { KeyRound, Leaf, TriangleAlert } from 'lucide-react';
 
 export default function LoginScreen({ onDone, onError }: { onDone: () => void; onError: (m: string) => void }) {
   const [username, setUsername] = useState('admin');
@@ -54,7 +55,7 @@ export default function LoginScreen({ onDone, onError }: { onDone: () => void; o
       >
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>🌿</div>
+          <div style={{ marginBottom: 8, color: '#205C38' }}><Leaf size={40} /></div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#123B26', letterSpacing: '-0.02em' }}>
             Bensi Queen Mart
           </h2>
@@ -78,7 +79,7 @@ export default function LoginScreen({ onDone, onError }: { onDone: () => void; o
               lineHeight: 1.4,
             }}
           >
-            ⚠️ {localError}
+            <TriangleAlert size={14} style={{ verticalAlign: -2 }} /> {localError}
           </div>
         )}
 
@@ -205,7 +206,7 @@ export default function LoginScreen({ onDone, onError }: { onDone: () => void; o
             lineHeight: 1.5,
           }}
         >
-          <div style={{ fontWeight: 700, marginBottom: 2 }}>🔑 Sign-in Details:</div>
+          <div style={{ fontWeight: 700, marginBottom: 2 }}><KeyRound size={13} style={{ verticalAlign: -2, marginRight: 4 }} />Sign-in Details:</div>
           <div>Username: <strong style={{ color: '#123B26' }}>admin</strong></div>
           <div>Password: <strong style={{ color: '#123B26' }}>admin123</strong></div>
         </div>

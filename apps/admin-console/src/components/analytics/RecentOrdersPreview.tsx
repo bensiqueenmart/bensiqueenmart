@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Order, RecentOrderPreview } from '@bqm/types';
 import { getOrder, rupees, formatSafeDateTime } from '../../api';
 import OrderDetailsModal from './OrderDetailsModal';
+import { Check, Hourglass } from 'lucide-react';
 
 interface Props {
   recentOrders?: RecentOrderPreview[];
@@ -164,7 +165,7 @@ export default function RecentOrdersPreview({ recentOrders = [], onViewAllOrders
                           color: isConfirmed ? '#123B26' : '#991b1b',
                         }}
                       >
-                        {isConfirmed ? '✓ Confirmed' : '⏳ Pending'}
+                        {isConfirmed ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={11} /> Confirmed</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Hourglass size={11} /> Pending</span>)}
                       </span>
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'center' }}>

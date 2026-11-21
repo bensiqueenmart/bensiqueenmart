@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Check, ChevronDown, ChevronUp, Save, Trash2, TriangleAlert } from 'lucide-react';
 
 /** Shared primitives for the website editors. Styled to match the Bensi Queen Mart premium admin console. */
 export const API_BASE = '/api/edit';
@@ -49,7 +50,7 @@ export const card: React.CSSProperties = {
   boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
 };
 
-export function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+export function Field({ label, children, hint }: { label: React.ReactNode; children: React.ReactNode; hint?: string }) {
   return (
     <label style={{ display: 'block', marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -118,7 +119,7 @@ export function Num({ value, onChange }: { value: number; onChange: (v: number) 
   );
 }
 
-export function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+export function Toggle({ label, value, onChange }: { label: React.ReactNode; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <label
       style={{
@@ -301,7 +302,7 @@ export function ListEditor<T>({
                   onClick={() => move(i, i - 1)}
                   title="Move up"
                 >
-                  ↑
+                  <ChevronUp size={12} />
                 </button>
                 <button
                   style={{ ...btn, padding: '3px 8px', fontSize: 11 }}
@@ -309,13 +310,16 @@ export function ListEditor<T>({
                   onClick={() => move(i, i + 1)}
                   title="Move down"
                 >
-                  ↓
+                  <ChevronDown size={12} />
                 </button>
                 <button
                   style={{
                     ...btn,
                     padding: '3px 10px',
                     fontSize: 11,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
                     color: '#991b1b',
                     borderColor: '#fca5a5',
                     background: '#fef2f2',
@@ -326,7 +330,7 @@ export function ListEditor<T>({
                     }
                   }}
                 >
-                  ✕ Remove
+                  <Trash2 size={12} /> Remove
                 </button>
               </div>
             </div>
@@ -404,7 +408,7 @@ export function SaveBar({
             border: dirty ? '1px solid #fde68a' : '1px solid #a7f3d0',
           }}
         >
-          {dirty ? '● Unsaved Changes' : '✓ Up to date with GitHub'}
+          {dirty ? (<><span style={{ width: 7, height: 7, borderRadius: '50%', background: '#d97706', display: 'inline-block' }} /> Unsaved Changes</>) : (<><Check size={12} /> Up to date with GitHub</>)}
         </span>
       </div>
 
@@ -424,6 +428,9 @@ export function SaveBar({
       <button
         style={{
           ...btn,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
           background: dirty && !saving ? '#123B26' : '#68826d',
           color: '#fff',
           borderColor: 'transparent',
@@ -437,7 +444,7 @@ export function SaveBar({
           setMessage('');
         }}
       >
-        {saving ? 'Saving to GitHub…' : '💾 Save to GitHub'}
+        {saving ? 'Saving to GitHub…' : (<><Save size={14} /> Save to GitHub</>)}
       </button>
 
       <button
@@ -454,7 +461,7 @@ export function SaveBar({
 
       {error && (
         <span style={{ color: '#b91c1c', fontSize: 12, fontWeight: 600, marginLeft: 6 }}>
-          ⚠️ {error}
+          <TriangleAlert size={12} style={{ verticalAlign: -2 }} /> {error}
         </span>
       )}
     </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Download, FileText } from 'lucide-react';
 import { calculateDateRange, type DatePreset, type DateRangeState } from './types';
 
 interface Props {
@@ -175,7 +176,7 @@ export default function DateRangePicker({
             }}
             title="Download multi-page PDF sales report"
           >
-            📄 PDF Report
+            <FileText size={13} /> PDF Report
           </button>
         )}
 
@@ -199,7 +200,7 @@ export default function DateRangePicker({
             }}
             title="Export filtered orders to CSV"
           >
-            📥 Export CSV
+            <Download size={13} /> Export CSV
           </button>
         )}
       </div>

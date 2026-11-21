@@ -5,22 +5,23 @@ import { DATA_FILES, type DataFileKey } from '../edit/constants';
 import type { About, Article, Business, Delivery, Faq, Home, Review } from '../edit/types';
 import { AboutEditor, BlogEditor, BusinessEditor, DeliveryEditor, FaqsEditor, HomeEditor, ReviewsEditor } from '../edit/editors';
 import { EDIT_SESSION_EXPIRED } from '../edit/lib/api';
+import { BookOpen, CircleHelp, House, Package, PenLine, Star, Store, Truck, type LucideIcon } from 'lucide-react';
 
 interface FileTabDef {
   key: DataFileKey;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   description: string;
 }
 
 const FILE_TABS: FileTabDef[] = [
-  { key: 'business', label: 'Business Info', icon: '🏢', description: 'Store identity, address, phone, WhatsApp and operating hours' },
-  { key: 'delivery', label: 'Delivery & Zones', icon: '🚚', description: 'Deliverable towns, pincodes and local delivery turnaround times' },
-  { key: 'faqs', label: 'FAQs', icon: '❓', description: 'Customer questions, categorized answers and homepage highlights' },
-  { key: 'reviews', label: 'Reviews', icon: '⭐', description: 'Customer testimonials, ratings, approvals and verified badges' },
-  { key: 'about', label: 'About Page', icon: '📖', description: 'Story blocks, traditional trust pillars and store timeline' },
-  { key: 'home', label: 'Home Page', icon: '🏠', description: 'Supermarket comparison table, top announcement marquee and hero keywords' },
-  { key: 'blog', label: 'Blog & Articles', icon: '✍️', description: 'Kitchen-tips and health articles with English & Tamil titles' },
+  { key: 'business', label: 'Business Info', icon: Store, description: 'Store identity, address, phone, WhatsApp and operating hours' },
+  { key: 'delivery', label: 'Delivery & Zones', icon: Truck, description: 'Deliverable towns, pincodes and local delivery turnaround times' },
+  { key: 'faqs', label: 'FAQs', icon: CircleHelp, description: 'Customer questions, categorized answers and homepage highlights' },
+  { key: 'reviews', label: 'Reviews', icon: Star, description: 'Customer testimonials, ratings, approvals and verified badges' },
+  { key: 'about', label: 'About Page', icon: BookOpen, description: 'Story blocks, traditional trust pillars and store timeline' },
+  { key: 'home', label: 'Home Page', icon: House, description: 'Supermarket comparison table, top announcement marquee and hero keywords' },
+  { key: 'blog', label: 'Blog & Articles', icon: PenLine, description: 'Kitchen-tips and health articles with English & Tamil titles' },
 ];
 
 export default function WebsiteTab({ onError }: { onError: (m: string) => void }) {
@@ -99,7 +100,7 @@ export default function WebsiteTab({ onError }: { onError: (m: string) => void }
           }}
           title="Edits commit to the main GitHub repository branch"
         >
-          <span>📦</span>
+          <Package size={12} />
           <span>bensiqueenmart</span>
           <span style={{ color: '#8aa68e' }}>/</span>
           <span style={{ color: '#205C38', fontWeight: 700 }}>main</span>
@@ -153,7 +154,7 @@ export default function WebsiteTab({ onError }: { onError: (m: string) => void }
                 if (!active) e.currentTarget.style.background = 'transparent';
               }}
             >
-              <span style={{ fontSize: 14 }}>{t.icon}</span>
+              <t.icon size={14} />
               <span>{t.label}</span>
               {isDirty && (
                 <span
@@ -187,7 +188,7 @@ export default function WebsiteTab({ onError }: { onError: (m: string) => void }
           color: '#205C38',
         }}
       >
-        <span style={{ fontSize: 16 }}>{activeTabDef.icon}</span>
+        <activeTabDef.icon size={16} />
         <div>
           <strong>Editing {activeTabDef.label}:</strong> {activeTabDef.description}
         </div>

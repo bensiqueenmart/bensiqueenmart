@@ -1,4 +1,5 @@
 import React from 'react';
+import { BadgeCheck, BookOpen, Building2, CheckCircle2, Globe, House, Leaf, MapPin, Sparkles, Star, Store, Truck } from 'lucide-react';
 import type { DataFileState } from './hooks/useDataFile';
 import { Area, Field, Lines, ListEditor, Num, SaveBar, Select, Text, Toggle } from './components';
 import { PILLAR_ICONS } from './types';
@@ -82,7 +83,7 @@ export function BusinessEditor({ state }: { state: DataFileState<Business> }) {
     <div>
       {/* Card A: Identity & Contact */}
       <div style={formCardStyle}>
-        <h3 style={formCardHeaderStyle}>🏢 Store Identity &amp; Contact Information</h3>
+        <h3 style={formCardHeaderStyle}><Store size={16} style={{ verticalAlign: -3, marginRight: 6 }} />Store Identity &amp; Contact Information</h3>
         <div style={twoColGrid}>
           <Field label="Store Name">
             <Text value={d.storeName} onChange={(v) => set({ storeName: v })} placeholder="Bensi Queen Mart" />
@@ -112,7 +113,7 @@ export function BusinessEditor({ state }: { state: DataFileState<Business> }) {
 
       {/* Card B: Physical Location & Address */}
       <div style={formCardStyle}>
-        <h3 style={formCardHeaderStyle}>📍 Store Location &amp; Address</h3>
+        <h3 style={formCardHeaderStyle}><MapPin size={16} style={{ verticalAlign: -3, marginRight: 6 }} />Store Location &amp; Address</h3>
         <Field label="Full Address (Multi-line)">
           <Area value={d.address} onChange={(v) => set({ address: v })} rows={2} placeholder="Complete physical address displayed on website" />
         </Field>
@@ -163,7 +164,7 @@ export function BusinessEditor({ state }: { state: DataFileState<Business> }) {
 
       {/* Card D: Branding & URLs */}
       <div style={formCardStyle}>
-        <h3 style={formCardHeaderStyle}>🌐 Branding &amp; Links</h3>
+        <h3 style={formCardHeaderStyle}><Globe size={16} style={{ verticalAlign: -3, marginRight: 6 }} />Branding &amp; Links</h3>
         <div style={twoColGrid}>
           <Field label="Logo Image URL">
             <Text value={d.logoUrl} onChange={(v) => set({ logoUrl: v })} placeholder="/images/logo.png" />
@@ -188,7 +189,7 @@ export function DeliveryEditor({ state }: { state: DataFileState<Delivery> }) {
   return (
     <div>
       <div style={formCardStyle}>
-        <h3 style={formCardHeaderStyle}>🚚 Service Coverage Areas</h3>
+        <h3 style={formCardHeaderStyle}><Truck size={16} style={{ verticalAlign: -3, marginRight: 6 }} />Service Coverage Areas</h3>
         <Field label="Deliverable Pincodes &amp; Towns (One entry per line)">
           <Lines
             value={d.areas}
@@ -265,8 +266,8 @@ export function FaqsEditor({ state }: { state: DataFileState<Faq[]> }) {
               </Field>
             </div>
             <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
-              <Toggle label="⭐ Popular / Featured FAQ" value={!!f.popular} onChange={(v) => update({ popular: v })} />
-              <Toggle label="🏠 Show on Homepage" value={f.showOnHome} onChange={(v) => update({ showOnHome: v })} />
+              <Toggle label={<><Star size={13} style={{ verticalAlign: -2 }} /> Popular / Featured FAQ</>} value={!!f.popular} onChange={(v) => update({ popular: v })} />
+              <Toggle label={<><House size={13} style={{ verticalAlign: -2 }} /> Show on Homepage</>} value={f.showOnHome} onChange={(v) => update({ showOnHome: v })} />
             </div>
           </div>
         )}
@@ -304,9 +305,9 @@ export function ReviewsEditor({ state }: { state: DataFileState<Review[]> }) {
         renderItem={(r, update) => (
           <div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 10 }}>
-              <Toggle label="✅ Approved (Visible on live site)" value={r.isApproved} onChange={(v) => update({ isApproved: v })} />
-              <Toggle label="🏅 Verified Purchase Badge" value={r.verifiedPurchase} onChange={(v) => update({ verifiedPurchase: v })} />
-              <Toggle label="📖 Feature on About Page" value={!!r.featuredOnAbout} onChange={(v) => update({ featuredOnAbout: v })} />
+              <Toggle label={<><CheckCircle2 size={13} style={{ verticalAlign: -2 }} /> Approved (Visible on live site)</>} value={r.isApproved} onChange={(v) => update({ isApproved: v })} />
+              <Toggle label={<><BadgeCheck size={13} style={{ verticalAlign: -2 }} /> Verified Purchase Badge</>} value={r.verifiedPurchase} onChange={(v) => update({ verifiedPurchase: v })} />
+              <Toggle label={<><BookOpen size={13} style={{ verticalAlign: -2 }} /> Feature on About Page</>} value={!!r.featuredOnAbout} onChange={(v) => update({ featuredOnAbout: v })} />
             </div>
 
             <div style={threeColGrid}>
@@ -470,10 +471,10 @@ export function HomeEditor({ state }: { state: DataFileState<Home> }) {
               <Text value={p.feature} onChange={(v) => update({ feature: v })} placeholder="e.g. Processing Method" />
             </Field>
             <div style={twoColGrid}>
-              <Field label="🌿 Bensi Queen Mart Standard">
+              <Field label={<><Leaf size={13} style={{ verticalAlign: -2 }} /> Bensi Queen Mart Standard</>}>
                 <Area value={p.bensi} onChange={(v) => update({ bensi: v })} rows={2} placeholder="Traditional stone mill, zero chemicals" />
               </Field>
-              <Field label="🏬 Commercial Supermarkets">
+              <Field label={<><Building2 size={13} style={{ verticalAlign: -2 }} /> Commercial Supermarkets</>}>
                 <Area value={p.supermarket} onChange={(v) => update({ supermarket: v })} rows={2} placeholder="Refined with chemical solvents" />
               </Field>
             </div>
@@ -483,13 +484,13 @@ export function HomeEditor({ state }: { state: DataFileState<Home> }) {
 
       {/* Marquee & Cycle Words */}
       <div style={formCardStyle}>
-        <h3 style={formCardHeaderStyle}>✨ Homepage Tickers &amp; Animations</h3>
+        <h3 style={formCardHeaderStyle}><Sparkles size={16} style={{ verticalAlign: -3, marginRight: 6 }} />Homepage Tickers &amp; Animations</h3>
         <Field label="Top Marquee Announcement Ticker (One item per line)">
           <Lines
             value={d.marqueeItems}
             onChange={(marqueeItems) => set({ marqueeItems })}
             rows={3}
-            placeholder="🌾 Fresh Harvest Cold-Pressed Oils&#10;🚚 Free Home Delivery across Tirunelveli on Orders Above ₹500"
+            placeholder="Fresh Harvest Cold-Pressed Oils&#10;Free Home Delivery across Tirunelveli on Orders Above ₹500"
           />
         </Field>
 

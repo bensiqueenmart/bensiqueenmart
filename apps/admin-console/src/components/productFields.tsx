@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 
 const selStyle: React.CSSProperties = { padding: '6px 8px', border: '1px solid #ccc', borderRadius: 6, flex: 1, minWidth: 0, background: '#fff' };
 const rowInput: React.CSSProperties = { padding: '6px 8px', border: '1px solid #ccc', borderRadius: 6, flex: 1, minWidth: 0 };
@@ -129,7 +130,7 @@ export function PackRows({ rows, onChange, unit, countEditable }: { rows: PackRo
           ) : (
             <div style={{ ...rowInput, flex: 1, minWidth: 0, background: '#f7f7f7', color: '#333' }}>{r.count === '' ? '—' : r.count}</div>
           )}
-          <button style={{ width: 34, flexShrink: 0, padding: '6px 0', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff' }} onClick={() => onChange(rows.filter((_, j) => j !== i))}>✕</button>
+          <button style={{ width: 34, flexShrink: 0, padding: '6px 0', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff' }} onClick={() => onChange(rows.filter((_, j) => j !== i))}><X size={14} /></button>
         </div>
       ))}
       <button style={{ padding: '6px 10px', border: '1px dashed #999', borderRadius: 6, cursor: 'pointer', background: '#fff', fontSize: 13 }} onClick={() => onChange([...rows, { size: '', price: '', count: '' }])}>+ Add pack</button>

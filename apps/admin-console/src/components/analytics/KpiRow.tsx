@@ -1,6 +1,7 @@
 import React from 'react';
 import type { SalesKPIs } from '@bqm/types';
 import { rupees } from '../../api';
+import { CreditCard, IndianRupee, Package, Scale, TriangleAlert } from 'lucide-react';
 
 interface Props {
   kpis?: SalesKPIs;
@@ -103,7 +104,7 @@ export default function KpiRow({ kpis }: Props) {
                   fontSize: 13,
                 }}
               >
-                💰
+                <IndianRupee size={13} color="#205C38" />
               </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#205C38', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Total Sales
@@ -140,7 +141,7 @@ export default function KpiRow({ kpis }: Props) {
                   fontSize: 13,
                 }}
               >
-                📦
+                <Package size={13} color="#205C38" />
               </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#205C38', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Total Orders
@@ -157,7 +158,7 @@ export default function KpiRow({ kpis }: Props) {
         <div style={{ fontSize: 11.5, color: '#557258', marginTop: 12 }}>
           {safeKpis.totalUnconfirmedOrders > 0 ? (
             <span style={{ color: '#B45309', fontWeight: 600 }}>
-              ⚠ {safeKpis.totalUnconfirmedOrders} pending unconfirmed
+              <TriangleAlert size={12} style={{ verticalAlign: -1 }} /> {safeKpis.totalUnconfirmedOrders} pending unconfirmed
             </span>
           ) : (
             'All orders confirmed'
@@ -182,7 +183,7 @@ export default function KpiRow({ kpis }: Props) {
                   fontSize: 13,
                 }}
               >
-                ⚖️
+                <Scale size={13} color="#205C38" />
               </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#205C38', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Products Sold
@@ -220,7 +221,7 @@ export default function KpiRow({ kpis }: Props) {
                   fontSize: 13,
                 }}
               >
-                💳
+                <CreditCard size={13} color="#205C38" />
               </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#205C38', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Avg Order Value
