@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Order } from '@bqm/types';
 import { rupees, formatSafeDateTime } from '../../api';
-import { Check, Hourglass, Printer } from 'lucide-react';
+import { Check, Hourglass, Loader2, Copy, Download } from 'lucide-react';
+import OrderInvoiceSheet from './OrderInvoiceSheet';
+import { copyInvoiceImage, downloadInvoicePdf } from './invoiceShare';
 
 interface Props {
   order: Order | null;
@@ -12,10 +14,37 @@ interface Props {
 }
 
 export default function OrderDetailsModal({ order, onClose, busy = false, onSetStatus, onDeleteRequest }: Props) {
+  const [downloading, setDownloading] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [stamp, setStamp] = useState(() => formatSafeDateTime(new Date()));
   if (!order) return null;
 
-  const handlePrint = () => {
-    window.print();
+  const restamp = async () => {
+    // Re-stamp so the invoice footer shows the actual export time, then
+    // wait two frames so the hidden sheet re-renders before capture.
+    setStamp(formatSafeDateTime(new Date()));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  };
+
+  const handleDownload = async () => {
+    if (downloading || copying) return;
+    setDownloading(true);
+    setNote(null);
+    await restamp();
+    const res = await downloadInvoicePdf(order, 'admin-invoice-canvas');
+    setDownloading(false);
+    setNote(res.ok ? `Downloaded Bensi-Queen-Invoice-${order.orderNo}.pdf` : res.note);
+  };
+
+  const handleCopy = async () => {
+    if (downloading || copying) return;
+    setCopying(true);
+    setNote(null);
+    await restamp();
+    const res = await copyInvoiceImage(order, 'admin-invoice-canvas');
+    setCopying(false);
+    setNote(res.ok ? 'Invoice image copied — paste it in the chat (Ctrl+V).' : res.note);
   };
 
   const isConfirmed = order.status === 'confirmed';
@@ -248,21 +277,53 @@ export default function OrderDetailsModal({ order, onClose, busy = false, onSetS
             background: '#fafbfa',
           }}
         >
-          <button
-            onClick={handlePrint}
-            style={{
-              padding: '6px 14px',
-              background: '#fff',
-              border: '1px solid #cbd5e1',
-              borderRadius: 6,
-              fontSize: 13,
-              color: '#334155',
-              cursor: 'pointer',
-              fontWeight: 500,
-            }}
-          >
-            <Printer size={14} /> Print Receipt
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={handleDownload}
+                disabled={downloading || copying}
+                title="Download the invoice as a one-page PDF"
+                style={{
+                  padding: '6px 14px',
+                  background: '#fff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: 6,
+                  fontSize: 13,
+                  color: '#334155',
+                  cursor: downloading || copying ? 'not-allowed' : 'pointer',
+                  fontWeight: 500,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                {downloading ? <Loader2 size={14} /> : <Download size={14} />} Download
+              </button>
+              <button
+                onClick={handleCopy}
+                disabled={downloading || copying}
+                title="Copy the invoice as an image — paste it straight into WhatsApp"
+                style={{
+                  padding: '6px 14px',
+                  background: '#fff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: 6,
+                  fontSize: 13,
+                  color: '#334155',
+                  cursor: downloading || copying ? 'not-allowed' : 'pointer',
+                  fontWeight: 500,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                {copying ? <Loader2 size={14} /> : <Copy size={14} />} Copy image
+              </button>
+            </div>
+            {note && (
+              <div style={{ fontSize: 11, color: '#205C38', maxWidth: 240 }}>{note}</div>
+            )}
+          </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {onSetStatus && (isConfirmed ? (
@@ -337,6 +398,12 @@ export default function OrderDetailsModal({ order, onClose, busy = false, onSetS
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Offscreen invoice document for share-as-PDF. Kept outside the
+          visible card so modal action buttons can never leak into the file. */}
+      <div style={{ position: 'fixed', left: -10000, top: 0 }} aria-hidden="true">
+        <OrderInvoiceSheet order={order} generatedAt={stamp} />
       </div>
     </div>
   );

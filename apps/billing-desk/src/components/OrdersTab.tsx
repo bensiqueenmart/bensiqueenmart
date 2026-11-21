@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { Order, OrderItem, OrderStatus } from '@bqm/types';
-import { deleteOrder, getCatalog, getOrder, listOrders, rupees, patchOrder } from '../api';
+import { deleteOrder, formatSafeDateTime, getCatalog, getOrder, listOrders, rupees, patchOrder } from '../api';
+import OrderInvoiceSheet from './OrderInvoiceSheet';
+import { copyInvoiceImage, downloadInvoicePdf } from './invoiceShare';
 
 export default function OrdersTab({ onError }: { onError: (msg: string) => void }) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -16,6 +18,10 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
   const [units, setUnits] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [missing, setMissing] = useState<string[]>([]);
+  const [downloading, setDownloading] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [exportNote, setExportNote] = useState<string | null>(null);
+  const [stamp, setStamp] = useState(() => formatSafeDateTime(new Date()));
 
   const load = async (p = 1) => {
     setLoading(true);
@@ -49,6 +55,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
   const view = async (id: string) => {
     setSelectedId(id);
     setMissing([]);
+    setExportNote(null);
     try {
       setViewing(await getOrder(id));
     } catch (e) {
@@ -69,6 +76,33 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
     } finally {
       setBusy(false);
     }
+  };
+
+  const restamp = async () => {
+    // Re-stamp so the invoice footer shows the actual export time, then
+    // wait two frames so the hidden sheet re-renders before capture.
+    setStamp(formatSafeDateTime(new Date()));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  };
+
+  const handleDownload = async () => {
+    if (!viewing || downloading || copying) return;
+    setDownloading(true);
+    setExportNote(null);
+    await restamp();
+    const res = await downloadInvoicePdf(viewing, 'billing-invoice-canvas');
+    setDownloading(false);
+    setExportNote(res.ok ? `Downloaded Bensi-Queen-Invoice-${viewing.orderNo}.pdf` : res.note);
+  };
+
+  const handleCopyImage = async () => {
+    if (!viewing || downloading || copying) return;
+    setCopying(true);
+    setExportNote(null);
+    await restamp();
+    const res = await copyInvoiceImage(viewing, 'billing-invoice-canvas');
+    setCopying(false);
+    setExportNote(res.ok ? 'Invoice image copied — paste it in the chat (Ctrl+V).' : res.note);
   };
 
   const confirmDelete = async () => {
@@ -466,7 +500,49 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
                   </div>
 
                   {/* Actions inside drawer */}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          disabled={busy || downloading || copying}
+                          onClick={handleDownload}
+                          title="Download the invoice as a one-page PDF"
+                          style={{
+                            padding: '6px 14px',
+                            border: '1px solid #CBD5E1',
+                            borderRadius: 6,
+                            background: '#fff',
+                            color: '#334155',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: busy || downloading || copying ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          {downloading ? 'Downloading…' : '📥 Download'}
+                        </button>
+                        <button
+                          disabled={busy || downloading || copying}
+                          onClick={handleCopyImage}
+                          title="Copy the invoice as an image — paste it straight into WhatsApp"
+                          style={{
+                            padding: '6px 14px',
+                            border: '1px solid #CBD5E1',
+                            borderRadius: 6,
+                            background: '#fff',
+                            color: '#334155',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: busy || downloading || copying ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          {copying ? 'Copying…' : '📋 Copy image'}
+                        </button>
+                      </div>
+                      {exportNote && (
+                        <div style={{ fontSize: 11, color: '#205C38', maxWidth: 260 }}>{exportNote}</div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
                     {viewing.status === 'confirmed' ? (
                       <button
                         disabled={busy}
@@ -522,6 +598,7 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
                     >
                       Delete Order ✕
                     </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -646,6 +723,14 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Offscreen invoice document for Download / Copy image. Kept outside
+          the rows so drawer action buttons can never leak into the file. */}
+      {viewing && (
+        <div style={{ position: 'fixed', left: -10000, top: 0 }} aria-hidden="true">
+          <OrderInvoiceSheet order={viewing} generatedAt={stamp} />
         </div>
       )}
     </div>

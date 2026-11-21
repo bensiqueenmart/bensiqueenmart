@@ -60,3 +60,20 @@ export const getOrder = (id: string) => request<Order>(`/api/orders/${encodeURIC
 
 /** ₹ formatting for rupee values (2 decimals). */
 export const rupees = (n: number) => `₹${Number(n).toFixed(2)}`;
+
+/**
+ * Defensive date-time formatter that works across all browsers and Node/Electron runtimes
+ * without ever throwing "TypeError: Invalid option : timeStyle".
+ */
+export function formatSafeDateTime(dateVal?: string | Date | number | null): string {
+  if (!dateVal) return '—';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return String(dateVal);
+    const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    return `${dateStr}, ${timeStr}`;
+  } catch {
+    return String(dateVal);
+  }
+}
