@@ -3,17 +3,17 @@ import { authMe, logout } from './api';
 import LoginScreen from './components/LoginScreen';
 import DashboardTab from './components/DashboardTab';
 import InventoryTab from './components/InventoryTab';
-import OrdersTab from './components/OrdersTab';
 import WebsiteTab from './components/WebsiteTab';
+import { BarChart3, ClipboardList, Globe, Leaf, Package } from 'lucide-react';
 import OrderHistorySection from './components/analytics/OrderHistorySection';
 
-type Tab = 'dashboard' | 'history' | 'inventory' | 'orders' | 'website';
+type Tab = 'dashboard' | 'orders' | 'inventory' | 'website';
 
 export default function App() {
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [tab, setTab] = useState<Tab>('dashboard');
   const [error, setError] = useState('');
-  // Share the dashboard date range with the Order History tab so navigating
+  // Share the dashboard date range with the Orders tab so navigating
   // from "View Full Order History" preserves the selected period.
   const [sharedStartIso, setSharedStartIso] = useState<string | undefined>(undefined);
   const [sharedEndIso, setSharedEndIso] = useState<string | undefined>(undefined);
@@ -40,6 +40,9 @@ export default function App() {
     opacity: active ? 1 : 0.82,
     textAlign: 'left',
     width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
     transition: 'all 0.15s ease',
   });
 
@@ -47,7 +50,7 @@ export default function App() {
     <main style={{ fontFamily: 'system-ui, -apple-system, sans-serif', margin: 0, background: '#f8faf8', minHeight: '100vh' }}>
       <header style={{ background: '#123B26', color: '#fff', padding: '12px 24px', position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', borderBottom: '1px solid #1c5234' }}>
         <strong style={{ fontSize: 16, letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 18 }}>🌿</span> Bensi Queen Mart <span style={{ fontWeight: 400, opacity: 0.8, fontSize: 13 }}>| Admin Console</span>
+          <Leaf size={18} color="#A8C66C" /> Bensi Queen Mart <span style={{ fontWeight: 400, opacity: 0.8, fontSize: 13 }}>| Admin Console</span>
         </strong>
         <button
           style={{ marginLeft: 'auto', padding: '6px 14px', border: '1px solid #205C38', borderRadius: 6, background: '#1a4a2e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
@@ -67,19 +70,16 @@ export default function App() {
       <div className="app-layout">
         <nav className="app-sidebar">
           <button style={tabBtn(tab === 'dashboard')} onClick={() => setTab('dashboard')}>
-            📊 Sales Overview
-          </button>
-          <button style={tabBtn(tab === 'history')} onClick={() => setTab('history')}>
-            📜 Order History
-          </button>
-          <button style={tabBtn(tab === 'inventory')} onClick={() => setTab('inventory')}>
-            📦 Inventory
+            <BarChart3 size={15} /> Sales Overview
           </button>
           <button style={tabBtn(tab === 'orders')} onClick={() => setTab('orders')}>
-            📋 Orders Desk
+            <ClipboardList size={15} /> Orders
+          </button>
+          <button style={tabBtn(tab === 'inventory')} onClick={() => setTab('inventory')}>
+            <Package size={15} /> Inventory
           </button>
           <button style={tabBtn(tab === 'website')} onClick={() => setTab('website')}>
-            🌐 Website Content
+            <Globe size={15} /> Website Content
           </button>
         </nav>
         <div style={{ flex: 1, minWidth: 0, background: '#f8faf8' }}>
@@ -89,11 +89,11 @@ export default function App() {
               onNavigateToOrders={(startIso, endIso) => {
                 setSharedStartIso(startIso);
                 setSharedEndIso(endIso);
-                setTab('history');
+                setTab('orders');
               }}
             />
           )}
-          {tab === 'history' && (
+          {tab === 'orders' && (
             <div style={{ maxWidth: 1380, margin: '0 auto', padding: '24px 28px' }}>
               <OrderHistorySection
                 onError={setError}
@@ -103,7 +103,6 @@ export default function App() {
             </div>
           )}
           {tab === 'inventory' && <InventoryTab onError={setError} />}
-          {tab === 'orders' && <OrdersTab onError={setError} />}
           {tab === 'website' && <WebsiteTab onError={setError} />}
         </div>
       </div>

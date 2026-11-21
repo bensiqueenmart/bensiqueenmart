@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import type { Order, OrderHistoryQuery, PaginatedOrdersResponse } from '@bqm/types';
-import { getExportOrdersUrl, listHistoricalOrders, rupees, formatSafeDateTime } from '../../api';
+import type { Order, OrderHistoryQuery, OrderStatus, PaginatedOrdersResponse } from '@bqm/types';
+import { deleteOrder, getExportOrdersUrl, listHistoricalOrders, patchOrder, rupees, formatSafeDateTime } from '../../api';
 import OrderDetailsModal from './OrderDetailsModal';
+import { Check, Download, Undo2, X } from 'lucide-react';
 
 interface Props {
   initialStartIso?: string;
@@ -30,6 +31,12 @@ export default function OrderHistorySection({ initialStartIso, initialEndIso, on
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
   const [page, setPage] = useState(1);
   const [applyDateFilter, setApplyDateFilter] = useState(true);
+
+  // Desk-action state (ported from the old Orders Desk — same endpoints, same semantics).
+  const [busy, setBusy] = useState(false);
+  const [missing, setMissing] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState<{ id: string; orderNo: string; status: string } | null>(null);
+  const [restoreChoice, setRestoreChoice] = useState(true);
 
   // Debounce search input
   useEffect(() => {
@@ -71,6 +78,44 @@ export default function OrderHistorySection({ initialStartIso, initialEndIso, on
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  const applyStatus = async (target: Order, status: OrderStatus) => {
+    setBusy(true);
+    try {
+      const result = await patchOrder(target.id, { status });
+      setMissing(result.missingProducts ?? []);
+      setSelectedOrder((sel) => (sel && sel.id === result.order.id ? result.order : sel));
+      await fetchOrders();
+    } catch (err) {
+      onError(String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const requestDelete = (target: Order) => {
+    setRestoreChoice(true);
+    setDeleting({ id: target.id, orderNo: target.orderNo, status: target.status });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setBusy(true);
+    try {
+      // Unconfirmed orders hold no stock, so the choice only matters when confirmed.
+      const result = await deleteOrder(deleting.id, deleting.status === 'confirmed' && restoreChoice);
+      setMissing(result.missingProducts ?? []);
+      if (selectedOrder && selectedOrder.id === deleting.id) setSelectedOrder(null);
+      setDeleting(null);
+      // If that was the last row on this page, step back so the list isn't left empty.
+      if (ordersData.orders.length <= 1 && page > 1) setPage(page - 1);
+      else await fetchOrders();
+    } catch (err) {
+      onError(String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleExportCsv = () => {
     const query: OrderHistoryQuery = {
@@ -158,9 +203,15 @@ export default function OrderHistorySection({ initialStartIso, initialEndIso, on
           }}
           title="Export currently filtered orders to CSV"
         >
-          📥 Export CSV
+          <Download size={13} /> Export CSV
         </button>
       </div>
+
+      {missing.length > 0 && (
+        <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12.5, color: '#92400E' }}>
+          ℹ Deleted products skipped ({missing.join(', ')}) — movement recorded, stock write skipped.
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div
@@ -366,24 +417,60 @@ export default function OrderHistorySection({ initialStartIso, initialEndIso, on
                       </span>
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'center' }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedOrder(o);
-                        }}
-                        style={{
-                          padding: '4px 10px',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: 4,
-                          fontSize: 12,
-                          background: '#fff',
-                          color: '#163b22',
-                          cursor: 'pointer',
-                          fontWeight: 500,
-                        }}
-                      >
-                        View
-                      </button>
+                      <div style={{ display: 'flex', gap: 4, justifyContent: 'center', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                        <button
+                          disabled={busy}
+                          title={isConfirmed ? 'Mark unconfirmed (restores stock)' : 'Confirm (deducts stock)'}
+                          onClick={() => applyStatus(o, isConfirmed ? 'unconfirmed' : 'confirmed')}
+                          style={{
+                            padding: '4px 8px',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 4,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            background: isConfirmed ? '#FFFBEB' : '#E6F4EA',
+                            color: isConfirmed ? '#92400E' : '#137333',
+                            cursor: busy ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          {isConfirmed ? <Undo2 size={12} /> : <Check size={12} />}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedOrder(o);
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 4,
+                            fontSize: 12,
+                            background: '#fff',
+                            color: '#163b22',
+                            cursor: 'pointer',
+                            fontWeight: 500,
+                          }}
+                        >
+                          View
+                        </button>
+                        <button
+                          disabled={busy}
+                          title="Delete order"
+                          onClick={() => requestDelete(o)}
+                          style={{
+                            padding: '4px 8px',
+                            border: '1px solid #FCA5A5',
+                            borderRadius: 4,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            background: '#FEF2F2',
+                            color: '#DC2626',
+                            cursor: busy ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -465,9 +552,89 @@ export default function OrderHistorySection({ initialStartIso, initialEndIso, on
         </div>
       </div>
 
+      {/* Delete Confirmation Modal (ported from the old Orders Desk) */}
+      {deleting && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(18, 59, 38, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+          }}
+          onClick={() => { if (!busy) setDeleting(null); }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid #DCE8C8',
+              borderRadius: 14,
+              maxWidth: 440,
+              width: '90%',
+              padding: 22,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#123B26', marginBottom: 6 }}>
+              Delete order <code>{deleting.orderNo}</code>?
+            </div>
+            <div style={{ fontSize: 13, color: '#64748B', marginBottom: 14, lineHeight: 1.4 }}>
+              This will permanently delete the order. This cannot be undone.
+            </div>
+            {deleting.status === 'confirmed' && (
+              <div style={{ background: '#F8FAF8', border: '1px solid #E2ECE2', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8, cursor: 'pointer' }}>
+                  <input type="radio" checked={restoreChoice} onChange={() => setRestoreChoice(true)} style={{ accentColor: '#123B26', marginTop: 2 }} />
+                  <div>
+                    <strong style={{ color: '#123B26' }}>Restore stock quantities</strong>
+                    <div style={{ fontSize: 11.5, color: '#68826D', marginTop: 1 }}>
+                      Adds back the deducted inventory items as a cancellation movement.
+                    </div>
+                  </div>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
+                  <input type="radio" checked={!restoreChoice} onChange={() => setRestoreChoice(false)} style={{ accentColor: '#123B26', marginTop: 2 }} />
+                  <div>
+                    <strong style={{ color: '#123B26' }}>Do not restore stock</strong>
+                    <div style={{ fontSize: 11.5, color: '#68826D', marginTop: 1 }}>
+                      Leaves inventory levels as-is.
+                    </div>
+                  </div>
+                </label>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                disabled={busy}
+                onClick={() => setDeleting(null)}
+                style={{ padding: '8px 16px', border: '1px solid #DCE8C8', borderRadius: 6, background: '#fff', color: '#123B26', fontSize: 13, fontWeight: 600, cursor: busy ? 'not-allowed' : 'pointer' }}
+              >
+                Keep order
+              </button>
+              <button
+                disabled={busy}
+                onClick={confirmDelete}
+                style={{ padding: '8px 16px', border: 'none', borderRadius: 6, background: '#DC2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer' }}
+              >
+                {busy ? 'Deleting…' : 'Yes, delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Order Details Modal */}
       {selectedOrder && (
-        <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          busy={busy}
+          onSetStatus={(s) => applyStatus(selectedOrder, s)}
+          onDeleteRequest={() => requestDelete(selectedOrder)}
+        />
       )}
     </div>
   );

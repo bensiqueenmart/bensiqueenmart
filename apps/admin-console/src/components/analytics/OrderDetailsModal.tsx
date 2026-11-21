@@ -1,13 +1,17 @@
 import React from 'react';
 import type { Order } from '@bqm/types';
 import { rupees, formatSafeDateTime } from '../../api';
+import { Check, Hourglass, Printer } from 'lucide-react';
 
 interface Props {
   order: Order | null;
   onClose: () => void;
+  busy?: boolean;
+  onSetStatus?: (status: 'confirmed' | 'unconfirmed') => void;
+  onDeleteRequest?: () => void;
 }
 
-export default function OrderDetailsModal({ order, onClose }: Props) {
+export default function OrderDetailsModal({ order, onClose, busy = false, onSetStatus, onDeleteRequest }: Props) {
   if (!order) return null;
 
   const handlePrint = () => {
@@ -127,7 +131,7 @@ export default function OrderDetailsModal({ order, onClose }: Props) {
                     color: isConfirmed ? '#166534' : '#991b1b',
                   }}
                 >
-                  {isConfirmed ? '✓ Confirmed (Stock Deducted)' : '⏳ Unconfirmed / Draft'}
+                  {isConfirmed ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={11} /> Confirmed (Stock Deducted)</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Hourglass size={11} /> Unconfirmed / Draft</span>)}
                 </span>
               </div>
             </div>
@@ -251,24 +255,81 @@ export default function OrderDetailsModal({ order, onClose }: Props) {
               fontWeight: 500,
             }}
           >
-            🖨️ Print Receipt
+            <Printer size={14} /> Print Receipt
           </button>
 
-          <button
-            onClick={onClose}
-            style={{
-              padding: '6px 18px',
-              background: '#163b22',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              fontSize: 13,
-              cursor: 'pointer',
-              fontWeight: 500,
-            }}
-          >
-            Close
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {onSetStatus && (isConfirmed ? (
+              <button
+                disabled={busy}
+                onClick={() => onSetStatus('unconfirmed')}
+                title="Mark unconfirmed — restores stock"
+                style={{
+                  padding: '6px 14px',
+                  border: '1px solid #FCD34D',
+                  borderRadius: 6,
+                  background: '#FFFBEB',
+                  color: '#92400E',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: busy ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Mark Unconfirmed
+              </button>
+            ) : (
+              <button
+                disabled={busy}
+                onClick={() => onSetStatus('confirmed')}
+                title="Confirm — deducts stock"
+                style={{
+                  padding: '6px 14px',
+                  border: 'none',
+                  borderRadius: 6,
+                  background: '#205C38',
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: busy ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Confirm Order
+              </button>
+            ))}
+            {onDeleteRequest && (
+              <button
+                disabled={busy}
+                onClick={onDeleteRequest}
+                style={{
+                  padding: '6px 14px',
+                  border: '1px solid #FCA5A5',
+                  borderRadius: 6,
+                  background: '#FEF2F2',
+                  color: '#DC2626',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: busy ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Delete
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                padding: '6px 18px',
+                background: '#163b22',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                fontSize: 13,
+                cursor: 'pointer',
+                fontWeight: 500,
+              }}
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
