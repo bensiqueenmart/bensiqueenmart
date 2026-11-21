@@ -1,18 +1,29 @@
-import type { Combo, Product, PublicCatalog, PublicCombo, PublicComboItem, PublicProduct, QuantizedCount } from '@bqm/types';
+import type { Combo, Product, PublicCatalog, PublicCombo, PublicComboItem, PublicPackOption, PublicProduct, QuantizedCount } from '@bqm/types';
 
 /**
  * Public-catalog redaction — the single choke point between the raw DB
  * catalog and the unauthenticated website API.
  *
  * Raw stock quantities (loose base-unit numbers, QuantizedCount buckets)
- * NEVER leave the server: each product/combo carries only `available`.
+ * NEVER leave the server: each product/combo carries only `available`
+ * (plus per-pack booleans for loose website packs — pack SIZES are
+ * merchandising config, not stock quantities).
  * Prices pass through untouched for the future "show prices" switch — the
  * website UI is forbidden from rendering them today.
  */
 
-function productAvailable(p: Product): boolean {
+function quantizedAvailable(p: Product): boolean {
   if (Array.isArray(p.stock)) return p.stock.some((b) => b.count > 0);
-  return typeof p.stock === 'number' && p.stock > 0;
+  return false;
+}
+
+/** Loose website packs with per-pack availability: a pack is sellable only
+ * when the price exists and current stock covers one pack. No quantities leak. */
+function loosePackOptions(p: Product): PublicPackOption[] {
+  const sizes = [...(p.websitePackSizes ?? [])].sort((a, b) => a - b);
+  const stock = typeof p.stock === 'number' ? p.stock : 0;
+  const priced = (p.pricePerUnit ?? 0) > 0;
+  return sizes.map((size) => ({ size, available: priced && stock >= size }));
 }
 
 /** One combo unit is fulfillable only when every component's required quantity is on hand. */
@@ -40,7 +51,7 @@ function displayQty(quantity: number | QuantizedCount[], unit: string): string {
 }
 
 function toPublicProduct(p: Product): PublicProduct {
-  return {
+  const base = {
     id: p.id,
     slug: p.slug,
     name: p.name,
@@ -50,10 +61,14 @@ function toPublicProduct(p: Product): PublicProduct {
     category: p.category,
     isQuantized: p.isQuantized,
     stockUnit: p.stockUnit,
-    available: productAvailable(p),
     ...(p.pricePerUnit !== undefined ? { pricePerUnit: p.pricePerUnit } : {}),
     quantityPrice: p.quantityPrice ?? [],
   };
+  if (!p.isQuantized) {
+    const websitePackSizes = loosePackOptions(p);
+    return { ...base, available: websitePackSizes.some((s) => s.available), websitePackSizes };
+  }
+  return { ...base, available: quantizedAvailable(p), websitePackSizes: [] };
 }
 
 function toPublicCombo(c: Combo, byId: Map<string, Product>): PublicCombo {

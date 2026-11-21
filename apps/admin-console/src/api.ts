@@ -95,6 +95,12 @@ export function patchCombo(slug: string, patch: Record<string, unknown>) {
   });
 }
 
+export function deleteCombo(slug: string) {
+  return request<{ deleted: true; slug: string }>(`/api/combos/${encodeURIComponent(slug)}`, {
+    method: 'DELETE',
+  });
+}
+
 export const listOrders = (page = 1, limit = 20) =>
   request<OrdersPage>(`/api/orders?page=${page}&limit=${limit}`);
 export const getOrder = (id: string) => request<Order>(`/api/orders/${encodeURIComponent(id)}`);

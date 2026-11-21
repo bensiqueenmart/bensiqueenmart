@@ -2,14 +2,16 @@ import { useRef, useState } from 'react';
 import { imageSrc } from '../api';
 import { isValidImageUrl, uploadImage } from '../lib/cloudinary';
 
-const thumb: React.CSSProperties = {
-  width: '100%', height: 120, objectFit: 'cover', borderRadius: 6, display: 'block', background: '#eee',
-};
 const smallBtn: React.CSSProperties = {
-  padding: '6px 10px', border: '1px solid #999', borderRadius: 6, cursor: 'pointer', background: '#fff', fontSize: 13,
-};
-const segWrap: React.CSSProperties = {
-  display: 'flex', background: '#eee', borderRadius: 8, padding: 3, gap: 3, marginBottom: 6,
+  minHeight: 44,
+  padding: '10px 14px',
+  border: '1px solid #DCE8C8',
+  borderRadius: 10,
+  cursor: 'pointer',
+  background: '#fff',
+  fontSize: 14,
+  fontWeight: 600,
+  color: '#123B26',
 };
 
 type Mode = 'upload' | 'capture' | 'url';
@@ -68,18 +70,15 @@ export default function ImageEditor({ value, onChange, kind, onError }: {
     setUrl('');
   };
 
-  const seg = (m: Mode, label: string): React.CSSProperties => ({
-    flex: 1, padding: '6px 0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13,
-    fontWeight: 700, background: mode === m ? '#1a1a1a' : 'transparent', color: mode === m ? '#fff' : '#555',
-  });
+  const segCls = (m: Mode): string => `fkit-seg-btn${mode === m ? ' on' : ''}`;
 
   return (
     <div>
-      <div style={{ position: 'relative', marginBottom: 6 }}>
+      <div style={{ position: 'relative', marginBottom: 8 }}>
         {value && imgOk ? (
-          <img src={imageSrc(value)} alt="" onError={() => setImgOk(false)} style={thumb} />
+          <img src={imageSrc(value)} alt="" onError={() => setImgOk(false)} className="imgedit-thumb" />
         ) : (
-          <div style={{ ...thumb, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#888' }}>
+          <div className="imgedit-placeholder">
             no photo
           </div>
         )}
@@ -97,7 +96,7 @@ export default function ImageEditor({ value, onChange, kind, onError }: {
             disabled={busy}
             onClick={() => onChange('')}
             style={{
-              position: 'absolute', top: 6, right: 6, width: 28, height: 28, borderRadius: '50%',
+              position: 'absolute', top: 6, right: 6, width: 40, height: 40, borderRadius: '50%',
               border: '1px solid #ddd', background: 'rgba(255,255,255,0.92)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
             }}
@@ -126,24 +125,26 @@ export default function ImageEditor({ value, onChange, kind, onError }: {
         hidden
         onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ''; }}
       />
-      <div style={segWrap}>
-        <button style={seg('upload', 'Upload')} onClick={() => pick('upload')}>Upload</button>
-        <button style={seg('capture', 'Capture')} onClick={() => pick('capture')}>Capture</button>
-        <button style={seg('url', 'Link')} onClick={() => pick('url')}>Link</button>
+      <div className="fkit-seg" style={{ marginBottom: 8 }} role="radiogroup" aria-label="Image source">
+        <button type="button" className={segCls('upload')} onClick={() => pick('upload')} aria-pressed={mode === 'upload'}>Upload</button>
+        <button type="button" className={segCls('capture')} onClick={() => pick('capture')} aria-pressed={mode === 'capture'}>Capture</button>
+        <button type="button" className={segCls('url')} onClick={() => pick('url')} aria-pressed={mode === 'url'}>Link</button>
       </div>
       {mode === 'url' ? (
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <input
-            style={{ padding: '6px 8px', border: '1px solid #ccc', borderRadius: 6, flex: 1, minWidth: 0 }}
+            className="fkit-input"
+            style={{ flex: 1, minWidth: 0 }}
             placeholder="paste image URL…"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
+            aria-label="Image URL"
           />
-          <button style={smallBtn} onClick={useUrl}>Set</button>
+          <button type="button" style={{ ...smallBtn, flexShrink: 0 }} onClick={useUrl}>Set</button>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <button style={{ ...smallBtn, flex: 1 }} disabled={busy} onClick={() => pick(mode)}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button type="button" className="imgedit-choose" disabled={busy} onClick={() => pick(mode)}>
             {busy ? 'Uploading…' : mode === 'upload' ? 'Choose from gallery…' : 'Open camera…'}
           </button>
         </div>

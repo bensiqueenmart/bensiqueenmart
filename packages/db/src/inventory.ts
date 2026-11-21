@@ -17,6 +17,7 @@ export interface CreateProductInput {
   stock: number | QuantizedCount[];
   pricePerUnit?: number;
   quantityPrice?: QuantityPrice[];
+  websitePackSizes?: number[];
   tamilName?: string;
   image?: string;
 }
@@ -54,6 +55,18 @@ function assertValidTiers(tiers: unknown, what: string): asserts tiers is Quanti
   });
 }
 
+function assertValidWebsitePackSizes(sizes: unknown, what: string): asserts sizes is number[] {
+  if (!Array.isArray(sizes)) throw new Error(`${what} must be an array of base-unit pack sizes`);
+  const seen = new Set<number>();
+  sizes.forEach((s, i) => {
+    if (!Number.isInteger(s) || (s as number) <= 0) {
+      throw new Error(`${what}[${i}]: each pack size must be a positive integer (base units)`);
+    }
+    if (seen.has(s as number)) throw new Error(`${what}[${i}]: duplicate pack size: ${s}`);
+    seen.add(s as number);
+  });
+}
+
 /**
  * Create a brand-new product. Slug must be unique. Non-zero opening stock
  * writes one `create` movement so the audit trail starts at the product's
@@ -73,6 +86,10 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
     throw new Error('pricePerUnit must be a non-negative number (rupees)');
   }
   if (input.quantityPrice !== undefined) assertValidTiers(input.quantityPrice, 'quantityPrice');
+  if (input.websitePackSizes !== undefined) {
+    assertValidWebsitePackSizes(input.websitePackSizes, 'websitePackSizes');
+    if (input.isQuantized) throw new Error('websitePackSizes is loose-only (quantized products use quantityPrice tiers)');
+  }
   if (input.tamilName !== undefined && typeof input.tamilName !== 'string') {
     throw new Error('tamilName must be a string');
   }
@@ -99,6 +116,9 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
     stock: input.stock,
     ...(input.pricePerUnit !== undefined ? { pricePerUnit: input.pricePerUnit } : {}),
     quantityPrice: input.quantityPrice ?? [],
+    ...(input.websitePackSizes !== undefined && input.websitePackSizes.length > 0
+      ? { websitePackSizes: [...input.websitePackSizes].sort((a, b) => a - b) }
+      : {}),
     createdAt: now,
     updatedAt: now,
   };
@@ -142,6 +162,7 @@ export interface PatchProductInput {
   stockUnit?: string;
   pricePerUnit?: number;
   quantityPrice?: QuantityPrice[];
+  websitePackSizes?: number[];
 }
 
 const PRODUCT_IMMUTABLE_KEYS = ['id', 'slug', 'stock', 'isQuantized', 'createdAt', 'updatedAt'] as const;
@@ -191,6 +212,16 @@ export async function patchProduct(slug: string, patch: PatchProductInput & Reco
   if (patch.quantityPrice !== undefined) {
     assertValidTiers(patch.quantityPrice, 'quantityPrice');
     update.quantityPrice = patch.quantityPrice;
+  }
+  if (patch.websitePackSizes !== undefined) {
+    assertValidWebsitePackSizes(patch.websitePackSizes, 'websitePackSizes');
+    const { products: existingProducts } = await getCollections();
+    const existing = await existingProducts.findOne({ slug });
+    if (!existing) throw new Error(`product not found: ${slug}`);
+    if (existing.isQuantized) {
+      throw new Error('websitePackSizes is loose-only (quantized products use quantityPrice tiers)');
+    }
+    update.websitePackSizes = [...patch.websitePackSizes].sort((a, b) => a - b);
   }
   if (Object.keys(update).length === 0) throw new Error('patch is empty — nothing to update');
 
@@ -371,6 +402,23 @@ export async function patchCombo(slug: string, patch: PatchComboInput & Record<s
   const res = await combos.findOneAndUpdate({ slug }, { $set: update }, { returnDocument: 'after' });
   if (!res) throw new Error(`combo not found: ${slug}`);
   return res;
+}
+
+/**
+ * Hard-delete a combo by slug. Nothing blocks it: orders keep their
+ * id-keyed history plus the confirm-time deduction snapshot, so a later
+ * combo reusing the slug can never inherit old rows. Unconfirmed orders
+ * still referencing the combo will fail at confirm-time validation
+ * (same policy as deleted products).
+ */
+export async function deleteCombo(slug: string): Promise<{ deleted: true; slug: string }> {
+  assertNonEmptyString(slug, 'slug');
+  const { combos } = await getCollections();
+  const existing = await combos.findOne({ slug });
+  if (!existing) throw new Error(`combo not found: ${slug}`);
+  const res = await combos.deleteOne({ id: existing.id });
+  if (res.deletedCount === 0) throw new Error(`combo vanished during delete: ${slug}`);
+  return { deleted: true as const, slug };
 }
 
 /**

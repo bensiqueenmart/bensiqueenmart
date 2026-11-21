@@ -1,5 +1,4 @@
 import type { Order, PublicCatalog } from '@bqm/types';
-import { STORE_CONFIG } from './config/storeConfig';
 
 async function request<T>(path: string): Promise<T> {
   const res = await fetch(path, {
@@ -68,15 +67,37 @@ export const comboLabel = (slug: string): string => {
 };
 
 /**
+ * One selectable pack in a weight dropdown. `value` is the cart/API pack
+ * label (e.g. "500g"); `available` is the per-pack stock signal.
+ */
+export interface PackOption {
+  value: string;
+  label: string;
+  available: boolean;
+}
+
+/**
  * Pack-size options for the weight dropdown. Quantized products offer
- * exactly their tier sizes; loose products offer the standard weights.
+ * exactly their tier sizes; loose products offer only their configured
+ * website packs (empty = hidden from the storefront).
  * Labels only — prices are confirmed on WhatsApp, never shown here.
  */
 export const packOptions = (p: {
   isQuantized: boolean;
   quantityPrice: Array<{ quantity: number }>;
   stockUnit: string;
-}): string[] =>
-  p.isQuantized && p.quantityPrice.length > 0
-    ? p.quantityPrice.map((t) => `${t.quantity}${p.stockUnit}`)
-    : [...STORE_CONFIG.weightOptions];
+  websitePackSizes?: Array<{ size: number; available: boolean }>;
+}): PackOption[] => {
+  if (p.isQuantized) {
+    return (p.quantityPrice ?? []).map((t) => ({
+      value: `${t.quantity}${p.stockUnit}`,
+      label: `${t.quantity}${p.stockUnit}`,
+      available: true,
+    }));
+  }
+  return (p.websitePackSizes ?? []).map((s) => ({
+    value: `${s.size}${p.stockUnit}`,
+    label: `${s.size}${p.stockUnit}`,
+    available: s.available,
+  }));
+};

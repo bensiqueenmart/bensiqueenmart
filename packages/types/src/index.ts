@@ -37,6 +37,13 @@ export interface Product {
   stock: number | QuantizedCount[];
   pricePerUnit?: number;
   quantityPrice: QuantityPrice[];
+  /**
+   * Loose-only: fixed pack sizes (base units, e.g. grams) sold on the
+   * website. The website sells everything in fixed packs, so a loose
+   * product with no sizes here is hidden from the storefront.
+   * Quantized products never use this (their tiers ARE the packs).
+   */
+  websitePackSizes?: number[];
   createdAt: string;
   updatedAt: string;
 }
@@ -179,9 +186,20 @@ export interface StockMovement {
 }
 
 /**
+ * One fixed pack size offered on the website for a loose product, with its
+ * own availability. Sizes are merchandising config (base units) — not stock
+ * quantities — so they may leave the server. Raw stock never does.
+ */
+export interface PublicPackOption {
+  size: number;
+  available: boolean;
+}
+
+/**
  * Public storefront product — the ONLY product shape the website may see.
  * Deliberately has no `stock` field: availability is a single boolean
- * computed server-side. Raw quantities never leave the server.
+ * plus per-pack booleans for loose website packs, computed server-side.
+ * Raw quantities never leave the server.
  * Prices stay in the payload for a future "show prices" switch; the
  * website UI must not render them today.
  */
@@ -199,6 +217,8 @@ export interface PublicProduct {
   available: boolean;
   pricePerUnit?: number;
   quantityPrice: QuantityPrice[];
+  /** Loose-only fixed packs for the website (empty for quantized). Sizes are config, not stock. */
+  websitePackSizes: PublicPackOption[];
 }
 
 /**

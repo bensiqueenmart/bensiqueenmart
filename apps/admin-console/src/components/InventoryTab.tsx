@@ -419,12 +419,14 @@ export default function InventoryTab({ onError }: { onError: (m: string) => void
         <EditPopup
           product={editingProduct}
           combo={editingCombo}
+          products={products}
           units={units}
           categories={categories}
           onClose={() => setEditSlug(null)}
           onSavedProduct={(u) => setProducts((ps) => ps.map((x) => (x.slug === u.slug ? u : x)))}
           onSavedCombo={(u) => setCombos((cs) => cs.map((x) => (x.slug === u.slug ? u : x)))}
           onDeletedProduct={(slug) => setProducts((ps) => ps.filter((x) => x.slug !== slug))}
+          onDeletedCombo={(slug) => setCombos((cs) => cs.filter((x) => x.slug !== slug))}
           onError={onError}
         />
       )}
@@ -433,6 +435,7 @@ export default function InventoryTab({ onError }: { onError: (m: string) => void
           kind={creating}
           categories={categories}
           units={units}
+          products={products}
           onClose={() => setCreating(null)}
           onCreatedProduct={(p) => setProducts((ps) => [...ps, p])}
           onCreatedCombo={(c) => setCombos((cs) => [...cs, c])}

@@ -33,9 +33,4 @@ export const STORE_CONFIG = {
 
   // Service Areas
   serviceAreas: DELIVERY.areas,
-
-  // Supported Weights across all products
-  weightOptions: ['100g', '200g', '500g', '750g', '1kg'] as const,
 };
-
-export type WeightOption = (typeof STORE_CONFIG.weightOptions)[number];

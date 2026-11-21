@@ -88,9 +88,11 @@ export const CartPage: React.FC = () => {
         lines.push({ comboId, quantity: item.quantity });
       } else {
         const product = productById.get(item.productId);
-        if (!product || !product.available) {
+        const packOk =
+          !!product && packOptions(product).some((o) => o.value === item.weight && o.available);
+        if (!product || !product.available || !packOk) {
           setApiError(
-            `"${item.englishName}" is no longer available. Please remove it and try again.`,
+            `"${item.englishName}" (${item.weight}) is no longer available. Please choose an available pack or remove it.`,
           );
           return;
         }
@@ -215,8 +217,17 @@ export const CartPage: React.FC = () => {
 
               {items.map((item) => {
                 const product = !item.isCombo ? productById.get(item.productId) : undefined;
-                const options = product ? packOptions(product) : [item.weight];
-                const packValue = options.includes(item.weight) ? item.weight : options[0];
+                const options = product
+                  ? packOptions(product)
+                  : [{ value: item.weight, label: item.weight, available: false }];
+                // Keep the stored pack visible even if it is no longer offered,
+                // so the customer can see what to change.
+                const offered = options.some((o) => o.value === item.weight)
+                  ? options
+                  : [...options, { value: item.weight, label: item.weight, available: false }];
+                const packAvailable = options.some(
+                  (o) => o.value === item.weight && o.available,
+                );
                 return (
                   <div
                     key={item.id}
@@ -275,14 +286,14 @@ export const CartPage: React.FC = () => {
                           </span>
                         ) : (
                           <select
-                            value={packValue}
+                            value={item.weight}
                             onChange={(e) => updateWeight(item.id, e.target.value)}
                             className="bg-[#F7F5E8] border border-[#DCE8C8] text-xs font-bold text-[#123B26] rounded-lg px-2 py-1.5 focus:outline-none min-h-[40px]"
                             aria-label={`Pack size for ${item.englishName}`}
                           >
-                            {options.map((w) => (
-                              <option key={w} value={w}>
-                                {w}
+                            {offered.map((o) => (
+                              <option key={o.value} value={o.value} disabled={!o.available}>
+                                {o.available ? o.label : `${o.label} — out of stock`}
                               </option>
                             ))}
                           </select>
@@ -309,6 +320,12 @@ export const CartPage: React.FC = () => {
                         </button>
                       </div>
                     </div>
+                    {!item.isCombo && !packAvailable && (
+                      <p className="text-[11px] text-red-600 font-semibold">
+                        This pack is no longer available — please choose another pack or remove this
+                        item.
+                      </p>
+                    )}
                   </div>
                 );
               })}

@@ -14,17 +14,20 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
   const { addToCart } = useCart();
   const options = packOptions(product);
-  const [selectedWeight, setSelectedWeight] = useState<string>(options[0] ?? '');
+  const [selectedWeight, setSelectedWeight] = useState<string>(
+    () => options.find((o) => o.available)?.value ?? options[0]?.value ?? '',
+  );
   const [quantity, setQuantity] = useState<number>(1);
   const [isAdded, setIsAdded] = useState<boolean>(false);
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const selectedAvailable = options.some((o) => o.value === selectedWeight && o.available);
 
   const handleIncrement = () => setQuantity((q) => q + 1);
   const handleDecrement = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   const handleAddToCart = () => {
-    if (!product.available) return;
+    if (!product.available || !selectedAvailable) return;
     addToCart(product, selectedWeight, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);
@@ -92,9 +95,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
               onChange={(e) => setSelectedWeight(e.target.value)}
               className="appearance-none bg-[#FCFAF5] hover:bg-white border border-[#DCE8C8] focus:border-[#123B26] text-[#123B26] font-extrabold text-xs rounded-xl px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-[#A8C66C]/30 cursor-pointer shadow-xs transition-all"
             >
-              {options.map((weight) => (
-                <option key={weight} value={weight} className="bg-white text-[#123B26] font-bold">
-                  {weight} Pack
+              {options.map((opt) => (
+                <option key={opt.value} value={opt.value} disabled={!opt.available} className="bg-white text-[#123B26] font-bold">
+                  {opt.available ? `${opt.label} Pack` : `${opt.label} — out of stock`}
                 </option>
               ))}
             </select>
@@ -127,8 +130,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             <button
               type="button"
               onClick={handleAddToCart}
-              disabled={unavailable}
-              title={unavailable ? 'Out of stock — back soon' : 'Add to cart'}
+              disabled={unavailable || !selectedAvailable}
+              title={unavailable ? 'Out of stock — back soon' : !selectedAvailable ? 'This pack is out of stock — choose another' : 'Add to cart'}
               className={`flex items-center space-x-1.5 py-2 px-3.5 rounded-xl font-bold text-xs transition-all shadow-sm active:scale-95 ${
                 unavailable
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -282,9 +285,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
                 onChange={(e) => setSelectedWeight(e.target.value)}
                 className="w-full appearance-none bg-[#FCFAF5] hover:bg-white border border-[#DCE8C8] focus:border-[#123B26] text-[#123B26] font-extrabold text-xs rounded-xl px-3.5 py-2.5 pr-9 focus:outline-none focus:ring-2 focus:ring-[#A8C66C]/30 cursor-pointer shadow-xs transition-all"
               >
-                {options.map((weight) => (
-                  <option key={weight} value={weight} className="bg-white text-[#123B26] font-bold">
-                    {weight} Pack
+                {options.map((opt) => (
+                  <option key={opt.value} value={opt.value} disabled={!opt.available} className="bg-white text-[#123B26] font-bold">
+                    {opt.available ? `${opt.label} Pack` : `${opt.label} — out of stock`}
                   </option>
                 ))}
               </select>
@@ -321,8 +324,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             <button
               type="button"
               onClick={handleAddToCart}
-              disabled={unavailable}
-              title={unavailable ? 'Out of stock — back soon' : 'Add to cart'}
+              disabled={unavailable || !selectedAvailable}
+              title={unavailable ? 'Out of stock — back soon' : !selectedAvailable ? 'This pack is out of stock — choose another' : 'Add to cart'}
               className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-sm active:scale-95 ${
                 unavailable
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'

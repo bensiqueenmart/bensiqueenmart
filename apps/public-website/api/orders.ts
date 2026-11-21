@@ -11,7 +11,8 @@ import type { OrderItemInput } from '@bqm/types';
  * Body: { customer: { name, mobile, address, instructions? },
  *         lines: [{ productId?, comboId?, weight?, quantity }] }
  * `productId`/`comboId` are the public catalog ids; `weight` is the
- * pack label (e.g. "500g") — resolved against quantityPrice tiers.
+ * pack label (e.g. "500g") — resolved against quantityPrice tiers
+ * (quantized) or websitePackSizes (loose).
  */
 
 interface LineIn {
@@ -89,10 +90,20 @@ export default async function handler(req: any, res: any): Promise<void> {
           price: r2(tier.price * qty),
         };
       }
-      // Loose product: weight label is informative; quantity is base units.
+      // Loose product: only configured website packs, priced by pricePerUnit.
+      // Single-pack fulfillability only (stock >= size); multi-pack totals
+      // are confirmed by the owner, same as quantized tiers.
       const grams = parsePackGrams(String(l?.weight ?? ''));
-      const baseUnits = Number.isFinite(grams) && grams > 0 ? grams * qty : qty;
+      const sizes = product.websitePackSizes ?? [];
+      if (!Number.isFinite(grams) || grams <= 0 || !sizes.includes(grams)) {
+        throw new Error(`lines[${i}]: ${l?.weight} is not available for ${product.name}`);
+      }
       const unitRate = product.pricePerUnit ?? 0;
+      if (!(unitRate > 0)) throw new Error(`lines[${i}]: ${product.name} is not available right now`);
+      if (typeof product.stock !== 'number' || product.stock < grams) {
+        throw new Error(`lines[${i}]: ${l?.weight} is not available for ${product.name}`);
+      }
+      const baseUnits = grams * qty;
       return { productSlug: product.slug, quantity: baseUnits, price: r2(unitRate * baseUnits) };
     });
 
