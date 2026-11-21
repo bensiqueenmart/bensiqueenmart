@@ -1,3 +1,181 @@
+/* Bensi Queen Mart — Billing Desk Modern Retail POS Design System */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --bqm-green-dark: #123B26;
+  --bqm-green-forest: #205C38;
+  --bqm-green-light: #A8C66C;
+  --bqm-green-sage: #DCE8C8;
+  --bqm-yellow: #F2C94C;
+  --bqm-cream: #F7F5E8;
+  --bqm-beige: #E8DFC8;
+  --bqm-surface: #FFFFFF;
+  --bqm-bg: #F8FAF8;
+  --bqm-text: #123B26;
+  --bqm-text-muted: #557258;
+  --bqm-border: #DCE8C8;
+  --bqm-radius: 14px;
+}
+
 body {
   margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #F8FAF8;
+  color: #123B26;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* POS Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F5F1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C2D6C2;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #205C38;
+}
+
+/* POS Main Layout */
+.pos-layout {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 58px);
+}
+
+/* POS Sidebar Navigation */
+.pos-sidebar {
+  background: #123B26;
+  width: 190px;
+  flex-shrink: 0;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: sticky;
+  top: 58px;
+  align-self: flex-start;
+  min-height: calc(100vh - 58px);
+  border-right: 1px solid #1C5234;
+  z-index: 10;
+}
+
+.pos-nav-btn {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #DCE8C8;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pos-nav-btn:hover {
+  background: #1A4A2E;
+  color: #ffffff;
+}
+
+.pos-nav-btn.active {
+  background: #205C38;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Workspace Grid (Product Catalog vs Cart Panel) */
+.pos-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: 20px;
+  padding: 20px 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Category Filter Chips Bar */
+.category-chips-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-chips-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+/* POS Product Card */
+.pos-product-card {
+  background: #ffffff;
+  border: 1px solid #DCE8C8;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justifyContent: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.pos-product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(18, 59, 38, 0.08);
+  border-color: #A8C66C;
+}
+
+/* Media Queries for Tablet and Mobile */
+@media (max-width: 1080px) {
+  .pos-workspace-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    padding: 16px 14px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .pos-layout {
+    flex-direction: column !important;
+  }
+
+  .pos-sidebar {
+    width: 100% !important;
+    min-height: auto !important;
+    position: sticky !important;
+    top: 58px !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    padding: 6px 10px !important;
+    border-right: none !important;
+    border-bottom: 1px solid #1C5234 !important;
+    white-space: nowrap !important;
+    gap: 6px !important;
+  }
+
+  .pos-nav-btn {
+    width: auto !important;
+    border-radius: 6px !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+  }
 }

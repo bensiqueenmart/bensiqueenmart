@@ -1,4 +1,16 @@
-import type { Combo, Order, OrderItemInput, OrderStatus, Product, QuantizedCount } from '@bqm/types';
+import type {
+  Combo,
+  Order,
+  OrderHistoryQuery,
+  OrderItemInput,
+  OrderStatus,
+  PaginatedOrdersResponse,
+  Product,
+  ProductSalesDetailResponse,
+  QuantizedCount,
+  SalesAnalyticsResponse,
+} from '@bqm/types';
+
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -103,6 +115,34 @@ export function deleteOrder(id: string, restoreStock: boolean) {
 export const rupees = (n: number) => `₹${Number(n).toFixed(2)}`;
 
 /**
+ * Defensive date-time formatter that works across all browsers and Node/Electron runtimes
+ * without ever throwing "TypeError: Invalid option : timeStyle".
+ */
+export function formatSafeDateTime(dateVal?: string | Date | number | null): string {
+  if (!dateVal) return '—';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return String(dateVal);
+    const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    return `${dateStr}, ${timeStr}`;
+  } catch {
+    return String(dateVal);
+  }
+}
+
+export function formatSafeDateOnly(dateVal?: string | Date | number | null): string {
+  if (!dateVal) return '—';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return String(dateVal);
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch {
+    return String(dateVal).slice(0, 10);
+  }
+}
+
+/**
  * Resolve a product image path to a renderable src. Today images are local
  * (`/images/*` served from `public/`), so stored paths pass through
  * untouched. To migrate to cloud hosting, set `VITE_IMAGE_BASE` to the CDN
@@ -121,3 +161,49 @@ export const stockLabel = (p: Product) =>
   Array.isArray(p.stock)
     ? `${p.stock.reduce((s, q) => s + q.size * q.count, 0)}${p.stockUnit} (${p.stock.map((q) => `${q.size}×${q.count}`).join(' + ')})`
     : `${p.stock}${p.stockUnit}`;
+
+// ---------------------------------------------------------------------------
+// Sales Analytics Client Methods
+// ---------------------------------------------------------------------------
+
+export function getSalesAnalytics(startDate: string, endDate: string, tzOffset = 330) {
+  const q = new URLSearchParams({ startDate, endDate, tzOffset: String(tzOffset) });
+  return request<SalesAnalyticsResponse>(`/api/analytics/sales?${q.toString()}`);
+}
+
+export function listHistoricalOrders(query: OrderHistoryQuery) {
+  const q = new URLSearchParams();
+  if (query.page) q.set('page', String(query.page));
+  if (query.limit) q.set('limit', String(query.limit));
+  if (query.startDate) q.set('startDate', query.startDate);
+  if (query.endDate) q.set('endDate', query.endDate);
+  if (query.source && query.source !== 'all') q.set('source', query.source);
+  if (query.status && query.status !== 'all') q.set('status', query.status);
+  if (query.search) q.set('search', query.search);
+  if (query.sortBy) q.set('sortBy', query.sortBy);
+  if (query.sortDir) q.set('sortDir', query.sortDir);
+  return request<PaginatedOrdersResponse>(`/api/analytics/orders?${q.toString()}`);
+}
+
+export function getProductSalesDetail(productId: string, startDate: string, endDate: string, tzOffset = 330) {
+  const q = new URLSearchParams({
+    productId,
+    startDate,
+    endDate,
+    tzOffset: String(tzOffset),
+  });
+  return request<ProductSalesDetailResponse>(`/api/analytics/product-detail?${q.toString()}`);
+}
+
+export function getExportOrdersUrl(query: OrderHistoryQuery): string {
+  const q = new URLSearchParams();
+  if (query.startDate) q.set('startDate', query.startDate);
+  if (query.endDate) q.set('endDate', query.endDate);
+  if (query.source && query.source !== 'all') q.set('source', query.source);
+  if (query.status && query.status !== 'all') q.set('status', query.status);
+  if (query.search) q.set('search', query.search);
+  if (query.sortBy) q.set('sortBy', query.sortBy);
+  if (query.sortDir) q.set('sortDir', query.sortDir);
+  return `/api/analytics/export?${q.toString()}`;
+}
+

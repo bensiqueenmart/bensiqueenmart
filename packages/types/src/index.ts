@@ -233,3 +233,144 @@ export interface PublicCatalog {
   products: PublicProduct[];
   combos: PublicCombo[];
 }
+
+// ---------------------------------------------------------------------------
+// Sales Analytics & Reporting Types
+// ---------------------------------------------------------------------------
+
+export interface SalesKPIs {
+  totalRevenue: number;
+  totalConfirmedOrders: number;
+  totalUnconfirmedOrders: number;
+  averageOrderValue: number;
+  totalLooseQuantitySold: number;
+  totalPacketsSold: number;
+  totalLineItemsSold: number;
+  bestSellingProduct: {
+    productId: string;
+    productSlug: string;
+    name: string;
+    tamilName?: string;
+    quantityDisplay: string;
+    totalRevenue: number;
+  } | null;
+  revenueChangePct: number | null;
+  ordersChangePct: number | null;
+  aovChangePct: number | null;
+}
+
+export interface TrendPoint {
+  date: string;
+  label: string;
+  revenue: number;
+  ordersCount: number;
+  priorRevenue?: number;
+  priorOrdersCount?: number;
+}
+
+export interface ProductPackBreakdown {
+  size: number;
+  count: number;
+}
+
+export interface ProductSalesStat {
+  productId: string;
+  productSlug: string;
+  name: string;
+  tamilName?: string;
+  category: string;
+  isQuantized: boolean;
+  stockUnit: string;
+  totalLooseQuantity: number;
+  packBreakdown: ProductPackBreakdown[];
+  totalPacksCount: number;
+  quantityDisplay: string;
+  ordersCount: number;
+  totalRevenue: number;
+  percentOfTotalSales: number;
+  currentStockDisplay: string;
+}
+
+export interface ComboSalesStat {
+  comboId: string;
+  comboSlug: string;
+  name: string;
+  tamilName?: string;
+  unitsSold: number;
+  ordersCount: number;
+  totalRevenue: number;
+  percentOfTotalSales: number;
+}
+
+export interface DistributionSlice {
+  key: string;
+  label: string;
+  count: number;
+  revenue?: number;
+  percentage: number;
+}
+
+export interface RecentOrderPreview {
+  id: string;
+  orderNo: string;
+  createdAt: string;
+  status: string;
+  source: string;
+  customerName: string;
+  itemCount: number;
+  totalPrice: number;
+}
+
+export interface SalesAnalyticsResponse {
+  dateRange: {
+    startDate: string;
+    endDate: string;
+    priorStartDate: string;
+    priorEndDate: string;
+  };
+  kpis: SalesKPIs;
+  trend: TrendPoint[];
+  sourceDistribution: DistributionSlice[];
+  statusDistribution: DistributionSlice[];
+  productSales: ProductSalesStat[];
+  comboSales: ComboSalesStat[];
+  recentOrdersPreview: RecentOrderPreview[];
+}
+
+
+export interface OrderHistoryQuery {
+  page?: number;
+  limit?: number;
+  startDate?: string;
+  endDate?: string;
+  source?: 'all' | 'in-store' | 'online';
+  status?: 'all' | 'confirmed' | 'unconfirmed' | 'cancelled';
+  search?: string;
+  sortBy?: 'createdAt' | 'totalPrice';
+  sortDir?: 'desc' | 'asc';
+}
+
+export interface PaginatedOrdersResponse {
+  orders: Order[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ProductSalesDetailResponse {
+  product: Product | null;
+  stats: ProductSalesStat;
+  salesTrend: TrendPoint[];
+  recentOrders: Array<{
+    id: string;
+    orderNo: string;
+    createdAt: string;
+    status: string;
+    source: string;
+    customerName: string;
+    quantityDisplay: string;
+    price: number;
+  }>;
+}
+

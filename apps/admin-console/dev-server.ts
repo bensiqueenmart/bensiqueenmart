@@ -12,6 +12,11 @@ import loginHandler from './api/auth/login.js';
 import logoutHandler from './api/auth/logout.js';
 import meHandler from './api/auth/me.js';
 import githubFileHandler from './api/edit/github-file.js';
+import salesAnalyticsHandler from './api/analytics/sales.js';
+import ordersAnalyticsHandler from './api/analytics/orders.js';
+import productDetailAnalyticsHandler from './api/analytics/product-detail.js';
+import exportAnalyticsHandler from './api/analytics/export.js';
+
 
 config({ path: new URL('../../.env', import.meta.url) });
 
@@ -79,6 +84,22 @@ const routes: Array<{ match: (path: string, method: string) => string | null; ha
     },
     handler: orderByIdHandler as unknown as Handler,
   },
+  {
+    match: (path) => (path === '/api/analytics/sales' ? 'analytics-sales' : null),
+    handler: salesAnalyticsHandler as unknown as Handler,
+  },
+  {
+    match: (path) => (path === '/api/analytics/orders' ? 'analytics-orders' : null),
+    handler: ordersAnalyticsHandler as unknown as Handler,
+  },
+  {
+    match: (path) => (path === '/api/analytics/product-detail' ? 'analytics-product-detail' : null),
+    handler: productDetailAnalyticsHandler as unknown as Handler,
+  },
+  {
+    match: (path) => (path === '/api/analytics/export' ? 'analytics-export' : null),
+    handler: exportAnalyticsHandler as unknown as Handler,
+  },
 ];
 
 function makeRes(nodeRes: http.ServerResponse) {
@@ -89,6 +110,14 @@ function makeRes(nodeRes: http.ServerResponse) {
   };
   res.setHeader = (name: string, value: string | string[]) => {
     nodeRes.setHeader(name, value);
+    return res;
+  };
+  res.end = (body?: unknown) => {
+    nodeRes.end(body);
+    return res;
+  };
+  res.send = (body?: unknown) => {
+    nodeRes.end(body);
     return res;
   };
   res.json = (body: unknown) => {

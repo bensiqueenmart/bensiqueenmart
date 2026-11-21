@@ -5,13 +5,18 @@ import DashboardTab from './components/DashboardTab';
 import InventoryTab from './components/InventoryTab';
 import OrdersTab from './components/OrdersTab';
 import WebsiteTab from './components/WebsiteTab';
+import OrderHistorySection from './components/analytics/OrderHistorySection';
 
-type Tab = 'dashboard' | 'inventory' | 'orders' | 'website';
+type Tab = 'dashboard' | 'history' | 'inventory' | 'orders' | 'website';
 
 export default function App() {
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [tab, setTab] = useState<Tab>('dashboard');
   const [error, setError] = useState('');
+  // Share the dashboard date range with the Order History tab so navigating
+  // from "View Full Order History" preserves the selected period.
+  const [sharedStartIso, setSharedStartIso] = useState<string | undefined>(undefined);
+  const [sharedEndIso, setSharedEndIso] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     authMe().then((r) => setAuthed(r.authenticated)).catch(() => setAuthed(false));
@@ -24,20 +29,28 @@ export default function App() {
   </>);
 
   const tabBtn = (active: boolean): React.CSSProperties => ({
-    padding: '10px 16px', border: 'none',
-    borderLeft: active ? '3px solid #fff' : '3px solid transparent',
-    background: active ? '#2a2a2a' : 'transparent',
-    color: '#fff', cursor: 'pointer', fontSize: 15,
-    fontWeight: active ? 700 : 400, opacity: active ? 1 : 0.75,
-    textAlign: 'left', width: '100%',
+    padding: '11px 18px',
+    border: 'none',
+    borderLeft: active ? '3px solid #39FF14' : '3px solid transparent',
+    background: active ? '#1a4a2e' : 'transparent',
+    color: '#fff',
+    cursor: 'pointer',
+    fontSize: 13.5,
+    fontWeight: active ? 700 : 500,
+    opacity: active ? 1 : 0.82,
+    textAlign: 'left',
+    width: '100%',
+    transition: 'all 0.15s ease',
   });
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', margin: 0, background: '#f4f4f4', minHeight: '100vh' }}>
-      <header style={{ background: '#1a1a1a', color: '#fff', padding: '12px 20px', position: 'sticky', top: 0, zIndex: 1, display: 'flex', alignItems: 'center' }}>
-        <strong>Admin Console</strong>
+    <main style={{ fontFamily: 'system-ui, -apple-system, sans-serif', margin: 0, background: '#f8faf8', minHeight: '100vh' }}>
+      <header style={{ background: '#123B26', color: '#fff', padding: '12px 24px', position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', borderBottom: '1px solid #1c5234' }}>
+        <strong style={{ fontSize: 16, letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 18 }}>🌿</span> Bensi Queen Mart <span style={{ fontWeight: 400, opacity: 0.8, fontSize: 13 }}>| Admin Console</span>
+        </strong>
         <button
-          style={{ marginLeft: 'auto', padding: '6px 12px', border: '1px solid #666', borderRadius: 6, background: 'transparent', color: '#fff', cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', padding: '6px 14px', border: '1px solid #205C38', borderRadius: 6, background: '#1a4a2e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
           onClick={() => logout().then(() => setAuthed(false)).catch((e) => setError(String(e)))}
         >
           Logout
@@ -51,16 +64,44 @@ export default function App() {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'stretch', paddingTop: 12 }}>
-        <nav style={{ background: '#1a1a1a', width: 168, flexShrink: 0, padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2, position: 'sticky', top: 61, alignSelf: 'flex-start', minHeight: 'calc(100vh - 61px)', borderRadius: '0 8px 8px 0' }}>
-          {(['dashboard', 'inventory', 'orders', 'website'] as Tab[]).map((t) => (
-            <button key={t} style={tabBtn(tab === t)} onClick={() => setTab(t)}>
-              {t[0].toUpperCase() + t.slice(1)}
-            </button>
-          ))}
+      <div className="app-layout">
+        <nav className="app-sidebar">
+          <button style={tabBtn(tab === 'dashboard')} onClick={() => setTab('dashboard')}>
+            📊 Sales Overview
+          </button>
+          <button style={tabBtn(tab === 'history')} onClick={() => setTab('history')}>
+            📜 Order History
+          </button>
+          <button style={tabBtn(tab === 'inventory')} onClick={() => setTab('inventory')}>
+            📦 Inventory
+          </button>
+          <button style={tabBtn(tab === 'orders')} onClick={() => setTab('orders')}>
+            📋 Orders Desk
+          </button>
+          <button style={tabBtn(tab === 'website')} onClick={() => setTab('website')}>
+            🌐 Website Content
+          </button>
         </nav>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {tab === 'dashboard' && <DashboardTab onError={setError} />}
+        <div style={{ flex: 1, minWidth: 0, background: '#f8faf8' }}>
+          {tab === 'dashboard' && (
+            <DashboardTab
+              onError={setError}
+              onNavigateToOrders={(startIso, endIso) => {
+                setSharedStartIso(startIso);
+                setSharedEndIso(endIso);
+                setTab('history');
+              }}
+            />
+          )}
+          {tab === 'history' && (
+            <div style={{ maxWidth: 1380, margin: '0 auto', padding: '24px 28px' }}>
+              <OrderHistorySection
+                onError={setError}
+                initialStartIso={sharedStartIso}
+                initialEndIso={sharedEndIso}
+              />
+            </div>
+          )}
           {tab === 'inventory' && <InventoryTab onError={setError} />}
           {tab === 'orders' && <OrdersTab onError={setError} />}
           {tab === 'website' && <WebsiteTab onError={setError} />}

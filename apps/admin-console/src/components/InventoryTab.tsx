@@ -237,29 +237,95 @@ function StockForm({ p, onUpdated, onError }: { p: Product; onUpdated: (u: Produ
   });
 
   return (
-    <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
-      <span style={{ display: 'inline-flex', gap: 4 }}>
+    <div style={{ marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+      {/* Add / Remove toggle */}
+      <div style={{ display: 'inline-flex', gap: 4, marginBottom: 8 }}>
         <button style={seg(mode === 'add')} onClick={() => pickMode('add')}>+ Add</button>
         <button style={seg(mode === 'remove')} onClick={() => pickMode('remove')}>− Remove</button>
-      </span>
-      {p.isQuantized && (
-        <>
-          <select style={input} value={picked} onChange={(e) => setPicked(e.target.value)}>
-            {buckets.map((q) => (
-              <option key={q.size} value={String(q.size)}>{q.size}{p.stockUnit}</option>
-            ))}
-            <option value="custom">+ New size…</option>
-          </select>
-          {picked === 'custom' && (
-            <input style={{ ...input, width: 80 }} placeholder={`size (${p.stockUnit})`} value={customSize} onChange={(e) => setCustomSize(e.target.value)} />
-          )}
-        </>
+      </div>
+
+      {p.isQuantized ? (
+        /* Quantized product: pack size + qty fields stacked with clear labels */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {/* Pack size selector */}
+          <div>
+            <div style={{ fontSize: 11, color: '#666', marginBottom: 2 }}>Pack size ({p.stockUnit})</div>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <select style={{ ...input, flex: 1 }} value={picked} onChange={(e) => { setPicked(e.target.value); }}>
+                {buckets.map((q) => (
+                  <option key={q.size} value={String(q.size)}>{q.size} {p.stockUnit}</option>
+                ))}
+                <option value="custom">+ New size…</option>
+              </select>
+              {picked === 'custom' && (
+                <input
+                  style={{ ...input, width: 90 }}
+                  placeholder={`size in ${p.stockUnit}`}
+                  value={customSize}
+                  onChange={(e) => setCustomSize(e.target.value)}
+                  autoFocus
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Number of packs */}
+          <div>
+            <div style={{ fontSize: 11, color: '#666', marginBottom: 2 }}>Number of packs</div>
+            <input
+              style={{ ...input, width: '100%', boxSizing: 'border-box' }}
+              placeholder="e.g. 5"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              type="number"
+              min="1"
+            />
+          </div>
+
+          {/* Reason + submit */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <select style={{ ...input, flex: 1 }} value={reason} onChange={(e) => setReason(e.target.value)}>
+              {REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+            <button
+              style={{ ...btn, background: busy || !qty ? '#eee' : '#1a1a1a', color: busy || !qty ? '#999' : '#fff', minWidth: 60 }}
+              disabled={busy || !qty}
+              onClick={submit}
+            >
+              {busy ? '…' : mode === 'add' ? 'Add' : 'Remove'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Loose product: single quantity + reason + submit in a row */
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 11, color: '#666', marginBottom: 2 }}>Quantity ({p.stockUnit})</div>
+            <input
+              style={{ ...input, width: 100 }}
+              placeholder={`amount in ${p.stockUnit}`}
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              type="number"
+              min="0"
+            />
+          </div>
+          <div style={{ alignSelf: 'flex-end' }}>
+            <select style={input} value={reason} onChange={(e) => setReason(e.target.value)}>
+              {REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+          </div>
+          <div style={{ alignSelf: 'flex-end' }}>
+            <button
+              style={{ ...btn, background: busy || !qty ? '#eee' : '#1a1a1a', color: busy || !qty ? '#999' : '#fff', minWidth: 60 }}
+              disabled={busy || !qty}
+              onClick={submit}
+            >
+              {busy ? '…' : mode === 'add' ? 'Add' : 'Remove'}
+            </button>
+          </div>
+        </div>
       )}
-      <input style={{ ...input, width: 90 }} placeholder={p.isQuantized ? 'packs' : p.stockUnit} value={qty} onChange={(e) => setQty(e.target.value)} />
-      <select style={input} value={reason} onChange={(e) => setReason(e.target.value)}>
-        {REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-      </select>
-      <button style={btn} disabled={busy || !qty} onClick={submit}>{busy ? '…' : mode === 'add' ? 'Add' : 'Remove'}</button>
     </div>
   );
 }
