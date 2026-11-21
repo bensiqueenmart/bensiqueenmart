@@ -1,6 +1,7 @@
 import http from 'node:http';
 import { config } from 'dotenv';
 import productsHandler from './api/products.js';
+import ordersHandler from './api/orders.js';
 
 config({ path: new URL('../../.env', import.meta.url) });
 
@@ -53,6 +54,10 @@ const server = http.createServer((nodeReq, nodeRes) => {
     };
     if (url.pathname === '/api/products' && method === 'GET') {
       await run(productsHandler as unknown as Handler);
+      return;
+    }
+    if (url.pathname === '/api/orders' && method === 'POST') {
+      await run(ordersHandler as unknown as Handler);
       return;
     }
     nodeRes.statusCode = 404;

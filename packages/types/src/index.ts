@@ -86,6 +86,7 @@ export interface CustomerData {
   customerName: string;
   mobile: string;
   fullAddress: string;
+  instructions?: string;
 }
 
 /**

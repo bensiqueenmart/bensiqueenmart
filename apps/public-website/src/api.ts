@@ -1,4 +1,4 @@
-import type { PublicCatalog } from '@bqm/types';
+import type { Order, PublicCatalog } from '@bqm/types';
 import { STORE_CONFIG } from './config/storeConfig';
 
 async function request<T>(path: string): Promise<T> {
@@ -24,6 +24,35 @@ export const imageSrc = (path?: string): string => {
   if (/^(https?:|data:|blob:)/.test(path)) return path;
   return `${IMAGE_BASE}${path}`;
 };
+
+/** Website checkout: create an `online` order. Prices are computed server-side. */
+export interface OnlineOrderLine {
+  productId?: string;
+  comboId?: string;
+  weight?: string;
+  quantity: number;
+}
+
+export interface OnlineOrderCustomer {
+  name: string;
+  mobile: string;
+  address: string;
+  instructions?: string;
+}
+
+export async function createOnlineOrder(
+  customer: OnlineOrderCustomer,
+  lines: OnlineOrderLine[],
+): Promise<Order> {
+  const res = await fetch('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customer, lines }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((body as { error?: string })?.error ?? `HTTP ${res.status}`);
+  return body as Order;
+}
 
 /** "nuts-dryfruits" → "Nuts Dryfruits". Fallback label for categories without static meta. */
 export const prettyCategory = (slug: string): string =>

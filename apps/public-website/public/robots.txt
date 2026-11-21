@@ -1,9 +1,8 @@
-﻿# Bensi Queen robots.txt
+# Bensi Queen robots.txt
 User-agent: *
 Allow: /
 Disallow: /cart
-Disallow: /checkout
-Disallow: /order-summary
+Disallow: /order-success
 Disallow: /api/
 
 # Sitemap location

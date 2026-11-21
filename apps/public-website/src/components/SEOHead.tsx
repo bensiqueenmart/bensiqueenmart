@@ -42,7 +42,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
     // 2. Meta Description
     setMetaTag('name', 'description', description);
 
-    // 3. Meta Robots (noindex on cart/checkout)
+    // 3. Meta Robots (noindex on cart/order-success)
     setMetaTag('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1');
 
     // 4. Meta Keywords

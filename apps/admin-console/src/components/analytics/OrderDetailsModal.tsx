@@ -169,6 +169,12 @@ export default function OrderDetailsModal({ order, onClose, busy = false, onSetS
                     <span>{order.customerData.fullAddress}</span>
                   </div>
                 )}
+                {order.customerData.instructions && (
+                  <div>
+                    <span style={{ color: '#668069' }}>Instructions:</span>{' '}
+                    <span>{order.customerData.instructions}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -4,7 +4,7 @@
         "category": "ordering",
         "categoryLabel": "Ordering & WhatsApp",
         "question": "How can I place an order on this website?",
-        "answer": "Ordering is simple and requires zero account creation or advance online payments! Browse our 35-item provision catalog, pick your preferred weight (100g, 200g, 500g, 750g, or 1kg) and quantity, and click \"Add to Cart\". In your slide-out cart, click \"Proceed to Checkout\", fill in your delivery name, mobile, and neighborhood address, and click \"Place Order via WhatsApp\". A neat, itemized order is automatically opened in WhatsApp for you to send directly to the store owner.",
+        "answer": "Ordering is simple and requires zero account creation or advance online payments! Browse our provision catalog, pick your preferred pack size and quantity, and click \"Add to Cart\". On the Your Order page, review your items, fill in your name, contact number and delivery address, and tap \"Place Order\". Your order is saved with the store instantly — then you can download a PDF copy or tap \"Message us on WhatsApp\" to confirm it with the owner.",
         "popular": true,
         "showOnHome": true
     },
@@ -48,7 +48,7 @@
         "category": "ordering",
         "categoryLabel": "Ordering & WhatsApp",
         "question": "Can I download or print a PDF summary of my order?",
-        "answer": "Yes, absolutely! On the Checkout page, simply click \"Download PDF\". An itemized, printable document containing your unique order reference, date, customer details, and complete list of provisions with exact weights is immediately generated for your household records.",
+        "answer": "Yes, absolutely! Right after you place your order, the confirmation page offers \"Download order copy\". It is an itemized, printable PDF containing your unique order reference, date, customer details, and complete list of provisions with exact packs for your household records.",
         "showOnHome": false
     },
     {

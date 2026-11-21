@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ShoppingBag, CheckCircle2, MessageSquare, ArrowRight, Check, Gift } from 'lucide-react';
+import { X, ShoppingBag, CheckCircle2, MessageSquare, Check, Gift } from 'lucide-react';
 import type { PublicCombo } from '@bqm/types';
 import { useCart } from '../context/CartContext';
 import { STORE_CONFIG } from '../config/storeConfig';
@@ -199,12 +199,11 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ offer, isOpen,
                   <button
                     onClick={() => {
                       onClose();
-                      navigate('/checkout');
+                      navigate('/cart');
                     }}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#123B26] hover:bg-[#205C38] text-white font-bold text-[11px] transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-[#123B26] hover:bg-[#205C38] text-white font-bold text-[11px] transition-colors"
                   >
-                    <span>Checkout</span>
-                    <ArrowRight className="w-3 h-3 text-[#A8C66C]" />
+                    Review Order
                   </button>
                 </div>
               </div>

@@ -58,7 +58,7 @@ export const SEOAuditModal: React.FC<SEOAuditModalProps> = ({ isOpen, onClose })
       status: 'Implemented & Verified',
       statusColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
       details:
-        'Accessible at /robots.txt. Disallows private order summary routes (/checkout, /order-summary, /api/) and points crawlers directly to sitemap.',
+        'Accessible at /robots.txt. Disallows private order routes (/cart, /order-success, /api/) and points crawlers directly to sitemap.',
     },
     {
       task: 'JSON-LD Schema Markup',

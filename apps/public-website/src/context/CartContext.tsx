@@ -12,8 +12,6 @@ export interface CartContextType {
   clearCart: () => void;
   totalProductsCount: number;
   totalPackagesCount: number;
-  isCartOpen: boolean;
-  setIsCartOpen: (open: boolean) => void;
   toastMessage: string | null;
   closeToast: () => void;
 }
@@ -33,7 +31,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Persist to localStorage whenever cart changes
@@ -127,7 +124,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     setToastMessage(`Added "${combo.name}" to your cart!`);
-    setIsCartOpen(true);
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {
@@ -192,8 +188,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearCart,
         totalProductsCount,
         totalPackagesCount,
-        isCartOpen,
-        setIsCartOpen,
         toastMessage,
         closeToast,
       }}

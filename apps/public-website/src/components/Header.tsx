@@ -18,7 +18,7 @@ import { useCatalog } from '../context/CatalogContext';
 import { STORE_CONFIG } from '../config/storeConfig';
 
 export const Header: React.FC = () => {
-  const { totalPackagesCount, setIsCartOpen } = useCart();
+  const { totalPackagesCount } = useCart();
   const { categories, products } = useCatalog();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -161,8 +161,8 @@ export const Header: React.FC = () => {
               </a>
 
               {/* Cart Button */}
-              <button
-                onClick={() => setIsCartOpen(true)}
+              <Link
+                to="/cart"
                 className="relative p-2.5 rounded-full bg-[#205C38] hover:bg-[#286f45] text-white transition-all duration-200 flex items-center justify-center border border-[#A8C66C]/25 hover:border-[#A8C66C]/50 shadow-sm hover:shadow-md group cursor-pointer"
                 aria-label="View Shopping Cart"
               >
@@ -176,7 +176,7 @@ export const Header: React.FC = () => {
                     0
                   </span>
                 )}
-              </button>
+              </Link>
 
               {/* Shop Now CTA — desktop */}
               <Link

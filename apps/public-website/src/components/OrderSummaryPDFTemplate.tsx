@@ -88,7 +88,7 @@ export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = (
             <p className="font-bold text-[#123B26] text-sm">{customer.name}</p>
           </div>
           <div>
-            <p className="text-gray-500">Mobile Number:</p>
+            <p className="text-gray-500">Contact Number:</p>
             <p className="font-bold text-[#123B26] text-sm">{customer.mobile}</p>
           </div>
           <div className="col-span-2">
@@ -189,7 +189,7 @@ export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = (
           Order Policy & Packing Checklist:
         </p>
         <p>
-          • This document serves as an order summary and packing checklist. Payment is collected upon delivery.
+          • This document serves as an order summary and packing checklist. Payment is arranged with the store via WhatsApp.
         </p>
         <p>
           • Prices and item availability are confirmed directly via WhatsApp or phone.

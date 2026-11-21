@@ -4,7 +4,6 @@ import { CartProvider } from './context/CartContext';
 import { ReviewsProvider } from './context/ReviewsContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { CartDrawer } from './components/CartDrawer';
 import { ToastNotification } from './components/ToastNotification';
 import { CatalogProvider } from './context/CatalogContext';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
@@ -18,7 +17,7 @@ import { AboutPage } from './pages/AboutPage';
 import { FAQPage } from './pages/FAQPage';
 import { ContactPage } from './pages/ContactPage';
 import { CartPage } from './pages/CartPage';
-import { CheckoutPage } from './pages/CheckoutPage';
+import { OrderSuccessPage } from './pages/OrderSuccessPage';
 
 // Scroll to top automatically when route changes
 const ScrollToTop: React.FC = () => {
@@ -52,7 +51,8 @@ export const AppContent: React.FC = () => {
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/order-success" element={<OrderSuccessPage />} />
+          <Route path="/checkout" element={<Navigate to="/cart" replace />} />
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -60,9 +60,6 @@ export const AppContent: React.FC = () => {
 
       {/* Shared Footer across all pages */}
       <Footer />
-
-      {/* Cart Slide-out Drawer */}
-      <CartDrawer />
 
       {/* Toast Notification */}
       <ToastNotification />
