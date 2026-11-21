@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Combo, Product } from '@bqm/types';
-import { deleteProduct, patchCombo, patchProduct } from '../api';
+import { adjustStock, deleteProduct, patchCombo, patchProduct } from '../api';
 import ImageEditor from './ImageEditor';
 import { TypeSlider, UnitSelect, CategorySelect, PackRows, parsePacks, normUnit, normCategory, type PackRow } from './productFields';
 
@@ -46,6 +46,7 @@ function ProductForm({ p, units, categories, onSaved, onDeleted, onError }: { p:
       ...(image ? { image } : {}),
       description, category: cat, stockUnit: unit,
     };
+    let delta: Array<{ size: number; count: number }> = [];
     if (loose) {
       if (pricePerUnit !== '') {
         const price = Number(pricePerUnit);
@@ -53,16 +54,28 @@ function ProductForm({ p, units, categories, onSaved, onDeleted, onError }: { p:
         patch.pricePerUnit = price;
       }
     } else {
+      let stock: Array<{ size: number; count: number }>;
       try {
-        patch.quantityPrice = parsePacks(rows).quantityPrice;
+        const packs = parsePacks(rows);
+        patch.quantityPrice = packs.quantityPrice;
+        stock = packs.stock;
       } catch (e) {
         onError(String(e));
         return;
       }
+      // Counts typed here are absolute; convert to a delta against current
+      // stock so the move goes through the audited adjust path (PATCH
+      // rejects stock outright).
+      const oldBySize = new Map((Array.isArray(p.stock) ? p.stock : []).map((q) => [q.size, q.count]));
+      delta = stock
+        .map((s) => ({ size: s.size, count: s.count - (oldBySize.get(s.size) ?? 0) }))
+        .filter((d) => d.count !== 0);
     }
     setBusy(true);
     try {
-      onSaved(await patchProduct(p.slug, patch));
+      let saved = await patchProduct(p.slug, patch);
+      if (delta.length > 0) saved = await adjustStock(p.slug, delta, 'adjust');
+      onSaved(saved);
     } catch (e) {
       onError(String(e));
     } finally {
@@ -73,7 +86,7 @@ function ProductForm({ p, units, categories, onSaved, onDeleted, onError }: { p:
   return (
     <div>
       <p style={{ fontSize: 12, color: '#666', marginTop: 0 }}>
-        Stock {Array.isArray(p.stock) ? p.stock.map((q) => `${q.size}×${q.count}`).join(' + ') : `${p.stock}${p.stockUnit}`} · {p.isQuantized ? 'fixed' : 'loose'} (stock edits go through Add stock, not here)
+        Stock {Array.isArray(p.stock) ? p.stock.map((q) => `${q.size}×${q.count}`).join(' + ') : `${p.stock}${p.stockUnit}`} · {p.isQuantized ? 'fixed' : 'loose'} (pack counts save via an audited stock adjustment)
       </p>
       <Field label="Name"><input style={input} value={name} onChange={(e) => setName(e.target.value)} /></Field>
       <Field label="Tamil name"><input style={input} value={tamilName} onChange={(e) => setTamilName(e.target.value)} /></Field>
@@ -91,7 +104,7 @@ function ProductForm({ p, units, categories, onSaved, onDeleted, onError }: { p:
       ) : (
         <>
           <Field label="Base unit"><UnitSelect value={stockUnit} onChange={setStockUnit} units={units} /></Field>
-          <Field label="Fixed packs (pack size · price · stock on hand)"><PackRows rows={rows} onChange={setRows} unit={stockUnit} countEditable={false} /></Field>
+          <Field label="Fixed packs (pack size · price · stock on hand)"><PackRows rows={rows} onChange={setRows} unit={stockUnit} countEditable /></Field>
         </>
       )}
       <button style={btn} disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save product'}</button>
