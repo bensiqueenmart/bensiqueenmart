@@ -5,7 +5,7 @@
   "type": "module",
   "description": "In-store billing / POS terminal for Bensi Queen Mart.",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5175",
     "dev:api": "tsx dev-server.ts",
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview"
