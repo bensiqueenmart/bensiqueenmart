@@ -280,9 +280,9 @@ export const FAQPage: React.FC = () => {
                       </div>
 
                       <a
-                        href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                        href={STORE_CONFIG.whatsappLink(
                           `Hello Bensi Queen, I have a question regarding: "${faq.question}".`
-                        )}`}
+                        )}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#205C38] hover:text-[#123B26] bg-[#DCE8C8]/50 hover:bg-[#DCE8C8] px-3 py-1.5 rounded-full transition-colors"
@@ -341,19 +341,19 @@ export const FAQPage: React.FC = () => {
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <a
-              href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+              href={STORE_CONFIG.whatsappLink(
                 'Hello Bensi Queen, I have a question regarding grocery orders and delivery.'
-              )}`}
+              )}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 px-8 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all active:scale-95"
             >
               <MessageSquare className="w-4 h-4 text-white" />
-              <span>Chat on WhatsApp ({STORE_CONFIG.displayPhone})</span>
+              <span>Chat on WhatsApp ({STORE_CONFIG.whatsappDisplay})</span>
             </a>
 
             <a
-              href={`tel:${STORE_CONFIG.phone}`}
+              href={STORE_CONFIG.callLink}
               className="inline-flex items-center space-x-2 px-7 py-3.5 rounded-full border border-white/30 hover:border-white text-white font-bold text-xs uppercase tracking-wider transition-colors"
             >
               <Phone className="w-4 h-4 text-[#A8C66C]" />

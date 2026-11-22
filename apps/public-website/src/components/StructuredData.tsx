@@ -17,7 +17,7 @@ export const StructuredData: React.FC = () => {
         'image': `${BUSINESS.websiteUrl}${BUSINESS.logoUrl}`,
         'logo': `${BUSINESS.websiteUrl}${BUSINESS.logoUrl}`,
         'url': `${BUSINESS.websiteUrl}/`,
-        'telephone': `+${BUSINESS.ownerWhatsappNumber}`,
+        'telephone': `+91${BUSINESS.primaryPhone.replace(/\D/g, '').slice(-10)}`,
         'address': {
           '@type': 'PostalAddress',
           'streetAddress': BUSINESS.streetAddress,

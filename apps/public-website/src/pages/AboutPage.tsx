@@ -90,7 +90,7 @@ export const AboutPage: React.FC = () => {
   const { products, categories } = useCatalog();
   const handleWhatsApp = () => {
     const text = `Hello Bensi Queen! I would like to know more about your products and services.`;
-    const url = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+    const url = STORE_CONFIG.whatsappLink(text);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -569,7 +569,27 @@ export const AboutPage: React.FC = () => {
                 </div>
                 <div className="flex items-start space-x-3">
                   <Phone className="w-4 h-4 text-[#205C38] flex-shrink-0 mt-0.5" />
-                  <p><strong className="text-[#123B26]">Call / WhatsApp:</strong> {STORE_CONFIG.displayPhone}</p>
+                  <p>
+                    <strong className="text-[#123B26]">Call:</strong>{' '}
+                    <a href={STORE_CONFIG.callLink} className="hover:underline">
+                      {STORE_CONFIG.primaryPhone}
+                    </a>
+                    {STORE_CONFIG.hasSecondaryPhone && (
+                      <>
+                        {', '}
+                        <a href={STORE_CONFIG.secondaryCallLink} className="hover:underline">
+                          {STORE_CONFIG.secondaryDisplayPhone}
+                        </a>
+                      </>
+                    )}
+                    {!STORE_CONFIG.whatsappIsPrimary && (
+                      <>
+                        <br />
+                        <strong className="text-[#123B26]">WhatsApp:</strong>{' '}
+                        {STORE_CONFIG.whatsappDisplay}
+                      </>
+                    )}
+                  </p>
                 </div>
               </div>
             </div>

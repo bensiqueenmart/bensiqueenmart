@@ -38,7 +38,7 @@ export const DealCard: React.FC<DealCardProps> = ({
     if (isPreview) return;
     const text = `Hello Bensi Queen! I'm interested in the "${offer.name}" combo.`;
     window.open(
-      `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,
+      STORE_CONFIG.whatsappLink(text),
       '_blank',
       'noopener,noreferrer'
     );

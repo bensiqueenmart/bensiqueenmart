@@ -139,9 +139,9 @@ export const FAQSection: React.FC = () => {
           </Link>
 
           <a
-            href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+            href={STORE_CONFIG.whatsappLink(
               'Hello Bensi Queen, I have a question about groceries and delivery.'
-            )}`}
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm"

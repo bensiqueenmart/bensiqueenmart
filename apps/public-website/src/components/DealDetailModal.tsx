@@ -31,7 +31,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ offer, isOpen,
   const handleWhatsApp = () => {
     const text = `Hello Bensi Queen, I would like to inquire about the combo deal: "${offer.name}".`;
     window.open(
-      `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,
+      STORE_CONFIG.whatsappLink(text),
       '_blank',
       'noopener,noreferrer'
     );

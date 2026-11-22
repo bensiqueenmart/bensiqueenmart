@@ -141,16 +141,16 @@ export const Header: React.FC = () => {
 
               {/* Phone — desktop only */}
               <a
-                href={`tel:${STORE_CONFIG.phone}`}
+                href={STORE_CONFIG.callLink}
                 className="hidden xl:flex items-center space-x-1.5 text-xs text-white/60 hover:text-[#A8C66C] font-medium transition-colors"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>{STORE_CONFIG.displayPhone}</span>
+                <span>{STORE_CONFIG.primaryPhone}</span>
               </a>
 
               {/* WhatsApp — desktop */}
               <a
-                href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello Bensi Queen, I would like to inquire about groceries.')}`}
+                href={STORE_CONFIG.whatsappLink('Hello Bensi Queen, I would like to inquire about groceries.')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden lg:inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-full bg-[#205C38]/80 hover:bg-[#205C38] text-white font-semibold text-xs border border-[#A8C66C]/25 hover:border-[#A8C66C]/50 transition-all duration-200"
@@ -319,7 +319,7 @@ export const Header: React.FC = () => {
             {/* Right: WhatsApp + Phone */}
             <div className="flex items-center space-x-4">
               <a
-                href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello Bensi Queen, I would like to inquire about groceries.')}`}
+                href={STORE_CONFIG.whatsappLink('Hello Bensi Queen, I would like to inquire about groceries.')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#205C38]/60 hover:bg-[#205C38] text-white font-semibold border border-[#A8C66C]/20 hover:border-[#A8C66C]/40 transition-all duration-200"
@@ -329,10 +329,10 @@ export const Header: React.FC = () => {
                 <span>WhatsApp Us</span>
               </a>
               <a
-                href={`tel:${STORE_CONFIG.phone}`}
+                href={STORE_CONFIG.callLink}
                 className="text-xs text-white/50 hover:text-[#A8C66C] font-medium transition-colors duration-200"
               >
-                {STORE_CONFIG.displayPhone}
+                {STORE_CONFIG.primaryPhone}
               </a>
             </div>
           </div>
@@ -429,13 +429,13 @@ export const Header: React.FC = () => {
                 <span>Shop All {products.length} Products</span>
               </Link>
               <a
-                href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}`}
+                href={`https://wa.me/${STORE_CONFIG.whatsappNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-full bg-[#205C38]/60 border border-[#A8C66C]/25 text-white font-semibold text-sm transition-all"
               >
                 <Headphones className="w-4 h-4 text-[#A8C66C]" />
-                <span>WhatsApp: {STORE_CONFIG.displayPhone}</span>
+                <span>WhatsApp: {STORE_CONFIG.whatsappDisplay}</span>
               </a>
             </div>
 

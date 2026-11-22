@@ -1,7 +1,7 @@
 /** Local mirrors of the website's content shapes (admin edits raw JSON, no cross-app imports). */
 export interface Business {
   storeName: string; tagline: string; subTagline: string;
-  ownerWhatsappNumber: string; phone: string; displayPhone: string; email: string;
+  whatsappNumber: string; primaryPhone: string; secondaryDisplayPhone: string; email: string;
   address: string; streetAddress: string; landmark: string;
   city: string; pincode: string; state: string;
   openTime: string; closeTime: string; businessHours: string;

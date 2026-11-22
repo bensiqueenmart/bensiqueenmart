@@ -443,9 +443,9 @@ export const HomePage: React.FC = () => {
                 </button>
 
                 <a
-                  href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                  href={STORE_CONFIG.whatsappLink(
                     'Hello Bensi Queen, I would like to inquire about grocery delivery in Chitlapakkam.'
-                  )}`}
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="wa-pulse inline-flex items-center space-x-2 px-7 py-4 rounded-full border-2 border-white/25 hover:border-[#A8C66C]/70 bg-white/5 hover:bg-white/10 text-white hover:text-[#A8C66C] font-bold text-sm transition-all duration-200"
@@ -843,9 +843,9 @@ export const HomePage: React.FC = () => {
                 </div>
 
                 <a
-                  href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                  href={STORE_CONFIG.whatsappLink(
                     `Hello Bensi Queen, I would like to order groceries to ${selectedZone.area}.`
-                  )}`}
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs transition-colors flex items-center space-x-1.5 shadow-sm flex-shrink-0"
@@ -1296,16 +1296,16 @@ export const HomePage: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-3.5 flex-shrink-0">
               <a
-                href={`tel:${STORE_CONFIG.phone}`}
+                href={STORE_CONFIG.callLink}
                 className="px-6 py-3.5 rounded-full border border-white/30 hover:border-white text-white font-bold text-xs uppercase tracking-wider transition-all"
               >
-                Call {STORE_CONFIG.displayPhone}
+                Call {STORE_CONFIG.primaryPhone}
               </a>
 
               <a
-                href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                href={STORE_CONFIG.whatsappLink(
                   'Hello Bensi Queen, I would like to place an order for groceries.'
-                )}`}
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="wa-pulse inline-flex items-center space-x-2 px-8 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all active:scale-95"
@@ -1356,9 +1356,9 @@ export const HomePage: React.FC = () => {
             </Link>
 
             <a
-              href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+              href={STORE_CONFIG.whatsappLink(
                 'Hello Bensi Queen, I would like to place a grocery order.'
-              )}`}
+              )}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2.5 px-7 py-4 rounded-full border border-white/20 hover:border-[#A8C66C]/60 text-white/80 hover:text-[#A8C66C] font-semibold text-sm transition-all duration-200"

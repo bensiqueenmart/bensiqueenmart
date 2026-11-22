@@ -26,19 +26,19 @@ export const ContactPage: React.FC = () => {
       form.subject || 'General Inquiry'
     )}%0AMessage: ${encodeURIComponent(form.message)}`;
 
-    window.open(`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${text}`, '_blank');
+    window.open(`https://wa.me/${STORE_CONFIG.whatsappNumber}?text=${text}`, '_blank');
     setSubmitted(false);
   };
 
-  const directWhatsAppUrl = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  const directWhatsAppUrl = STORE_CONFIG.whatsappLink(
     'Hello Bensi Queen, I would like to inquire about your grocery availability.'
-  )}`;
+  );
 
   return (
     <div className="py-12 bg-[#F7F5E8] text-[#123B26] min-h-screen">
       <SEOHead
         title="Contact Bensi Queen | Grocery Enquiries, Orders & Directions — Chitlapakkam Chennai"
-        description="Get in touch with Bensi Queen in Chitlapakkam, Chennai 600064. Phone, WhatsApp, and delivery helpline: +91 63694 48863. Open 7 days a week, 7:00 AM to 9:30 PM. Fast doorstep dispatch across Chromepet, Tambaram, and Selaiyur."
+        description={`Get in touch with Bensi Queen in Chitlapakkam, Chennai 600064. Phone, WhatsApp, and delivery helpline: ${STORE_CONFIG.primaryPhone}. Open 7 days a week, 7:00 AM to 9:30 PM. Fast doorstep dispatch across Chromepet, Tambaram, and Selaiyur.`}
         canonical="https://bensiqueen.com/contact"
         keywords="contact bensi queen, chitlapakkam grocery contact, chennai grocery phone number, order groceries whatsapp, bensi queen address chitlapakkam"
         image="https://bensiqueen.com/images/bensi-queen-logo.jpg"
@@ -95,11 +95,19 @@ export const ContactPage: React.FC = () => {
                   <div>
                     <h3 className="font-bold text-[#123B26]">Phone & Order Helpline</h3>
                     <a
-                      href={`tel:${STORE_CONFIG.phone}`}
+                      href={STORE_CONFIG.callLink}
                       className="text-[#205C38] hover:underline font-bold mt-0.5 block"
                     >
-                      {STORE_CONFIG.displayPhone}
+                      {STORE_CONFIG.primaryPhone}
                     </a>
+                    {STORE_CONFIG.hasSecondaryPhone && (
+                      <a
+                        href={STORE_CONFIG.secondaryCallLink}
+                        className="text-[#205C38] hover:underline font-bold mt-0.5 block"
+                      >
+                        {STORE_CONFIG.secondaryDisplayPhone}
+                      </a>
+                    )}
                   </div>
                 </div>
 

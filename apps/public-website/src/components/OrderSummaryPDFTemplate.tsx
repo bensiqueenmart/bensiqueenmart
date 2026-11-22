@@ -55,7 +55,9 @@ export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = (
                 {STORE_CONFIG.address}
               </p>
               <p className="text-xs text-gray-600">
-                Helpline / WhatsApp: {STORE_CONFIG.displayPhone}
+                Helpline: {STORE_CONFIG.primaryPhone}
+                {STORE_CONFIG.hasSecondaryPhone && ` / ${STORE_CONFIG.secondaryDisplayPhone}`}
+                {!STORE_CONFIG.whatsappIsPrimary && ` · WhatsApp: ${STORE_CONFIG.whatsappDisplay}`}
               </p>
             </div>
           </div>
@@ -196,7 +198,10 @@ export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = (
         </p>
         <p>
           • For any urgent modifications to this order, please contact{' '}
-          <strong className="text-[#123B26]">{STORE_CONFIG.displayPhone}</strong>.
+          <strong className="text-[#123B26]">
+            {STORE_CONFIG.primaryPhone}
+            {STORE_CONFIG.hasSecondaryPhone && ` / ${STORE_CONFIG.secondaryDisplayPhone}`}
+          </strong>.
         </p>
       </div>
 

@@ -36,7 +36,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
   const handleDirectWhatsAppOrder = (e: React.MouseEvent) => {
     e.stopPropagation();
     const text = `Hello Bensi Queen, I would like to order: ${product.name}${product.tamilName ? ` (${product.tamilName})` : ''} - ${quantity} pack(s) of ${selectedWeight}. Please confirm doorstep delivery.`;
-    const url = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+    const url = STORE_CONFIG.whatsappLink(text);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 

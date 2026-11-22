@@ -3,9 +3,9 @@ import { MessageSquare } from 'lucide-react';
 import { STORE_CONFIG } from '../config/storeConfig';
 
 export const FloatingWhatsApp: React.FC = () => {
-  const directWhatsAppUrl = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  const directWhatsAppUrl = STORE_CONFIG.whatsappLink(
     'Hello Bensi Queen, I would like to inquire about your grocery availability.'
-  )}`;
+  );
 
   return (
     <div className="fixed bottom-6 left-6 z-40">

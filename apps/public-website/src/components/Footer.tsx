@@ -8,9 +8,9 @@ import { useCatalog } from '../context/CatalogContext';
 export const Footer: React.FC = () => {
   const { categories } = useCatalog();
 
-  const directWhatsAppUrl = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  const directWhatsAppUrl = STORE_CONFIG.whatsappLink(
     'Hello Bensi Queen, I would like to inquire about your grocery products.'
-  )}`;
+  );
 
   return (
     <footer className="bg-[#123B26] text-white pt-16 pb-8 border-t-4 border-[#205C38]">
@@ -142,12 +142,23 @@ export const Footer: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-[#A8C66C] flex-shrink-0" />
                 <a
-                  href={`tel:${STORE_CONFIG.phone}`}
+                  href={STORE_CONFIG.callLink}
                   className="hover:text-[#A8C66C] transition-colors font-semibold"
                 >
-                  {STORE_CONFIG.displayPhone}
+                  {STORE_CONFIG.primaryPhone}
                 </a>
               </div>
+              {STORE_CONFIG.hasSecondaryPhone && (
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4 text-[#A8C66C] flex-shrink-0" />
+                  <a
+                    href={STORE_CONFIG.secondaryCallLink}
+                    className="hover:text-[#A8C66C] transition-colors font-semibold"
+                  >
+                    {STORE_CONFIG.secondaryDisplayPhone}
+                  </a>
+                </div>
+              )}
 
               <div className="pt-2 border-t border-white/10 text-[11px] text-white/60">
                 <p className="font-semibold text-white/80">Service Locations:</p>

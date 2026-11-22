@@ -52,7 +52,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   const handleWhatsAppInquiry = () => {
     const text = `Hello Bensi Queen, I would like to inquire about ${product.name}${product.tamilName ? ` (${product.tamilName})` : ''} - ${quantity} pack(s) of ${selectedWeight}.`;
-    const url = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+    const url = STORE_CONFIG.whatsappLink(text);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 

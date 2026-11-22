@@ -491,7 +491,7 @@ export const CartPage: React.FC = () => {
               </button>
 
               <p className="text-[11px] text-gray-500 italic text-center font-poppins">
-                * Final pricing and payment are confirmed directly via WhatsApp ({STORE_CONFIG.displayPhone}).
+                * Final pricing and payment are confirmed directly via WhatsApp ({STORE_CONFIG.primaryPhone}).
               </p>
             </section>
           </>

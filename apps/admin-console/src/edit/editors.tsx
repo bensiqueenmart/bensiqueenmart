@@ -96,14 +96,14 @@ export function BusinessEditor({ state }: { state: DataFileState<Business> }) {
           <Text value={d.subTagline} onChange={(v) => set({ subTagline: v })} placeholder="Cold pressed oils, traditional rice, spices and natural groceries" />
         </Field>
         <div style={twoColGrid}>
-          <Field label="Primary Phone">
-            <Text value={d.phone} onChange={(v) => set({ phone: v })} placeholder="+91 98765 43210" />
+          <Field label="WhatsApp Number" hint="Digits only, e.g. 919876543210. Every wa.me link uses this.">
+            <Text value={d.whatsappNumber} onChange={(v) => set({ whatsappNumber: v })} placeholder="919876543210" />
           </Field>
-          <Field label="Display Phone (formatted)">
-            <Text value={d.displayPhone} onChange={(v) => set({ displayPhone: v })} placeholder="98765 43210" />
+          <Field label="Primary Phone" hint="Main call number, e.g. +91 98765 43210. Every tel: link and number label uses this.">
+            <Text value={d.primaryPhone} onChange={(v) => set({ primaryPhone: v })} placeholder="+91 98765 43210" />
           </Field>
-          <Field label="Owner WhatsApp Number">
-            <Text value={d.ownerWhatsappNumber} onChange={(v) => set({ ownerWhatsappNumber: v })} placeholder="919876543210" />
+          <Field label="Secondary Display Phone (optional)" hint="Pure UI — extra store number shown next to the primary. Empty = hidden everywhere.">
+            <Text value={d.secondaryDisplayPhone} onChange={(v) => set({ secondaryDisplayPhone: v })} placeholder="+91 98765 43210" />
           </Field>
           <Field label="Store Email">
             <Text value={d.email} onChange={(v) => set({ email: v })} placeholder="contact@bensiqueenmart.com" />

@@ -187,7 +187,7 @@ const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails
             </button>
 
             <a
-              href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${whatsappMessage}`}
+              href={`https://wa.me/${STORE_CONFIG.whatsappNumber}?text=${whatsappMessage}`}
               target="_blank"
               rel="noopener noreferrer"
               title="Claim or inquire on WhatsApp"
@@ -499,9 +499,9 @@ export const OffersPage: React.FC = () => {
 
               <div className="pt-4 border-t border-white/10">
                 <a
-                  href={`https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                  href={STORE_CONFIG.whatsappLink(
                     'Hello Bensi Queen, I would like to create a custom grocery combo pack for my family.'
-                  )}`}
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center space-x-2 py-3.5 px-4 rounded-2xl bg-[#F2C94C] hover:bg-[#e0b738] text-[#123B26] font-black text-xs uppercase tracking-wider transition-all shadow-md active:scale-95"

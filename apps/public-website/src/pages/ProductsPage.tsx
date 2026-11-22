@@ -100,7 +100,7 @@ export const ProductsPage: React.FC = () => {
 
   const handleWhatsAppCustomList = () => {
     const text = `Hello Bensi Queen, I would like to place an order with my custom grocery list. Please let me know how to share my list or send a photo of it.`;
-    const url = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+    const url = STORE_CONFIG.whatsappLink(text);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 

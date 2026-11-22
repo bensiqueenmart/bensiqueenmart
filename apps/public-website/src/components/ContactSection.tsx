@@ -4,9 +4,9 @@ import { STORE_CONFIG } from '../config/storeConfig';
 import { DELIVERY } from '../config/siteContent';
 
 export const ContactSection: React.FC = () => {
-  const directWhatsAppUrl = `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  const directWhatsAppUrl = STORE_CONFIG.whatsappLink(
     'Hello Bensi Queen, I would like to inquire about your grocery products.'
-  )}`;
+  );
 
   return (
     <section id="contact" className="py-16 bg-[#F7F5E8] border-t border-[#DCE8C8]">
@@ -66,11 +66,22 @@ export const ContactSection: React.FC = () => {
             <div className="space-y-1">
               <p className="text-xs text-gray-600">Customer Helpline:</p>
               <a
-                href={`tel:${STORE_CONFIG.phone}`}
+                href={STORE_CONFIG.callLink}
                 className="text-lg font-bold text-[#123B26] hover:text-[#205C38] block"
               >
-                {STORE_CONFIG.displayPhone}
+                {STORE_CONFIG.primaryPhone}
               </a>
+              {STORE_CONFIG.hasSecondaryPhone && (
+                <p className="text-xs text-gray-600">
+                  Also reach us at:{' '}
+                  <a
+                    href={STORE_CONFIG.secondaryCallLink}
+                    className="font-bold text-[#123B26] hover:text-[#205C38]"
+                  >
+                    {STORE_CONFIG.secondaryDisplayPhone}
+                  </a>
+                </p>
+              )}
             </div>
             <a
               href={directWhatsAppUrl}

@@ -2,9 +2,9 @@ export interface BusinessInfo {
   storeName: string;
   tagline: string;
   subTagline: string;
-  ownerWhatsappNumber: string;
-  phone: string;
-  displayPhone: string;
+  whatsappNumber: string;
+  primaryPhone: string;
+  secondaryDisplayPhone: string;
   email: string;
   address: string;
   streetAddress: string;

@@ -65,9 +65,9 @@ Bensi Queen Customer.`;
 }
 
 /**
- * Generates the WhatsApp click-to-chat URL using the central OWNER_WHATSAPP_NUMBER
+ * Generates the WhatsApp click-to-chat URL using the central whatsappNumber
+ * (via STORE_CONFIG.whatsappLink — the single wa.me builder for the whole site).
  */
 export function getWhatsAppOrderUrl(message: string): string {
-  const encoded = encodeURIComponent(message);
-  return `https://wa.me/${STORE_CONFIG.OWNER_WHATSAPP_NUMBER}?text=${encoded}`;
+  return STORE_CONFIG.whatsappLink(message);
 }
