@@ -1,14 +1,39 @@
 import type { Combo, Order, OrderItemInput, OrderStatus, Product } from '@bqm/types';
 
+/** Fired on any 401 response so the app can drop back to the lock screen. */
+let unauthorizedHandler: (() => void) | null = null;
+export function onUnauthorized(fn: () => void): void {
+  unauthorizedHandler = fn;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
     ...init,
   });
+  if (res.status === 401 && unauthorizedHandler) {
+    try {
+      unauthorizedHandler();
+    } catch {
+      /* lock-screen fallback is best-effort */
+    }
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((body as { error?: string })?.error ?? `HTTP ${res.status}`);
   return body as T;
 }
+
+export const authMe = () => request<{ authenticated: boolean }>('/api/auth/me');
+export function login(username: string, password: string) {
+  return request<{ ok: true }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+}
+export function refreshSession() {
+  return request<{ ok: true }>('/api/auth/refresh', { method: 'POST' });
+}
+export const logout = () => request<{ ok: true }>('/api/auth/logout', { method: 'POST' });
 
 export interface Catalog {
   products: Product[];

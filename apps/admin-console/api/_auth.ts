@@ -54,17 +54,12 @@ export function verifyCredentials(username: unknown, password: unknown): boolean
   const expectedUser = cfg.user.trim().toLowerCase();
   if (cleanUser !== expectedUser) return false;
 
-  const validHashes = new Set([
-    cfg.passHash.toLowerCase(),
-    '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', // admin123
-    '4d334b77bd69d2c3161eca8ce074a754acf73702b656634e8636742b5adfd4bc', // original .env hash
-    '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', // admin
-  ]);
-
+  // The ONLY accepted password: the sha256 hash in ADMIN_PASS_SHA256.
+  // No fallback or default passwords - auth is fail-closed.
   const pRawHash = sha256Hex(password).toLowerCase();
   const pTrimmedHash = sha256Hex(password.trim()).toLowerCase();
 
-  return validHashes.has(pRawHash) || validHashes.has(pTrimmedHash);
+  return safeEqualHex(pRawHash, cfg.passHash) || safeEqualHex(pTrimmedHash, cfg.passHash);
 }
 
 /** Mint a session token for `username`. Format: b64u(payload).b64u(sig). */

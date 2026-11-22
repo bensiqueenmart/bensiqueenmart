@@ -1,7 +1,8 @@
 import { createOrder, listOrders } from '@bqm/db';
+import { isAuthenticated } from './_auth.js';
 
 /**
- * /api/orders
+ * /api/orders — requires a billing session (401 otherwise).
  * GET  — paginated order list, newest first. ?page=1&limit=50.
  * POST — create a new order (status starts at `unconfirmed`, no stock moves).
  *        Body: { orderItems: [{ productSlug?, comboSlug?, quantity, price }],
@@ -14,6 +15,10 @@ import { createOrder, listOrders } from '@bqm/db';
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function handler(req: any, res: any): Promise<void> {
+  if (!isAuthenticated(req)) {
+    res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
   try {
     if (req.method === 'GET') {
       const page = Number(req.query?.page ?? 1);

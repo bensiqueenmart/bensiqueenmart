@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { login } from '../api';
-import { KeyRound, Leaf, TriangleAlert } from 'lucide-react';
+import { Leaf, TriangleAlert } from 'lucide-react';
 
 export default function LoginScreen({ onDone, onError }: { onDone: () => void; onError: (m: string) => void }) {
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -19,7 +19,7 @@ export default function LoginScreen({ onDone, onError }: { onDone: () => void; o
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes('401') || msg.toLowerCase().includes('invalid credentials')) {
-        setLocalError('Invalid username or password. Please use admin / admin123.');
+        setLocalError('Invalid username or password.');
       } else {
         setLocalError(`Login error: ${msg}`);
       }
@@ -110,7 +110,7 @@ export default function LoginScreen({ onDone, onError }: { onDone: () => void; o
                 boxSizing: 'border-box',
                 outline: 'none',
               }}
-              placeholder="admin"
+              placeholder="Enter username"
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value);
@@ -192,24 +192,6 @@ export default function LoginScreen({ onDone, onError }: { onDone: () => void; o
             {busy ? 'Signing in…' : 'Sign In to Console'}
           </button>
         </form>
-
-        {/* Credentials Helper Callout */}
-        <div
-          style={{
-            marginTop: 20,
-            padding: '12px 14px',
-            background: '#F7F5E8',
-            border: '1px solid #E8DFC8',
-            borderRadius: 8,
-            fontSize: 12,
-            color: '#205C38',
-            lineHeight: 1.5,
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: 2 }}><KeyRound size={13} style={{ verticalAlign: -2, marginRight: 4 }} />Sign-in Details:</div>
-          <div>Username: <strong style={{ color: '#123B26' }}>admin</strong></div>
-          <div>Password: <strong style={{ color: '#123B26' }}>admin123</strong></div>
-        </div>
       </div>
     </div>
   );

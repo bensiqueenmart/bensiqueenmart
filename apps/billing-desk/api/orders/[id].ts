@@ -1,6 +1,8 @@
 import { deleteOrder, getOrderById, patchOrder } from '@bqm/db';
+import { isAuthenticated } from '../_auth.js';
 
 /**
+ * /api/orders/:id — requires a billing session (401 otherwise).
  * /api/orders/:id
  * GET    — fetch one order (bill reprint).
  * PATCH  — update specific attributes: status / orderItems / totalPrice /
@@ -15,6 +17,10 @@ import { deleteOrder, getOrderById, patchOrder } from '@bqm/db';
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function handler(req: any, res: any): Promise<void> {
+  if (!isAuthenticated(req)) {
+    res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
   try {
     const id = Array.isArray(req.query?.id) ? req.query.id[0] : req.query?.id;
     if (typeof id !== 'string' || id.length === 0) {
