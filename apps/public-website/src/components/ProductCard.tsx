@@ -1,8 +1,8 @@
-﻿import React, { useState } from 'react';
-import { Plus, Minus, ShoppingBag, Check, Eye, Info, MessageSquare, ChevronDown } from 'lucide-react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
+import { Plus, Minus, ShoppingBag, Check, Eye, ChevronRight } from 'lucide-react';
 import type { PublicProduct } from '@bqm/types';
-import { imageSrc, packOptions, prettyCategory } from '../api';
-import { STORE_CONFIG } from '../config/storeConfig';
+import { imageSrc, packOptions, prettyCategory, type PackOption } from '../api';
+import { formatPrice, packPrice } from '../utils/pricing';
 import { useCart } from '../context/CartContext';
 import { ProductDetailModal } from './ProductDetailModal';
 
@@ -11,364 +11,313 @@ interface ProductCardProps {
   layout?: 'grid' | 'list';
 }
 
+const FALLBACK_IMAGE = '/images/Products_Cover.jpg';
+
+/* ── Pack size chips ─────────────────────────────────────────────── */
+const PackChips: React.FC<{
+  options: PackOption[];
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ options, value, onChange }) => {
+  if (options.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5" role="group" aria-label="Pack size">
+      {options.map((opt) => {
+        const selected = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            disabled={!opt.available}
+            aria-pressed={selected}
+            onClick={() => onChange(opt.value)}
+            className={`min-h-[40px] min-w-[44px] px-2.5 rounded-lg border text-xs font-bold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A8C66C]/70 ${
+              !opt.available
+                ? 'bg-[#F4F2EC] text-gray-400 border-[#E7E3D8] line-through cursor-not-allowed'
+                : selected
+                  ? 'bg-[#123B26] text-white border-[#123B26]'
+                  : 'bg-white text-[#123B26] border-[#DCE8C8] hover:border-[#205C38]'
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ── Quantity stepper ─────────────────────────────────────────────── */
+const QtyStepper: React.FC<{
+  value: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}> = ({ value, onChange, disabled }) => (
+  <div className="flex items-center flex-shrink-0 overflow-hidden rounded-xl border border-[#DCE8C8] bg-[#F7F5E8]">
+    <button
+      type="button"
+      onClick={() => onChange(value - 1)}
+      disabled={disabled || value <= 1}
+      aria-label="Decrease quantity"
+      className="h-10 w-10 flex items-center justify-center text-gray-500 hover:text-[#123B26] hover:bg-[#DCE8C8]/60 disabled:opacity-30 transition-colors"
+    >
+      <Minus className="h-3.5 w-3.5" />
+    </button>
+    <span className="w-7 text-center font-bold text-xs text-[#123B26] tabular-nums">{value}</span>
+    <button
+      type="button"
+      onClick={() => onChange(value + 1)}
+      disabled={disabled}
+      aria-label="Increase quantity"
+      className="h-10 w-10 flex items-center justify-center text-gray-500 hover:text-[#123B26] hover:bg-[#DCE8C8]/60 disabled:opacity-30 transition-colors"
+    >
+      <Plus className="h-3.5 w-3.5" />
+    </button>
+  </div>
+);
+
+/* ── Price block — the card's focal point ─────────────────────────── */
+const PriceBlock: React.FC<{
+  amount: number | null;
+  caption: string;
+  muted?: boolean;
+}> = ({ amount, caption, muted }) => (
+  <div>
+    {amount !== null ? (
+      <p
+        className={`font-poppins text-[26px] font-extrabold leading-none tracking-tight tabular-nums ${
+          muted ? 'text-[#9BA79B]' : 'text-[#123B26]'
+        }`}
+      >
+        {formatPrice(amount)}
+      </p>
+    ) : (
+      <p className="font-poppins text-sm font-bold text-gray-500">Price on request</p>
+    )}
+    <p className="mt-1.5 text-[11px] font-medium text-gray-500">{caption}</p>
+  </div>
+);
+
 export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
   const { addToCart } = useCart();
-  const options = packOptions(product);
+  const options = useMemo(() => packOptions(product), [product]);
   const [selectedWeight, setSelectedWeight] = useState<string>(
     () => options.find((o) => o.available)?.value ?? options[0]?.value ?? '',
   );
   const [quantity, setQuantity] = useState<number>(1);
   const [isAdded, setIsAdded] = useState<boolean>(false);
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
+  const imgSrc = imageSrc(product.image);
+  const unavailable = !product.available;
   const selectedAvailable = options.some((o) => o.value === selectedWeight && o.available);
+  const soldOut = unavailable || !selectedAvailable;
+  const unit = packPrice(product, selectedWeight);
+  const packLabel = options.find((o) => o.value === selectedWeight)?.label ?? selectedWeight;
+  const amount = unit !== null ? unit * quantity : null;
+  const caption = quantity > 1 ? `${quantity} × ${packLabel}` : packLabel;
+
+  // If the chosen pack goes stale (stock changed), fall back to an available pack.
+  useEffect(() => {
+    if (options.length === 0) return;
+    const current = options.find((o) => o.value === selectedWeight);
+    if (current?.available) return;
+    const next = options.find((o) => o.available);
+    if (next && next.value !== selectedWeight) setSelectedWeight(next.value);
+  }, [options, selectedWeight]);
 
   const handleIncrement = () => setQuantity((q) => q + 1);
   const handleDecrement = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   const handleAddToCart = () => {
-    if (!product.available || !selectedAvailable) return;
+    if (soldOut) return;
     addToCart(product, selectedWeight, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);
   };
 
-  const handleDirectWhatsAppOrder = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const text = `Hello Bensi Queen, I would like to order: ${product.name}${product.tamilName ? ` (${product.tamilName})` : ''} - ${quantity} pack(s) of ${selectedWeight}. Please confirm doorstep delivery.`;
-    const url = STORE_CONFIG.whatsappLink(text);
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
+  const categoryLabel = prettyCategory(product.category);
+  const altText = `${product.name}${product.tamilName ? ` – ${product.tamilName}` : ''}`;
 
-  const imgSrc = imageSrc(product.image);
-  const unavailable = !product.available;
+  const photoImage = (
+    <img
+      src={imgSrc || FALLBACK_IMAGE}
+      alt={altText}
+      loading="lazy"
+      onError={(e) => {
+        e.currentTarget.onerror = null;
+        e.currentTarget.src = FALLBACK_IMAGE;
+      }}
+      className={`h-full w-full object-cover object-center ${
+        unavailable ? 'grayscale opacity-60' : ''
+      }`}
+    />
+  );
 
-  // Compact List Layout
+  const ctaClasses = `h-11 min-w-[88px] inline-flex items-center justify-center gap-1.5 rounded-xl px-4 font-bold text-[13px] uppercase tracking-wider whitespace-nowrap transition-all duration-200 active:scale-[0.98] ${
+    soldOut
+      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+      : isAdded
+        ? 'bg-[#205C38] text-white'
+        : 'bg-[#123B26] hover:bg-[#205C38] text-white'
+  }`;
+
+  const ctaContent = soldOut ? (
+    <span>Sold out</span>
+  ) : isAdded ? (
+    <>
+      <Check className="h-4 w-4 text-[#A8C66C]" />
+      <span>Added</span>
+    </>
+  ) : (
+    <>
+      <ShoppingBag className="h-4 w-4 text-[#A8C66C]" />
+      <span>Add</span>
+    </>
+  );
+
+  /* ── List layout ─────────────────────────────────────────────────── */
   if (layout === 'list') {
     return (
       <>
-        <div className="bg-white rounded-2xl border border-[#E8DFC8] p-4 shadow-xs hover:shadow-md hover:border-[#205C38]/40 transition-all duration-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div
+        <article className="flex flex-wrap items-start gap-x-5 gap-y-3 rounded-2xl border border-[#E8DFC8] bg-white p-4 transition-all duration-200 hover:border-[#A8C66C] hover:shadow-md lg:items-center">
+          <button
+            type="button"
             onClick={() => setShowDetailModal(true)}
-            className="flex items-center space-x-4 cursor-pointer w-full sm:w-auto flex-1 min-w-0"
+            title={`View details for ${product.name}`}
+            aria-label={`View details for ${product.name}`}
+            className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#F7F5E8] lg:h-32 lg:w-32"
           >
-            <div className="w-20 h-20 rounded-xl overflow-hidden border border-[#E8DFC8] flex-shrink-0 bg-white relative">
-              {imgSrc ? (
-                <img
-                  src={imgSrc}
-                  alt={`${product.name}${product.tamilName ? ` – ${product.tamilName}` : ''}`}
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/images/Products_Cover.jpg';
-                  }}
-                  className={`w-full h-full object-cover object-center${unavailable ? ' grayscale opacity-55' : ''}`}
-                />
-              ) : null}
-              {unavailable && (
-                <span className="absolute bottom-1 left-1 right-1 text-center bg-[#123B26]/85 text-white text-[9px] font-bold px-1 py-0.5 rounded">
-                  Out of stock
-                </span>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-bold text-[#205C38] uppercase tracking-wide bg-[#DCE8C8]/60 px-2 py-0.5 rounded-full">
-                  {prettyCategory(product.category)}
-                </span>
-              </div>
-              <h3 className="font-poppins text-base font-bold text-[#123B26] truncate hover:text-[#205C38] transition-colors mt-0.5">
+            {photoImage}
+            <span className="pointer-events-none absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#123B26]">
+              <Eye className="h-3 w-3 text-[#205C38]" />
+              Quick view
+            </span>
+            {unavailable && (
+              <span className="absolute inset-x-0 bottom-0 bg-[#123B26]/92 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-white">
+                Out of stock
+              </span>
+            )}
+          </button>
+
+          <div className="min-w-0 flex-1 basis-[220px]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5E7A63]">
+              {categoryLabel}
+            </p>
+            <h3 className="mt-1 font-poppins text-[15px] font-extrabold leading-snug text-[#123B26]">
+              <button
+                type="button"
+                onClick={() => setShowDetailModal(true)}
+                className="inline-flex items-center gap-1 text-left transition-colors hover:text-[#205C38]"
+              >
                 {product.name}
-              </h3>
-              {product.tamilName && (
-                <p className="font-mukta text-xs font-semibold text-[#205C38]">
-                  {product.tamilName}
-                </p>
-              )}
-            </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#205C38]" />
+              </button>
+            </h3>
+            {product.tamilName ? (
+              <p className="mt-0.5 font-mukta text-xs font-semibold text-[#205C38]">{product.tamilName}</p>
+            ) : (
+              <div className="mt-0.5 h-4" aria-hidden="true" />
+            )}
           </div>
 
-          {/* Weight Dropdown (List Mode) */}
-          <div className="relative flex-shrink-0">
-            <select
-              value={selectedWeight}
-              onChange={(e) => setSelectedWeight(e.target.value)}
-              className="appearance-none bg-[#FCFAF5] hover:bg-white border border-[#DCE8C8] focus:border-[#123B26] text-[#123B26] font-extrabold text-xs rounded-xl px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-[#A8C66C]/30 cursor-pointer shadow-xs transition-all"
-            >
-              {options.map((opt) => (
-                <option key={opt.value} value={opt.value} disabled={!opt.available} className="bg-white text-[#123B26] font-bold">
-                  {opt.available ? `${opt.label} Pack` : `${opt.label} — out of stock`}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-[#205C38] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="basis-full lg:basis-auto lg:w-24 lg:shrink-0 lg:text-right">
+            <PriceBlock amount={amount} caption={caption} muted={unavailable} />
           </div>
 
-          {/* Stepper & Action */}
-          <div className="flex items-center space-x-2 w-full sm:w-auto justify-end flex-shrink-0">
-            <div className="flex items-center border border-[#DCE8C8] rounded-xl bg-[#F7F5E8] overflow-hidden">
-              <button
-                type="button"
-                onClick={handleDecrement}
-                disabled={quantity <= 1}
-                className="p-1.5 text-gray-500 hover:text-[#123B26] hover:bg-[#DCE8C8]/60 disabled:opacity-30 transition-colors"
-                aria-label="Decrease quantity"
-              >
-                <Minus className="w-3.5 h-3.5" />
-              </button>
-              <span className="w-6 text-center font-bold text-xs text-[#123B26]">{quantity}</span>
-              <button
-                type="button"
-                onClick={handleIncrement}
-                className="p-1.5 text-gray-500 hover:text-[#123B26] hover:bg-[#DCE8C8]/60 transition-colors"
-                aria-label="Increase quantity"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            </div>
+          <div className="basis-full lg:basis-auto lg:shrink-0">
+            <PackChips options={options} value={selectedWeight} onChange={setSelectedWeight} />
+          </div>
 
+          <div className="basis-full flex items-center justify-between gap-2 lg:basis-auto lg:shrink-0 lg:justify-end">
+            <QtyStepper value={quantity} onChange={setQuantity} disabled={soldOut} />
             <button
               type="button"
               onClick={handleAddToCart}
-              disabled={unavailable || !selectedAvailable}
-              title={unavailable ? 'Out of stock — back soon' : !selectedAvailable ? 'This pack is out of stock — choose another' : 'Add to cart'}
-              className={`flex items-center space-x-1.5 py-2 px-3.5 rounded-xl font-bold text-xs transition-all shadow-sm active:scale-95 ${
-                unavailable
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : isAdded
-                    ? 'bg-[#205C38] text-white'
-                    : 'bg-[#123B26] hover:bg-[#205C38] text-white'
-              }`}
+              disabled={soldOut}
+              className={ctaClasses}
             >
-              {unavailable ? (
-                <span>Out of stock</span>
-              ) : isAdded ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-[#A8C66C]" />
-                  <span>Added</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-3.5 h-3.5 text-[#A8C66C]" />
-                  <span>Add</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleDirectWhatsAppOrder}
-              className="p-2 rounded-xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] border border-[#25D366]/30 transition-colors"
-              title="Quick WhatsApp Order"
-              aria-label="Quick WhatsApp Order"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
+              {ctaContent}
             </button>
           </div>
-        </div>
+        </article>
 
         {showDetailModal && (
-          <ProductDetailModal
-            product={product}
-            onClose={() => setShowDetailModal(false)}
-          />
+          <ProductDetailModal product={product} onClose={() => setShowDetailModal(false)} />
         )}
       </>
     );
   }
 
-  // Standard Grid Layout
+  /* ── Grid layout ─────────────────────────────────────────────────── */
   return (
     <>
-      <div className="bg-white rounded-3xl border border-[#E8DFC8] overflow-hidden shadow-sm hover:shadow-xl hover:border-[#205C38]/40 transition-all duration-300 flex flex-col group hover:-translate-y-1.5">
+      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#E8DFC8] bg-white transition-all duration-200 hover:border-[#A8C66C] hover:shadow-lg">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F7F5E8]">
+          <button
+            type="button"
+            onClick={() => setShowDetailModal(true)}
+            title={`View details for ${product.name}`}
+            aria-label={`View details for ${product.name}`}
+            className="block h-full w-full cursor-pointer"
+          >
+            {photoImage}
+          </button>
 
-        {/* ── Image Canvas ── */}
-        <div
-          onClick={() => setShowDetailModal(true)}
-          className="relative w-full h-52 sm:h-56 overflow-hidden cursor-pointer border-b border-[#F0EDE0] bg-white"
-          title={`Click to view details for ${product.name}`}
-        >
-          {imgSrc ? (
-            <img
-              src={imgSrc}
-              alt={`${product.name}${product.tamilName ? ` – ${product.tamilName}` : ''}`}
-              loading="lazy"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = '/images/Products_Cover.jpg';
-              }}
-              className={`w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500${unavailable ? ' grayscale opacity-55' : ''}`}
-            />
-          ) : null}
-
-          {/* Category badge */}
-          <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#123B26] text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-xs border border-[#DCE8C8] uppercase tracking-wider z-10">
-            {prettyCategory(product.category)}
+          {/* Quick view — always visible, never hover-only */}
+          <span className="pointer-events-none absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#123B26]">
+            <Eye className="h-3 w-3 text-[#205C38]" />
+            Quick view
           </span>
 
-          {/* Out-of-stock pill */}
           {unavailable && (
-            <span className="absolute top-3 right-3 bg-[#123B26]/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-xs uppercase tracking-wide z-10">
+            <span className="absolute inset-x-0 bottom-0 bg-[#123B26]/92 px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-white">
               Out of stock — back soon
             </span>
           )}
-
-          {/* Quick view overlay */}
-          <div className="absolute inset-0 bg-[#123B26]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
-            <span className="bg-white/95 backdrop-blur-xs text-[#123B26] font-bold text-xs px-3.5 py-1.5 rounded-full shadow-lg flex items-center space-x-1.5 border border-[#DCE8C8]">
-              <Eye className="w-3.5 h-3.5 text-[#205C38]" />
-              <span>Quick View</span>
-            </span>
-          </div>
         </div>
 
-        {/* ── Content ── */}
-        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
-
-          {/* Names */}
+        <div className="flex flex-1 flex-col gap-3 p-4">
           <div>
-            <h3
-              onClick={() => setShowDetailModal(true)}
-              className="font-poppins text-base font-extrabold text-[#123B26] leading-snug cursor-pointer hover:text-[#205C38] transition-colors"
-            >
-              {product.name}
-            </h3>
-            {product.tamilName && (
-              <p className="font-mukta text-sm font-semibold text-[#205C38] mt-0.5">
-                {product.tamilName}
-              </p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="flex-1">
-            <p
-              className={`text-xs text-gray-600 leading-relaxed font-poppins transition-all duration-200 ${
-                isExpanded ? '' : 'line-clamp-2'
-              }`}
-            >
-              {product.description}
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5E7A63]">
+              {categoryLabel}
             </p>
-            <div className="mt-1.5 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-[11px] font-bold text-[#205C38] hover:text-[#123B26] hover:underline"
-              >
-                {isExpanded ? 'Show less' : 'Read more...'}
-              </button>
+            <h3 className="mt-1 min-h-[41px] font-poppins text-[15px] font-extrabold leading-snug text-[#123B26]">
               <button
                 type="button"
                 onClick={() => setShowDetailModal(true)}
-                className="text-[11px] font-medium text-gray-500 hover:text-[#123B26] inline-flex items-center space-x-1"
+                className="line-clamp-2 text-left transition-colors hover:text-[#205C38]"
               >
-                <Info className="w-3 h-3 text-[#205C38]" />
-                <span>Details</span>
+                {product.name}
               </button>
-            </div>
+            </h3>
+            {product.tamilName ? (
+              <p className="mt-0.5 font-mukta text-xs font-semibold text-[#205C38]">{product.tamilName}</p>
+            ) : (
+              <div className="mt-0.5 h-4" aria-hidden="true" />
+            )}
           </div>
 
-          {/* Pack Weight Dropdown */}
-          <div className="pt-2 border-t border-[#F0EDE0] space-y-1.5">
-            <div className="flex items-center justify-between text-[11px]">
-              <label htmlFor={`weight-${product.id}`} className="font-bold text-gray-500 uppercase tracking-wider">
-                Pack Weight:
-              </label>
-              <span className="font-extrabold text-[#205C38] bg-[#DCE8C8]/70 px-2 py-0.5 rounded-md">
-                {selectedWeight}
-              </span>
-            </div>
-            <div className="relative">
-              <select
-                id={`weight-${product.id}`}
-                value={selectedWeight}
-                onChange={(e) => setSelectedWeight(e.target.value)}
-                className="w-full appearance-none bg-[#FCFAF5] hover:bg-white border border-[#DCE8C8] focus:border-[#123B26] text-[#123B26] font-extrabold text-xs rounded-xl px-3.5 py-2.5 pr-9 focus:outline-none focus:ring-2 focus:ring-[#A8C66C]/30 cursor-pointer shadow-xs transition-all"
-              >
-                {options.map((opt) => (
-                  <option key={opt.value} value={opt.value} disabled={!opt.available} className="bg-white text-[#123B26] font-bold">
-                    {opt.available ? `${opt.label} Pack` : `${opt.label} — out of stock`}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-[#205C38] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
+          <PriceBlock amount={amount} caption={caption} muted={unavailable} />
 
-          {/* Stepper + Dual Actions */}
-          <div className="flex items-center space-x-2 pt-1">
+          <PackChips options={options} value={selectedWeight} onChange={setSelectedWeight} />
 
-            {/* Quantity stepper */}
-            <div className="flex items-center border border-[#DCE8C8] rounded-xl bg-[#F7F5E8] overflow-hidden flex-shrink-0">
-              <button
-                type="button"
-                onClick={handleDecrement}
-                disabled={quantity <= 1}
-                className="px-2.5 py-2 text-gray-500 hover:text-[#123B26] hover:bg-[#DCE8C8]/60 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                aria-label="Decrease quantity"
-              >
-                <Minus className="w-3 h-3" />
-              </button>
-              <span className="w-6 text-center font-black text-xs text-[#123B26]">{quantity}</span>
-              <button
-                type="button"
-                onClick={handleIncrement}
-                className="px-2.5 py-2 text-gray-500 hover:text-[#123B26] hover:bg-[#DCE8C8]/60 transition-colors"
-                aria-label="Increase quantity"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-            </div>
-
-            {/* Add to cart button */}
+          <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+            <QtyStepper value={quantity} onChange={setQuantity} disabled={soldOut} />
             <button
               type="button"
               onClick={handleAddToCart}
-              disabled={unavailable || !selectedAvailable}
-              title={unavailable ? 'Out of stock — back soon' : !selectedAvailable ? 'This pack is out of stock — choose another' : 'Add to cart'}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-sm active:scale-95 ${
-                unavailable
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : isAdded
-                    ? 'bg-[#205C38] text-white'
-                    : 'bg-[#123B26] hover:bg-[#205C38] text-white'
-              }`}
+              disabled={soldOut}
+              className={ctaClasses}
             >
-              {unavailable ? (
-                <span>Out of stock</span>
-              ) : isAdded ? (
-                <>
-                  <Check className="w-4 h-4 text-[#A8C66C]" />
-                  <span>Added!</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-4 h-4 text-[#A8C66C]" />
-                  <span>Add to Cart</span>
-                </>
-              )}
+              {ctaContent}
             </button>
-
-            {/* Direct WhatsApp Order button */}
-            <button
-              type="button"
-              onClick={handleDirectWhatsAppOrder}
-              className="p-2.5 rounded-xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] border border-[#25D366]/30 hover:border-[#25D366]/60 transition-all flex-shrink-0 active:scale-95"
-              title="Order this directly on WhatsApp"
-              aria-label="Order on WhatsApp"
-            >
-              <MessageSquare className="w-4 h-4" />
-            </button>
-
           </div>
         </div>
-      </div>
+      </article>
 
       {showDetailModal && (
-        <ProductDetailModal
-          product={product}
-          onClose={() => setShowDetailModal(false)}
-        />
+        <ProductDetailModal product={product} onClose={() => setShowDetailModal(false)} />
       )}
     </>
   );

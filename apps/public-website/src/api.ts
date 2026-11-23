@@ -77,10 +77,27 @@ export interface PackOption {
 }
 
 /**
+ * Human-readable pack label: 1000g → 1kg, 500ml → 500ml. Display only —
+ * `value` stays the raw pack string so pricing and server payloads are
+ * byte-identical to before.
+ */
+const formatPackLabel = (size: number, unit: string): string => {
+  if (size >= 1000 && unit === 'g') {
+    const kg = size / 1000;
+    return `${Number.isInteger(kg) ? kg : kg.toFixed(1)}kg`;
+  }
+  if (size >= 1000 && (unit === 'ml' || unit === 'l')) {
+    const litres = size / 1000;
+    return `${Number.isInteger(litres) ? litres : litres.toFixed(1)}${unit === 'ml' ? 'ml' : 'L'}`;
+  }
+  return `${size}${unit}`;
+};
+
+/**
  * Pack-size options for the weight dropdown. Quantized products offer
  * exactly their tier sizes; loose products offer only their configured
  * website packs (empty = hidden from the storefront).
- * Labels only — prices are confirmed on WhatsApp, never shown here.
+ * Tier/pack prices come from the catalog payload and are rendered in the UI.
  */
 export const packOptions = (p: {
   isQuantized: boolean;
@@ -91,13 +108,13 @@ export const packOptions = (p: {
   if (p.isQuantized) {
     return (p.quantityPrice ?? []).map((t) => ({
       value: `${t.quantity}${p.stockUnit}`,
-      label: `${t.quantity}${p.stockUnit}`,
+      label: formatPackLabel(t.quantity, p.stockUnit),
       available: true,
     }));
   }
   return (p.websitePackSizes ?? []).map((s) => ({
     value: `${s.size}${p.stockUnit}`,
-    label: `${s.size}${p.stockUnit}`,
+    label: formatPackLabel(s.size, p.stockUnit),
     available: s.available,
   }));
 };
