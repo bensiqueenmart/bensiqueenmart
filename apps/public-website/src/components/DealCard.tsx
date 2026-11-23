@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MessageSquare, Sparkles, ShoppingBag, Eye, Check, Gift } from 'lucide-react';
 import type { PublicCombo } from '@bqm/types';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { formatPrice, comboUnitPrice } from '../utils/pricing';
 import { useCart } from '../context/CartContext';
 import { imageSrc, comboLabel } from '../api';
 
@@ -24,6 +25,7 @@ export const DealCard: React.FC<DealCardProps> = ({
   const [justAdded, setJustAdded] = useState(false);
   const unavailable = !offer.available;
   const featured = variant === 'featured';
+  const unit = comboUnitPrice(offer);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,7 +38,8 @@ export const DealCard: React.FC<DealCardProps> = ({
   const handleWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isPreview) return;
-    const text = `Hello Bensi Queen! I'm interested in the "${offer.name}" combo.`;
+    const priceBit = unit !== null ? ` (${formatPrice(unit)})` : '';
+    const text = `Hello Bensi Queen! I'm interested in the "${offer.name}" combo${priceBit}.`;
     window.open(
       STORE_CONFIG.whatsappLink(text),
       '_blank',
@@ -111,6 +114,9 @@ export const DealCard: React.FC<DealCardProps> = ({
             className="font-poppins text-xs lg:text-sm text-white/70 leading-relaxed cursor-pointer line-clamp-2"
           >
             {offer.description}
+          </p>
+          <p className="font-poppins text-sm font-extrabold text-[#F2C94C]">
+            {unit !== null ? `${formatPrice(unit)} · per combo pack` : 'Price on request'}
           </p>
         </div>
 

@@ -4,12 +4,10 @@ import type { Combo, Product, PublicCatalog, PublicCombo, PublicComboItem, Publi
  * Public-catalog redaction — the single choke point between the raw DB
  * catalog and the unauthenticated website API.
  *
- * Raw stock quantities (loose base-unit numbers, QuantizedCount buckets)
- * NEVER leave the server: each product/combo carries only `available`
- * (plus per-pack booleans for loose website packs — pack SIZES are
- * merchandising config, not stock quantities).
- * Prices pass through untouched for the future "show prices" switch — the
- * website UI is forbidden from rendering them today.
+ * Raw stock quantities NEVER leave the server: each product/combo carries
+ * only `available` (plus per-pack booleans for loose website packs — pack
+ * SIZES are merchandising config, not stock quantities).
+ * Prices pass through untouched and are rendered on the storefront.
  */
 
 function quantizedAvailable(p: Product): boolean {

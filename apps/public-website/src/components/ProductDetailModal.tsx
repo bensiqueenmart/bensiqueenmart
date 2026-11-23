@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import type { PublicProduct } from '@bqm/types';
 import { imageSrc, packOptions, prettyCategory } from '../api';
+import { formatPrice, packPrice } from '../utils/pricing';
 import { STORE_CONFIG } from '../config/storeConfig';
 import { useCart } from '../context/CartContext';
 
@@ -37,6 +38,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   if (!product) return null;
   const unavailable = !product.available;
   const selectedAvailable = options.some((o) => o.value === selectedWeight && o.available);
+  const unit = packPrice(product, selectedWeight);
 
   const handleIncrement = () => setQuantity((q) => q + 1);
   const handleDecrement = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
@@ -51,7 +53,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   const handleWhatsAppInquiry = () => {
-    const text = `Hello Bensi Queen, I would like to inquire about ${product.name}${product.tamilName ? ` (${product.tamilName})` : ''} - ${quantity} pack(s) of ${selectedWeight}.`;
+    const priceBit = unit !== null ? ` — ${formatPrice(unit)} for ${selectedWeight}` : '';
+    const text = `Hello Bensi Queen, I would like to inquire about ${product.name}${product.tamilName ? ` (${product.tamilName})` : ''} - ${quantity} pack(s) of ${selectedWeight}${priceBit}.`;
     const url = STORE_CONFIG.whatsappLink(text);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -169,6 +172,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               {/* Quantity Stepper & Add to Cart */}
+              <div className="flex items-baseline justify-between">
+                <span className="font-extrabold text-2xl text-[#123B26]">
+                  {unit !== null ? formatPrice(unit) : 'Price on request'}
+                </span>
+                <span className="text-xs text-gray-500 font-medium">per {selectedWeight} pack</span>
+              </div>
               <div className="flex items-center space-x-3">
                 <div className="flex items-center border border-[#DCE8C8] rounded-xl bg-white overflow-hidden">
                   <button
@@ -216,7 +225,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   ) : (
                     <>
                       <ShoppingBag className="w-4 h-4 text-[#A8C66C]" />
-                      <span>Add to Cart ({selectedWeight})</span>
+                      <span>
+                        {unit !== null ? `Add to Cart · ${formatPrice(unit * quantity)}` : `Add to Cart (${selectedWeight})`}
+                      </span>
                     </>
                   )}
                 </button>

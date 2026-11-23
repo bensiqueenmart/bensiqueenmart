@@ -4,6 +4,7 @@ import { X, ShoppingBag, CheckCircle2, MessageSquare, Check, Gift } from 'lucide
 import type { PublicCombo } from '@bqm/types';
 import { useCart } from '../context/CartContext';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { formatPrice, comboUnitPrice } from '../utils/pricing';
 import { imageSrc, comboLabel } from '../api';
 
 interface DealDetailModalProps {
@@ -19,6 +20,7 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ offer, isOpen,
 
   if (!isOpen || !offer) return null;
   const unavailable = !offer.available;
+  const unit = comboUnitPrice(offer);
 
   const contentsText = offer.contents.map((c) => `${c.name} (${c.qty})`).join(', ');
 
@@ -29,7 +31,8 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ offer, isOpen,
   };
 
   const handleWhatsApp = () => {
-    const text = `Hello Bensi Queen, I would like to inquire about the combo deal: "${offer.name}".`;
+    const priceBit = unit !== null ? ` (${formatPrice(unit)})` : '';
+    const text = `Hello Bensi Queen, I would like to inquire about the combo deal: "${offer.name}"${priceBit}.`;
     window.open(
       STORE_CONFIG.whatsappLink(text),
       '_blank',
@@ -82,6 +85,9 @@ export const DealDetailModal: React.FC<DealDetailModalProps> = ({ offer, isOpen,
                 Deal Overview
               </p>
               <p className="font-poppins text-sm text-gray-700 leading-relaxed">{offer.description}</p>
+              <p className="font-poppins text-lg font-extrabold text-[#123B26]">
+                {unit !== null ? `${formatPrice(unit)} · per combo pack` : 'Price on request'}
+              </p>
             </div>
 
             <div className="bg-[#F7F5E8] border border-[#DCE8C8] rounded-2xl p-5 space-y-3.5">

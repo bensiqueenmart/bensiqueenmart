@@ -19,6 +19,7 @@ import { useCart } from '../context/CartContext';
 import { useCatalog } from '../context/CatalogContext';
 import { STORE_CONFIG } from '../config/storeConfig';
 import { createOnlineOrder, packOptions } from '../api';
+import { cartLineTotal, cartSubtotal, formatPrice } from '../utils/pricing';
 import type { CustomerDetails } from '../types';
 import { SEOHead } from '../components/SEOHead';
 
@@ -49,6 +50,13 @@ export const CartPage: React.FC = () => {
 
   const productById = React.useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
   const comboById = React.useMemo(() => new Map(combos.map((c) => [c.id, c])), [combos]);
+  const { subtotal, hasUnpriced } = React.useMemo(
+    () => {
+      const { total, hasUnpriced } = cartSubtotal(items, productById, comboById);
+      return { subtotal: total, hasUnpriced };
+    },
+    [items, productById, comboById],
+  );
 
   const validate = (): boolean => {
     const err: { [key: string]: string } = {};
@@ -119,6 +127,8 @@ export const CartPage: React.FC = () => {
           JSON.stringify({
             orderNo: order.orderNo,
             createdAt: order.createdAt,
+            totalPrice: order.totalPrice,
+            lineTotals: order.orderItems.map((l) => l.price),
             customer: {
               name: customer.name.trim(),
               mobile: customer.mobile.trim(),
@@ -319,6 +329,28 @@ export const CartPage: React.FC = () => {
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
+
+                      {(() => {
+                        const line = cartLineTotal(item, productById, comboById);
+                        if (line === null) {
+                          return (
+                            <span className="text-xs font-semibold text-gray-500">
+                              Price on request
+                            </span>
+                          );
+                        }
+                        const per = line / item.quantity;
+                        return (
+                          <div className="text-right">
+                            <div className="font-extrabold text-sm text-[#123B26]">
+                              {formatPrice(line)}
+                            </div>
+                            <div className="text-[11px] text-gray-500 font-medium">
+                              {formatPrice(per)} × {item.quantity}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                     {!item.isCombo && !packAvailable && (
                       <p className="text-[11px] text-red-600 font-semibold">
@@ -341,14 +373,27 @@ export const CartPage: React.FC = () => {
               </div>
 
               {/* Bottom summary row */}
-              <div className="flex items-center justify-between flex-wrap gap-1 rounded-2xl bg-[#123B26] text-white px-4 py-3 text-sm">
-                <span className="font-poppins font-semibold text-xs uppercase tracking-wider text-white/80">
-                  Total quantity
-                </span>
-                <span className="font-bold">
-                  {totalPackagesCount} packs · {totalProductsCount}{' '}
-                  {totalProductsCount === 1 ? 'item' : 'items'}
-                </span>
+              <div className="rounded-2xl bg-[#123B26] text-white px-4 py-3 text-sm space-y-1">
+                <div className="flex items-center justify-between flex-wrap gap-1">
+                  <span className="font-poppins font-semibold text-xs uppercase tracking-wider text-white/80">
+                    Subtotal
+                  </span>
+                  <span className="font-extrabold text-base">{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex items-center justify-between flex-wrap gap-1">
+                  <span className="font-poppins font-semibold text-xs uppercase tracking-wider text-white/80">
+                    Total quantity
+                  </span>
+                  <span className="font-bold">
+                    {totalPackagesCount} packs · {totalProductsCount}{' '}
+                    {totalProductsCount === 1 ? 'item' : 'items'}
+                  </span>
+                </div>
+                {hasUnpriced && (
+                  <p className="text-[11px] text-white/70">
+                    Some items show “Price on request” — the store will confirm them on WhatsApp.
+                  </p>
+                )}
               </div>
             </section>
 
@@ -462,7 +507,7 @@ export const CartPage: React.FC = () => {
                   <p className="font-bold text-[#123B26]">No online payment needed</p>
                   <p className="text-gray-700 mt-0.5 text-[11.5px] leading-relaxed font-poppins">
                     Our store will contact you on WhatsApp to the number above to confirm
-                    availability, pricing and payment. Please keep WhatsApp reachable.
+                    availability and payment. Please keep WhatsApp reachable.
                   </p>
                 </div>
               </div>
@@ -486,12 +531,15 @@ export const CartPage: React.FC = () => {
                     <span>Placing your order…</span>
                   </>
                 ) : (
-                  <span>Place Order</span>
+                  <span>
+                    Place Order <span className="text-white/60">for</span> {formatPrice(subtotal)}
+                  </span>
                 )}
               </button>
 
               <p className="text-[11px] text-gray-500 italic text-center font-poppins">
-                * Final pricing and payment are confirmed directly via WhatsApp ({STORE_CONFIG.primaryPhone}).
+                * Prices reflect the website catalog at order time. Payment is confirmed via
+                WhatsApp ({STORE_CONFIG.primaryPhone}).
               </p>
             </section>
           </>

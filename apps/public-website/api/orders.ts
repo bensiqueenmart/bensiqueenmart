@@ -5,8 +5,8 @@ import type { OrderItemInput } from '@bqm/types';
  * POST /api/orders — public website checkout.
  * Creates an `online`, `unconfirmed` order (no stock moves; the owner
  * confirms in admin-console). Prices are computed server-side from the
- * current catalog so the stored total is a real indicative amount —
- * the website UI never renders prices.
+ * current catalog and rendered across the storefront (cards, cart,
+ * receipt, PDF, WhatsApp message).
  *
  * Body: { customer: { name, mobile, address, instructions? },
  *         lines: [{ productId?, comboId?, weight?, quantity }] }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CheckCircle2, Download, Loader2, MessageCircle, ShoppingBag } from 'lucide-react';
 import type { CartItem, CustomerDetails } from '../types';
 import { formatOrderDateTime, generateWhatsAppMessage, getWhatsAppOrderUrl } from '../utils/orderUtils';
+import { formatPrice } from '../utils/pricing';
 import { downloadOrderSummaryPdf } from '../utils/pdfGenerator';
 import { OrderSummaryPDFTemplate } from '../components/OrderSummaryPDFTemplate';
 import { SEOHead } from '../components/SEOHead';
@@ -14,6 +15,9 @@ interface PlacedOrder {
   createdAt: string;
   customer: CustomerDetails;
   items: CartItem[];
+  /** Authoritative server totals (stored at checkout, never recomputed). */
+  lineTotals?: number[];
+  totalPrice?: number;
 }
 
 function loadPlacedOrder(): PlacedOrder | null {
@@ -63,7 +67,13 @@ export const OrderSuccessPage: React.FC = () => {
 
   const { date, time } = formatOrderDateTime(placed.createdAt);
   const totalPackages = placed.items.reduce((sum, item) => sum + item.quantity, 0);
-  const message = generateWhatsAppMessage(placed.customer, placed.items, placed.orderNo);
+  const message = generateWhatsAppMessage(
+    placed.customer,
+    placed.items,
+    placed.orderNo,
+    placed.lineTotals,
+    placed.totalPrice,
+  );
   const waUrl = getWhatsAppOrderUrl(message);
 
   const handleDownloadPDF = async () => {
@@ -103,7 +113,7 @@ export const OrderSuccessPage: React.FC = () => {
               <br />
               Our team will contact you on WhatsApp at{' '}
               <strong className="text-[#123B26]">{placed.customer.mobile}</strong> to confirm
-              availability, pricing and payment. You can also start the conversation now with
+              availability and payment. You can also start the conversation now with
               your order details pre-filled.
             </p>
           </div>
@@ -145,31 +155,41 @@ export const OrderSuccessPage: React.FC = () => {
             Order recap
           </h2>
           <div className="divide-y divide-gray-100">
-            {placed.items.map((item, idx) => (
-              <div key={item.id} className="py-2.5 flex items-start justify-between gap-3 text-xs">
-                <p className="font-bold text-[#123B26] font-poppins leading-snug min-w-0">
-                  <span className="text-gray-400 font-mono mr-1.5">{idx + 1}.</span>
-                  {item.englishName}
-                  <span className="block sm:inline text-gray-500 font-medium">
-                    {' '}
-                    · {item.weight} × {item.quantity}
+            {placed.items.map((item, idx) => {
+              const amount = placed.lineTotals?.[idx];
+              return (
+                <div key={item.id} className="py-2.5 flex items-start justify-between gap-3 text-xs">
+                  <p className="font-bold text-[#123B26] font-poppins leading-snug min-w-0">
+                    <span className="text-gray-400 font-mono mr-1.5">{idx + 1}.</span>
+                    {item.englishName}
+                    <span className="block sm:inline text-gray-500 font-medium">
+                      {' '}
+                      · {item.weight} × {item.quantity}
+                    </span>
+                  </p>
+                  <span className="bg-[#F7F5E8] border border-[#DCE8C8] text-[#123B26] font-bold text-xs px-2 py-0.5 rounded flex-shrink-0">
+                    {typeof amount === 'number' ? formatPrice(amount) : `${item.weight} × ${item.quantity}`}
                   </span>
-                </p>
-                <span className="bg-[#F7F5E8] border border-[#DCE8C8] text-[#123B26] font-semibold text-[11px] px-2 py-0.5 rounded flex-shrink-0">
-                  {item.weight} × {item.quantity}
-                </span>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
           <div className="flex items-center justify-between flex-wrap gap-1 rounded-2xl bg-[#F7F5E8] border border-[#DCE8C8] px-4 py-3 text-sm">
             <span className="font-poppins font-semibold text-xs uppercase tracking-wider text-gray-600">
-              Total quantity
+              {typeof placed.totalPrice === 'number' ? 'Order total' : 'Total quantity'}
             </span>
-            <span className="font-bold text-[#123B26]">
-              {totalPackages} packs · {placed.items.length}{' '}
-              {placed.items.length === 1 ? 'item' : 'items'}
+            <span className="font-extrabold text-base text-[#123B26]">
+              {typeof placed.totalPrice === 'number'
+                ? formatPrice(placed.totalPrice)
+                : `${totalPackages} packs · ${placed.items.length} ${placed.items.length === 1 ? 'item' : 'items'}`}
             </span>
           </div>
+          {typeof placed.totalPrice === 'number' && (
+            <p className="text-[11px] text-gray-500 text-center font-poppins">
+              {totalPackages} packs · {placed.items.length}{' '}
+              {placed.items.length === 1 ? 'item' : 'items'}
+            </p>
+          )}
           <div className="pt-1 text-center">
             <Link
               to="/products"
@@ -189,6 +209,8 @@ export const OrderSuccessPage: React.FC = () => {
           orderTime={time}
           customer={placed.customer}
           items={placed.items}
+          lineTotals={placed.lineTotals}
+          orderTotal={placed.totalPrice}
         />
       </div>
     </div>

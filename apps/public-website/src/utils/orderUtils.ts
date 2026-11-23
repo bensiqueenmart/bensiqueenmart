@@ -1,5 +1,6 @@
 ﻿import type { CartItem, CustomerDetails } from '../types';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { formatPrice } from './pricing';
 
 /**
  * Formats order date & time in reader-friendly format
@@ -21,22 +22,29 @@ export function formatOrderDateTime(iso?: string): { date: string; time: string 
 
 /**
  * WhatsApp message for an already-placed order. References the stored
- * orderNo so the shop can match it; never includes prices.
+ * orderNo so the shop can match it. Line amounts and the order total come
+ * from the server-stored order (authoritative), never recomputed here.
  */
 export function generateWhatsAppMessage(
   customer: CustomerDetails,
   items: CartItem[],
   orderRef: string,
+  lineTotals?: number[],
+  orderTotal?: number,
 ): string {
   const itemsText = items
     .map((item, index) => {
+      const amount = lineTotals?.[index];
+      const amountBit = typeof amount === 'number' ? `\n   Amount: ${formatPrice(amount)}` : '';
       if (item.isCombo) {
         const details = item.comboIncludedText ? `\n   Contains: ${item.comboIncludedText}` : '';
-        return `${index + 1}. ${item.englishName}${details}\n   Pack: ${item.weight}\n   Quantity: ${item.quantity}`;
+        return `${index + 1}. ${item.englishName}${details}\n   Pack: ${item.weight}\n   Quantity: ${item.quantity}${amountBit}`;
       }
-      return `${index + 1}. ${item.englishName} (${item.tamilName})\n   Pack: ${item.weight}\n   Quantity: ${item.quantity}`;
+      return `${index + 1}. ${item.englishName} (${item.tamilName})\n   Pack: ${item.weight}\n   Quantity: ${item.quantity}${amountBit}`;
     })
     .join('\n\n');
+
+  const totalBit = typeof orderTotal === 'number' ? `\nOrder Total: ${formatPrice(orderTotal)}\n` : '';
 
   const instructionsText =
     customer.instructions && customer.instructions.trim().length > 0
@@ -55,8 +63,8 @@ Delivery Address: ${customer.address.trim()}
 ORDER DETAILS
 
 ${itemsText}
-
-${instructionsText}Please confirm availability, pricing and payment for my order.
+${totalBit}
+${instructionsText}Please confirm my order and delivery.
 
 Thank you!
 Bensi Queen Customer.`;

@@ -200,8 +200,8 @@ export interface PublicPackOption {
  * Deliberately has no `stock` field: availability is a single boolean
  * plus per-pack booleans for loose website packs, computed server-side.
  * Raw quantities never leave the server.
- * Prices stay in the payload for a future "show prices" switch; the
- * website UI must not render them today.
+ * Raw quantities never leave the server.
+ * Prices are part of the payload and rendered on the storefront.
  */
 export interface PublicProduct {
   id: string;
@@ -234,7 +234,6 @@ export interface PublicComboItem {
 /**
  * Public storefront combo — same redaction contract as PublicProduct.
  * `available` means active AND every component fulfillable from stock.
- * `totalPrice` stays in the payload for the future price switch; not rendered today.
  */
 export interface PublicCombo {
   id: string;

@@ -10,6 +10,7 @@ import { useCart } from '../context/CartContext';
 import { DealDetailModal } from '../components/DealDetailModal';
 import { SEOHead } from '../components/SEOHead';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { formatPrice, comboUnitPrice } from '../utils/pricing';
 import type { PublicCombo } from '@bqm/types';
 
 /* ── Floating Particle Background Configuration ─────────────── */
@@ -49,9 +50,10 @@ const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails
   const unavailable = !offer.available;
   const contentsText = offer.contents.map((c) => `${c.name} (${c.qty})`).join(', ');
   const fade = useFadeIn(0.08);
+  const unit = comboUnitPrice(offer);
 
   const whatsappMessage = encodeURIComponent(
-    `Hello Bensi Queen, I would like to claim the promotional offer: "${offer.name}".`
+    `Hello Bensi Queen, I would like to claim the promotional offer: "${offer.name}"${unit !== null ? ` (${formatPrice(unit)})` : ''}.`
   );
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -125,6 +127,9 @@ const DealGridCard: React.FC<DealGridCardProps> = ({ offer, index, onOpenDetails
             className="font-poppins text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-3 cursor-pointer"
           >
             {offer.description}
+          </p>
+          <p className="font-poppins text-base font-extrabold text-[#123B26]">
+            {unit !== null ? `${formatPrice(unit)} · per combo pack` : 'Price on request'}
           </p>
 
           <div onClick={() => onOpenDetails(offer)} className="pt-1 cursor-pointer group/items">

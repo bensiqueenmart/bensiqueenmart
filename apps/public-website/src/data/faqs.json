@@ -21,8 +21,8 @@
         "id": 3,
         "category": "quality",
         "categoryLabel": "Purity & Quality",
-        "question": "Why are commodity prices not displayed on the website?",
-        "answer": "Bensi Queen operates as a neighborhood family provision store. Prices of agricultural staples like dals, pulses, and dry fruits fluctuate daily based on market harvest rates. Rather than showing outdated online prices, our owner inspects the freshest batch in-store and shares the exact, transparent billing on your WhatsApp order chat before dispatch.",
+        "question": "How are prices shown on the website?",
+        "answer": "Every product card and combo shows its catalog price per pack, your cart shows a running subtotal, and your order receipt, PDF and WhatsApp message all carry the same item-wise amounts and order total. You still pay only on delivery via Cash or UPI — the store confirms availability and payment with you on WhatsApp.",
         "popular": true,
         "showOnHome": true
     },

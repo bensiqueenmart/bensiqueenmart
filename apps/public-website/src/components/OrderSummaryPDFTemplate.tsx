@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { CartItem, CustomerDetails } from '../types';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { formatPrice } from '../utils/pricing';
 
 interface OrderSummaryPDFTemplateProps {
   orderRef: string;
@@ -8,6 +9,8 @@ interface OrderSummaryPDFTemplateProps {
   orderTime: string;
   customer: CustomerDetails;
   items: CartItem[];
+  lineTotals?: number[];
+  orderTotal?: number;
 }
 
 export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = ({
@@ -16,6 +19,8 @@ export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = (
   orderTime,
   customer,
   items,
+  lineTotals,
+  orderTotal,
 }) => {
   const totalPackages = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -123,6 +128,12 @@ export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = (
               <th className="border border-[#123B26] py-2.5 px-3 text-center w-24 font-semibold">
                 Quantity
               </th>
+              <th className="border border-[#123B26] py-2.5 px-3 text-center w-24 font-semibold">
+                Rate
+              </th>
+              <th className="border border-[#123B26] py-2.5 px-3 text-center w-24 font-semibold">
+                Amount
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -165,20 +176,31 @@ export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = (
                   <td className="border border-gray-300 py-2.5 px-3 text-center font-bold text-[#123B26]">
                     {item.quantity}
                   </td>
+                  <td className="border border-gray-300 py-2.5 px-3 text-center text-[#123B26]">
+                    {(() => {
+                      const amount = lineTotals?.[index];
+                      if (typeof amount !== 'number' || !item.quantity) return '—';
+                      return formatPrice(amount / item.quantity);
+                    })()}
+                  </td>
+                  <td className="border border-gray-300 py-2.5 px-3 text-center font-bold text-[#123B26]">
+                    {(() => {
+                      const amount = lineTotals?.[index];
+                      return typeof amount === 'number' ? formatPrice(amount) : '—';
+                    })()}
+                  </td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr className="bg-[#DCE8C8] font-bold text-xs text-[#123B26]">
-              <td colSpan={2} className="border border-gray-300 py-2.5 px-4 text-right">
-                Total Unique Items: {items.length}
+              <td colSpan={4} className="border border-gray-300 py-2.5 px-4 text-right">
+                Total: {items.length} {items.length === 1 ? 'item' : 'items'} · {totalPackages}{' '}
+                packs
               </td>
-              <td className="border border-gray-300 py-2.5 px-3 text-right">
-                Total Packages:
-              </td>
-              <td className="border border-gray-300 py-2.5 px-3 text-center text-sm">
-                {totalPackages}
+              <td colSpan={2} className="border border-gray-300 py-2.5 px-3 text-center text-sm">
+                Order Total: {typeof orderTotal === 'number' ? formatPrice(orderTotal) : '—'}
               </td>
             </tr>
           </tfoot>
@@ -194,7 +216,8 @@ export const OrderSummaryPDFTemplate: React.FC<OrderSummaryPDFTemplateProps> = (
           • This document serves as an order summary and packing checklist. Payment is arranged with the store via WhatsApp.
         </p>
         <p>
-          • Prices and item availability are confirmed directly via WhatsApp or phone.
+          • Prices reflect the website catalog at order time. Payment is settled on delivery
+          via Cash or UPI.
         </p>
         <p>
           • For any urgent modifications to this order, please contact{' '}
