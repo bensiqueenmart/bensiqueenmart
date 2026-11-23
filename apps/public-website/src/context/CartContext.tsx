@@ -42,15 +42,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [items]);
 
-  // Auto-hide toast notification after 3 seconds
+  // Dismiss the popup only when the cart becomes empty — never on a timer.
   useEffect(() => {
-    if (toastMessage) {
-      const timer = setTimeout(() => {
-        setToastMessage(null);
-      }, 3000);
-      return () => clearTimeout(timer);
+    if (items.length === 0) {
+      setToastMessage(null);
     }
-  }, [toastMessage]);
+  }, [items.length]);
 
   const closeToast = () => setToastMessage(null);
 
