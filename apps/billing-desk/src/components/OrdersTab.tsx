@@ -486,11 +486,21 @@ export default function OrdersTab({ onError }: { onError: (msg: string) => void 
                       borderTop: '1px solid #DCE8C8',
                     }}
                   >
-                    <div>
+                    <div style={{ maxWidth: '60%' }}>
                       {viewing.customerData?.customerName && (
                         <div style={{ fontSize: 12, color: '#557258' }}>
                           Customer: <strong>{viewing.customerData.customerName}</strong>
                           {viewing.customerData.mobile ? ` (${viewing.customerData.mobile})` : ''}
+                        </div>
+                      )}
+                      {viewing.customerData?.fullAddress && (
+                        <div style={{ fontSize: 12, color: '#557258', marginTop: 2 }}>
+                          📍 {viewing.customerData.fullAddress}
+                        </div>
+                      )}
+                      {viewing.customerData?.instructions && (
+                        <div style={{ fontSize: 12, color: '#557258', marginTop: 2 }}>
+                          📝 <span style={{ fontStyle: 'italic' }}>{viewing.customerData.instructions}</span>
                         </div>
                       )}
                     </div>
