@@ -26,7 +26,7 @@ admin console — all sharing one MongoDB Atlas database.
 - Common code — Mongo connection, typed collections, atomic stock
   primitives (`$inc`) — lives in `@bqm/db` as importable library code.
 - Shared shapes live in `@bqm/types`.
-- See each `apps/<app>/api/README.md` for that app's planned suite.
+- See each `apps/<app>/API.md` for that app's planned suite.
 
 ## Data invariants
 
@@ -61,4 +61,4 @@ as its serverless endpoints automatically.
 
 1. ✅ Skeleton (this commit): workspaces, types, db stub, app shells.
 2. Next: wire `@bqm/db` (Atlas client, typed collections, `$inc` helpers).
-3. Next: first real endpoints per `api/README.md` roadmaps.
+3. Next: first real endpoints per `API.md` roadmaps.
