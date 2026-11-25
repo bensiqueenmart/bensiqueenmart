@@ -1,4 +1,4 @@
-import { isAuthenticated } from '../api/_auth.js';
+import { isAuthenticated } from './_auth.js';
 
 /**
  * GitHub Contents-API proxy for the website edit console.

@@ -1,5 +1,5 @@
 import { createOrder, listOrders } from '@bqm/db';
-import { isAuthenticated } from './_auth.js';
+import { isAuthenticated } from '../server/_auth.js';
 
 /**
  * /api/orders — identical semantics to billing-desk's orders endpoint.

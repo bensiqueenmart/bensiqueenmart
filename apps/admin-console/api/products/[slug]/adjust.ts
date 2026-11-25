@@ -1,5 +1,5 @@
 import { adjustStock } from '@bqm/db';
-import { isAuthenticated } from '../../_auth.js';
+import { isAuthenticated } from '../../../server/_auth.js';
 
 /**
  * POST /api/products/:slug/adjust — add or correct stock outside the order

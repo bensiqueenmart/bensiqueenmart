@@ -1,5 +1,5 @@
 import { createCombo } from '@bqm/db';
-import { isAuthenticated } from './_auth.js';
+import { isAuthenticated } from '../server/_auth.js';
 
 /**
  * POST /api/combos — create a brand-new combo. Body: { slug, name,

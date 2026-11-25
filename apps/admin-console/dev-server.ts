@@ -8,14 +8,9 @@ import comboBySlugHandler from './api/combos/[slug].js';
 import signHandler from './api/images/sign.js';
 import ordersHandler from './api/orders.js';
 import orderByIdHandler from './api/orders/[id].js';
-import loginHandler from './api/auth/login.js';
-import logoutHandler from './api/auth/logout.js';
-import meHandler from './api/auth/me.js';
+import authHandler from './api/auth/[action].js';
 import githubFileHandler from './api/edit/github-file.js';
-import salesAnalyticsHandler from './api/analytics/sales.js';
-import ordersAnalyticsHandler from './api/analytics/orders.js';
-import productDetailAnalyticsHandler from './api/analytics/product-detail.js';
-import exportAnalyticsHandler from './api/analytics/export.js';
+import analyticsHandler from './api/analytics/[report].js';
 
 
 config({ path: new URL('../../.env', import.meta.url) });
@@ -24,16 +19,11 @@ type Handler = (req: any, res: any) => Promise<void>;
 
 const routes: Array<{ match: (path: string, method: string) => string | null; handler: Handler }> = [
   {
-    match: (path, method) => (path === '/api/auth/login' && method === 'POST' ? 'login' : null),
-    handler: loginHandler as unknown as Handler,
-  },
-  {
-    match: (path, method) => (path === '/api/auth/logout' && method === 'POST' ? 'logout' : null),
-    handler: logoutHandler as unknown as Handler,
-  },
-  {
-    match: (path, method) => (path === '/api/auth/me' && method === 'GET' ? 'me' : null),
-    handler: meHandler as unknown as Handler,
+    match: (path) => {
+      const m = path.match(/^\/api\/auth\/([^/]+)$/);
+      return m ? `action:${decodeURIComponent(m[1])}` : null;
+    },
+    handler: authHandler as unknown as Handler,
   },
   {
     match: (path, method) =>
@@ -85,20 +75,11 @@ const routes: Array<{ match: (path: string, method: string) => string | null; ha
     handler: orderByIdHandler as unknown as Handler,
   },
   {
-    match: (path) => (path === '/api/analytics/sales' ? 'analytics-sales' : null),
-    handler: salesAnalyticsHandler as unknown as Handler,
-  },
-  {
-    match: (path) => (path === '/api/analytics/orders' ? 'analytics-orders' : null),
-    handler: ordersAnalyticsHandler as unknown as Handler,
-  },
-  {
-    match: (path) => (path === '/api/analytics/product-detail' ? 'analytics-product-detail' : null),
-    handler: productDetailAnalyticsHandler as unknown as Handler,
-  },
-  {
-    match: (path) => (path === '/api/analytics/export' ? 'analytics-export' : null),
-    handler: exportAnalyticsHandler as unknown as Handler,
+    match: (path) => {
+      const m = path.match(/^\/api\/analytics\/([^/]+)$/);
+      return m ? `report:${decodeURIComponent(m[1])}` : null;
+    },
+    handler: analyticsHandler as unknown as Handler,
   },
 ];
 
@@ -160,6 +141,8 @@ const server = http.createServer((nodeReq, nodeRes) => {
         else if (id.startsWith('adjust:')) query.slug = id.slice('adjust:'.length);
         else if (id.startsWith('combo:')) query.slug = id.slice('combo:'.length);
         else if (id.startsWith('order:')) query.id = id.slice('order:'.length);
+        else if (id.startsWith('report:')) query.report = id.slice('report:'.length);
+        else if (id.startsWith('action:')) query.action = id.slice('action:'.length);
         const req: any = { method, query, body, headers: { cookie: nodeReq.headers.cookie } };
         try {
           await route.handler(req, makeRes(nodeRes));

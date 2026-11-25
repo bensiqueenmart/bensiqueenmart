@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { isAuthenticated } from '../_auth.js';
+import { isAuthenticated } from '../../server/_auth.js';
 
 /**
  * POST /api/images/sign — sign a Cloudinary upload for the image editor.

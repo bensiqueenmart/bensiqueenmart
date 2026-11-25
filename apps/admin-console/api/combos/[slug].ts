@@ -1,5 +1,5 @@
 import { deleteCombo, patchCombo } from '@bqm/db';
-import { isAuthenticated } from '../_auth.js';
+import { isAuthenticated } from '../../server/_auth.js';
 
 /**
  * PATCH /api/combos/:slug — edit combo display data, components, totalPrice,
